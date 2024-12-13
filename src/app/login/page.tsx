@@ -2,22 +2,53 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import api from "../../lib/api"; // Import the Axios instance
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
+        setError("");
 
-        // Replace this with your actual authentication logic
-        if (username === "admin" && password === "password") {
-            localStorage.setItem("authToken", "sampleToken");
-            router.push("/"); // Redirect to dashboard
-        } else {
-            setError("Invalid username or password");
+        try {
+            // Make API request
+            const response = await api.post("/auth/login", {
+                username,
+                password,
+            });
+
+            // Save the token in localStorage
+            const { token } = response.data;
+            localStorage.setItem("authToken", token);
+
+            // Redirect to the dashboard
+            router.push("/");
+        } catch (err: any) {
+            // Handle errors based on API response
+            if (err.response) {
+                const status = err.response.status;
+                const message = err.response.data.status.message;
+
+                console.log(message);
+
+                if (status === 404) {
+                    setError("User not found. Please check your username.");
+                } else if (status === 401) {
+                    setError("Incorrect password. Please try again.");
+                } else {
+                    setError(message || "An error occurred during login.");
+                }
+            } else {
+                setError("Unable to connect to the server. Please try again.");
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -37,6 +68,7 @@ export default function LoginPage() {
                             className="form-control"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
+                            required
                         />
                     </div>
                     <div className="mb-3">
@@ -49,10 +81,15 @@ export default function LoginPage() {
                             className="form-control"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            required
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary w-100">
-                        Login
+                    <button
+                        type="submit"
+                        className="btn btn-primary w-100"
+                        disabled={loading}
+                    >
+                        {loading ? "Logging in..." : "Login"}
                     </button>
                 </form>
             </div>
