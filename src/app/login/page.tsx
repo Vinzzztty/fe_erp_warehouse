@@ -23,6 +23,7 @@ export default function LoginPage() {
                 username,
                 password,
             });
+            console.log(response);
             console.log("Response:", response.data);
 
             // Save the token in localStorage
