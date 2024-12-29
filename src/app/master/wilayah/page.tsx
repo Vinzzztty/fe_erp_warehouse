@@ -205,7 +205,7 @@ export default function WilayahPage() {
                             <td>
                                 {countries.find(
                                     (c: any) => c.Code === province.CountryId
-                                )?.Name || "N/A"}
+                                ) || "N/A"}
                             </td>
                             <td>{province.Status}</td>
                             <td>
@@ -254,12 +254,12 @@ export default function WilayahPage() {
                             <td>
                                 {provinces.find(
                                     (p: any) => p.Code === city.ProvinceId
-                                )?.Name || "N/A"}
+                                ) || "N/A"}
                             </td>
                             <td>
                                 {countries.find(
                                     (c: any) => c.Code === city.CountryId
-                                )?.Name || "N/A"}
+                                ) || "N/A"}
                             </td>
                             <td>{city.Status}</td>
                             <td>

@@ -65,7 +65,7 @@ export default function FinancePage() {
             );
             if (!response.ok) throw new Error("Failed to delete item.");
             updateState(); // Refresh data
-        } catch (error) {
+        } catch (error: any) {
             alert(error.message || "Failed to delete item.");
         }
     };
