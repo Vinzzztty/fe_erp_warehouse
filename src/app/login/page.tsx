@@ -18,10 +18,12 @@ export default function LoginPage() {
 
         try {
             // Make API request
-            const response = await api.post("/auth/login", {
+            console.log("Sending request to /auth/login");
+            const response = await api.post("/api/auth/login", {
                 username,
                 password,
             });
+            console.log("Response:", response.data);
 
             // Save the token in localStorage
             const { token } = response.data;
@@ -36,6 +38,7 @@ export default function LoginPage() {
                 const message = err.response.data.status.message;
 
                 console.log(message);
+                console.error("Error:", err);
 
                 if (status === 404) {
                     setError("User not found. Please check your username.");
