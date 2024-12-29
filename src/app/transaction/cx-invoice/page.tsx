@@ -1,7 +1,7 @@
-export default function OrdersPage() {
+export default function CXInvoicePage() {
     return (
         <div>
-            <h1>Order Management</h1>
+            <h1>CX Invoice</h1>
             <p>View and manage your orders here.</p>
         </div>
     );
