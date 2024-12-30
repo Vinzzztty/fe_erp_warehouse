@@ -7,36 +7,53 @@ import Link from "next/link";
 export default function WilayahPage() {
     const router = useRouter();
 
-    const [cities, setCities] = useState([]);
-    const [provinces, setProvinces] = useState([]);
-    const [countries, setCountries] = useState([]);
+    const [cities, setCities] = useState<any[]>([]);
+    const [provinces, setProvinces] = useState<any[]>([]);
+    const [countries, setCountries] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Fetch data for cities, provinces, and countries
     useEffect(() => {
-        const fetchData = async (endpoint: string, setState: any) => {
+        const fetchData = async () => {
             try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
-                );
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch ${endpoint}.`);
+                const [citiesRes, provincesRes, countriesRes] =
+                    await Promise.all([
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/cities`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/provinces`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/countries`
+                        ),
+                    ]);
+
+                if (!citiesRes.ok || !provincesRes.ok || !countriesRes.ok) {
+                    throw new Error("Failed to fetch data.");
                 }
-                const data = await response.json();
-                setState(data.data);
+
+                const [citiesData, provincesData, countriesData] =
+                    await Promise.all([
+                        citiesRes.json(),
+                        provincesRes.json(),
+                        countriesRes.json(),
+                    ]);
+
+                setCities(citiesData?.data || []);
+                setProvinces(provincesData?.data || []);
+                setCountries(countriesData?.data || []);
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
                 );
+            } finally {
+                setLoading(false);
             }
         };
 
-        Promise.all([
-            fetchData("cities", setCities),
-            fetchData("provinces", setProvinces),
-            fetchData("countries", setCountries),
-        ]).finally(() => setLoading(false));
+        fetchData();
     }, []);
 
     // Delete an item
@@ -48,30 +65,28 @@ export default function WilayahPage() {
                     method: "DELETE",
                 }
             );
+
             if (!response.ok) {
                 throw new Error("Failed to delete item.");
             }
 
-            // Refresh the data
-            const fetchData = async (endpoint: string, setState: any) => {
-                const response = await fetch(
+            // Refresh the data after deletion
+            const fetchData = async () => {
+                const res = await fetch(
                     `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
                 );
-                const data = await response.json();
-                setState(data.data);
+                const data = await res.json();
+                return data?.data || [];
             };
 
-            if (endpoint === "cities") fetchData("cities", setCities);
-            if (endpoint === "provinces") fetchData("provinces", setProvinces);
-            if (endpoint === "countries") fetchData("countries", setCountries);
+            if (endpoint === "cities") setCities(await fetchData());
+            if (endpoint === "provinces") setProvinces(await fetchData());
+            if (endpoint === "countries") setCountries(await fetchData());
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
     };
 
-    if (loading) {
-        return <p>Loading data...</p>;
-    }
     return (
         <div className="container mt-4">
             <h1>Wilayah</h1>
@@ -80,6 +95,7 @@ export default function WilayahPage() {
                 <div className="alert alert-danger">{errorMessage}</div>
             )}
 
+            {/* Cards */}
             <div className="row mt-4">
                 {/* City Card */}
                 <div className="col-md-4">
@@ -122,6 +138,7 @@ export default function WilayahPage() {
                         </div>
                     </div>
                 </div>
+
                 {/* Country Card */}
                 <div className="col-md-4">
                     <div className="card text-center shadow-sm">
@@ -143,149 +160,188 @@ export default function WilayahPage() {
                     </div>
                 </div>
             </div>
-            {/* Countries Table */}
-            <h2>Countries</h2>
-            <table className="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {countries.map((country: any) => (
-                        <tr key={country.Code}>
-                            <td>{country.Code}</td>
-                            <td>{country.Name}</td>
-                            <td>{country.Status}</td>
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() =>
-                                        router.push(
-                                            `/master/wilayah/country/edit/${country.Code}`
-                                        )
-                                    }
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() =>
-                                        handleDelete("countries", country.Code)
-                                    }
-                                >
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
 
-            {/* Provinces Table */}
-            <h2>Provinces</h2>
-            <table className="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Country</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {provinces.map((province: any) => (
-                        <tr key={province.Code}>
-                            <td>{province.Code}</td>
-                            <td>{province.Name}</td>
-                            <td>
-                                {countries.find(
-                                    (c: any) => c.Code === province.CountryId
-                                ) || "N/A"}
-                            </td>
-                            <td>{province.Status}</td>
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() =>
-                                        router.push(
-                                            `/master/wilayah/province/edit/${province.Code}`
-                                        )
-                                    }
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() =>
-                                        handleDelete("provinces", province.Code)
-                                    }
-                                >
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            {/* Data Tables */}
+            {loading ? (
+                <p className="text-center mt-5">Loading data...</p>
+            ) : (
+                <>
+                    {/* Countries Table */}
+                    <h2>Countries</h2>
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {countries.length > 0 ? (
+                                countries.map((country: any) => (
+                                    <tr key={country.Code}>
+                                        <td>{country.Code}</td>
+                                        <td>{country.Name}</td>
+                                        <td>{country.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/wilayah/country/edit/${country.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "countries",
+                                                        country.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={4}>No data available</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
 
-            {/* Cities Table */}
-            <h2>Cities</h2>
-            <table className="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Province</th>
-                        <th>Country</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {cities.map((city: any) => (
-                        <tr key={city.Code}>
-                            <td>{city.Code}</td>
-                            <td>{city.Name}</td>
-                            <td>
-                                {provinces.find(
-                                    (p: any) => p.Code === city.ProvinceId
-                                ) || "N/A"}
-                            </td>
-                            <td>
-                                {countries.find(
-                                    (c: any) => c.Code === city.CountryId
-                                ) || "N/A"}
-                            </td>
-                            <td>{city.Status}</td>
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() =>
-                                        router.push(
-                                            `/master/wilayah/city/edit/${city.Code}`
-                                        )
-                                    }
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() =>
-                                        handleDelete("cities", city.Code)
-                                    }
-                                >
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                    {/* Provinces Table */}
+                    <h2>Provinces</h2>
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Country</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {provinces.length > 0 ? (
+                                provinces.map((province: any) => (
+                                    <tr key={province.Code}>
+                                        <td>{province.Code}</td>
+                                        <td>{province.Name}</td>
+                                        <td>
+                                            {countries.find(
+                                                (c: any) =>
+                                                    c.Code ===
+                                                    province.CountryId
+                                            )?.Name || "N/A"}
+                                        </td>
+                                        <td>{province.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/wilayah/province/edit/${province.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "provinces",
+                                                        province.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={5}>No data available</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+
+                    {/* Cities Table */}
+                    <h2>Cities</h2>
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Province</th>
+                                <th>Country</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {cities.length > 0 ? (
+                                cities.map((city: any) => (
+                                    <tr key={city.Code}>
+                                        <td>{city.Code}</td>
+                                        <td>{city.Name}</td>
+                                        <td>
+                                            {provinces.find(
+                                                (p: any) =>
+                                                    p.Code === city.ProvinceId
+                                            )?.Name || "N/A"}
+                                        </td>
+                                        <td>
+                                            {countries.find(
+                                                (c: any) =>
+                                                    c.Code === city.CountryId
+                                            )?.Name || "N/A"}
+                                        </td>
+                                        <td>{city.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/wilayah/city/edit/${city.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "cities",
+                                                        city.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6}>No data available</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </>
+            )}
         </div>
     );
 }

@@ -2,6 +2,7 @@
     --background: #ffffff;
     --foreground: #171717;
 }
+@import "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.css";
 
 @media (prefers-color-scheme: dark) {
     :root {

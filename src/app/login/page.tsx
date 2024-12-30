@@ -19,11 +19,10 @@ export default function LoginPage() {
         try {
             // Make API request
             console.log("Sending request to /auth/login");
-            const response = await api.post("/api/auth/login", {
+            const response = await api.post("auth/login", {
                 username,
                 password,
             });
-            console.log(response);
             console.log("Response:", response.data);
 
             // Save the token in localStorage
@@ -35,20 +34,23 @@ export default function LoginPage() {
         } catch (err: any) {
             // Handle errors based on API response
             if (err.response) {
-                const status = err.response.status;
-                const message = err.response.data.status.message;
+                const status = err.response.status || "Unknown status";
+                const message =
+                    err.response.data?.status?.message ||
+                    err.response.data?.message || // Use `message` if it's directly in `data`
+                    "An error occurred";
 
-                console.log(message);
-                console.error("Error:", err);
+                console.error("API Error:", err.response.data);
 
                 if (status === 404) {
                     setError("User not found. Please check your username.");
                 } else if (status === 401) {
                     setError("Incorrect password. Please try again.");
                 } else {
-                    setError(message || "An error occurred during login.");
+                    setError(message);
                 }
             } else {
+                console.error("Unexpected error:", err);
                 setError("Unable to connect to the server. Please try again.");
             }
         } finally {
