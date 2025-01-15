@@ -18,7 +18,7 @@ export default function LoginPage() {
 
         try {
             // Make API request
-            console.log("Sending request to /auth/login");
+            console.log("Sending request to /auth/login",username,password);
             const response = await api.post("auth/login", {
                 username,
                 password,
