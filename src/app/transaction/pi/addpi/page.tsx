@@ -8,9 +8,9 @@ export default function CompanyPage() {
 
     const [formData, setFormData] = useState({
         Date: "",
+        PONumber:"",
         SupplierId: "",
         Notes: "",
-        Status:"Active",
     });
 
     const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ export default function CompanyPage() {
         try {
             console.log("Submitting data:", formData);
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payments`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices`,
                 {
                     method: "POST",
                     headers: {
@@ -111,23 +111,18 @@ export default function CompanyPage() {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="Status" className="form-label">Status</label>
-                    <select
-                        id="Status"
-                        name="Status"
+                    <label htmlFor="PONumber" className="form-label">PO Number</label>
+                    <input
+                        type="number"
+                        id="PONumber"
+                        name="PONumber"
                         className="form-select"
-                        value={formData.Status}
+                        value={formData.PONumber}
                         onChange={handleChange}
                         required
                     >
-                        <option value="Unpaid">Unpaid</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Arrived">Arrived</option>
-                        <option value="Inbound">Inbound</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
+                    
+                    </input>
                 </div>
 
                 <button
@@ -135,7 +130,7 @@ export default function CompanyPage() {
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add Company"}
+                    {loading ? "Submitting..." : "Add PI"}
                 </button>
             </form>
 

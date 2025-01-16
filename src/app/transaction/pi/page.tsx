@@ -17,7 +17,7 @@ export default function POPage() {
             setErrorCompanies(null);
             try {
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payments`
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices`
                 );
                 if (!response.ok) {
                     throw new Error("Failed to fetch PI.");
@@ -54,7 +54,7 @@ export default function POPage() {
     
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payments/${id}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices/${id}`,
                 {
                     method: "DELETE",
                 }
@@ -128,9 +128,9 @@ export default function POPage() {
                                 <tr>
                                     <th>Code</th>
                                     <th>Date</th>
+                                    <th>PO Number</th>
                                     <th>Supplier Id</th>
                                     <th>Notes</th>
-                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -139,9 +139,9 @@ export default function POPage() {
                                     <tr key={purchase.Code}>
                                         <td>{purchase.Code}</td>
                                         <td>{purchase.Date}</td>
-                                        <td>{purchase.SupplierId}</td>
-                                        <td>{purchase.Notes || "N/A"}</td>
-                                        <td>{purchase.Status}</td>
+                                        <td>{purchase.PONumber}</td>
+                                        <td>{purchase.SuppplierId}</td>
+                                        <td>{purchase.Notes}</td>
                                     
                                         <td>
                                             <button
