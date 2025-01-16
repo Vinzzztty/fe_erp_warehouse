@@ -112,13 +112,22 @@ export default function CompanyPage() {
                 </div>
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">Status</label>
-                    <textarea
+                    <select
                         id="Status"
                         name="Status"
-                        className="form-control"
+                        className="form-select"
                         value={formData.Status}
                         onChange={handleChange}
-                    />
+                        required
+                    >
+                        <option value="Unpaid">Unpaid</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Arrived">Arrived</option>
+                        <option value="Inbound">Inbound</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
                 </div>
 
                 <button

@@ -81,7 +81,7 @@ export default function POPage() {
     return (
         <div className="container mt-4">
             <h1>
-                <i className="bi bi-building me-2"></i> Purchase Order
+                <i className="bi bi-building me-2"></i> Proformal Invoice
             </h1>
             <p>View and manage your orders here.</p>
 
@@ -95,50 +95,31 @@ export default function POPage() {
                                 className="bi bi-building"
                                 style={{ fontSize: "2rem", color: "#6c757d" }}
                             ></i>
-                            <h5 className="card-title mt-3">Purchase Orders</h5>
+                            <h5 className="card-title mt-3">Proformal Invoice</h5>
                             <p className="card-text">
-                                View and edit PO details.
+                                View and edit PI details.
                             </p>
                             <Link href="/transaction/pi/addpi">
                                 <button className="btn btn-primary">
-                                    Go to PO
+                                    Go to PI
                                 </button>
                             </Link>
                         </div>
                     </div>
                 </div>
 
-                {/* Store */}
-                <div className="col-md-3">
-                    <div className="card text-center shadow-sm">
-                        <div className="card-body">
-                            <i
-                                className="bi bi-shop"
-                                style={{ fontSize: "2rem", color: "#6c757d" }}
-                            ></i>
-                            <h5 className="card-title mt-3">Store</h5>
-                            <p className="card-text">
-                                Manage your stores and locations.
-                            </p>
-                            <Link href="/master/business/store">
-                                <button className="btn btn-primary">
-                                    Go to Store
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+               
             </div>
 
             <div className="mt-5">
-                <h2>Purchase Orders</h2>
-                {loadingCompanies && <p>Loading POs...</p>}
+                <h2>Proformal Invoice</h2>
+                {loadingCompanies && <p>Loading PIs...</p>}
                 {errorCompanies && (
                     <p className="text-danger">{errorCompanies}</p>
                 )}
                 {!loadingCompanies &&
                     !errorCompanies &&
-                  Invoice.length === 0 && <p>No POs found.</p>}
+                  Invoice.length === 0 && <p>No PIs found.</p>}
                 {!loadingCompanies &&
                     !errorCompanies &&
                     Invoice.length > 0 && (
@@ -149,7 +130,7 @@ export default function POPage() {
                                     <th>Date</th>
                                     <th>Supplier Id</th>
                                     <th>Notes</th>
-                                    <th>Created At</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -161,12 +142,7 @@ export default function POPage() {
                                         <td>{purchase.SupplierId}</td>
                                         <td>{purchase.Notes || "N/A"}</td>
                                         <td>{purchase.Status}</td>
-                                        
-                                        <td>
-                                            {new Date(
-                                                purchase.CreatedAt
-                                            ).toLocaleString()}
-                                        </td>
+                                    
                                         <td>
                                             <button
                                                 className="btn btn-warning btn-sm me-2"
