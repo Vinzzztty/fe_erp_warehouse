@@ -3,13 +3,13 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function EditPurchaseOrder() {
+export default function EditProformalInvoice() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const id = searchParams.get("id"); // Get `id` from query parameters
 
     const [formData, setFormData] = useState({
-        Date: "",
+        Status: "",
         Notes: "",
     });
 
@@ -17,18 +17,19 @@ export default function EditPurchaseOrder() {
         if (!id) return; // Ensure `id` is available
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders/${id}`
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payments/${id}`
             );
             if (!response.ok) throw new Error("Failed to fetch data.");
 
             const data = await response.json();
             console.log("Fetched Purchase Order:", data.data);
             setFormData({
-                Date: data.data.Date,
-                Notes: data.data.Notes,
+                Status: data.data.Status || "",
+                Notes: data.data.Notes || "",
             });
         } catch (error: any) {
-            alert(error.message);
+            console.error("Fetch Error:", error.message);
+            alert(error.message || "An error occurred while fetching data.");
         }
     };
 
@@ -40,7 +41,7 @@ export default function EditPurchaseOrder() {
         e.preventDefault();
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders/${id}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payments/${id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -58,31 +59,39 @@ export default function EditPurchaseOrder() {
             }
 
             alert("Purchase order updated successfully.");
-            router.push("/transaction/po");
+            router.push("/transaction/pi-payment");
         } catch (error: any) {
+            console.error("Update Error:", error.message);
             alert(error.message || "An unexpected error occurred.");
         }
     };
 
     return (
         <div className="container mt-4">
-            <h1>Edit Purchase Order</h1>
+            <h1>Edit PI-Payment</h1>
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                    <label htmlFor="Date" className="form-label">
-                        Date
+                    <label htmlFor="Status" className="form-label">
+                        Status
                     </label>
-                    <input
-                        type="date"
-                        id="Date"
-                        name="Date"
-                        className="form-control"
-                        value={formData.Date}
+                    <select
+                        id="Status"
+                        name="Status"
+                        className="form-select"
+                        value={formData.Status}
                         onChange={(e) =>
-                            setFormData({ ...formData, Date: e.target.value })
-                        }
+                            setFormData({ ...formData, Status: e.target.value })
+                        } // Added `onChange` handler
                         required
-                    />
+                    >
+                        <option value="Unpaid">Unpaid</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Arrived">Arrived</option>
+                        <option value="Inbound">Inbound</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
                 </div>
                 <div className="mb-3">
                     <label htmlFor="Notes" className="form-label">
@@ -95,7 +104,7 @@ export default function EditPurchaseOrder() {
                         value={formData.Notes}
                         onChange={(e) =>
                             setFormData({ ...formData, Notes: e.target.value })
-                        }
+                        } // Added `onChange` handler
                         required
                     ></textarea>
                 </div>
