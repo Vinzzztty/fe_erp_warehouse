@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function UoMPage() {
+export default function ChannelPage() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({
-        Code: "",
         Name: "",
+        Initial: "",
+        Category: "Parent",
         Notes: "",
         Status: "Active",
     });
@@ -31,7 +32,7 @@ export default function UoMPage() {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/uoms`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/channels`,
                 {
                     method: "POST",
                     headers: {
@@ -43,11 +44,11 @@ export default function UoMPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to add UoM.");
+                throw new Error(errorData.message || "Failed to add channel.");
             }
 
             // Navigate back to Product Page on success
-            router.push("/master/product");
+            router.push("/master/product_dashboard");
         } catch (error: any) {
             setErrorMessage(error.message || "An unexpected error occurred.");
         } finally {
@@ -57,36 +58,20 @@ export default function UoMPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Manage Units of Measure (UoM)</h1>
-            <p>Add new UoMs to your system.</p>
+            <h1>Manage Channels</h1>
+            <p>Add new channels to your system.</p>
 
             {/* Error Message */}
             {errorMessage && (
                 <div className="alert alert-danger">{errorMessage}</div>
             )}
 
-            {/* UoM Form */}
+            {/* Channel Form */}
             <form onSubmit={handleSubmit} className="mt-4">
-                {/* Code */}
-                <div className="mb-3">
-                    <label htmlFor="Code" className="form-label">
-                        Code
-                    </label>
-                    <input
-                        type="text"
-                        id="Code"
-                        name="Code"
-                        className="form-control"
-                        value={formData.Code}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Name
+                        Channel Name
                     </label>
                     <input
                         type="text"
@@ -97,6 +82,38 @@ export default function UoMPage() {
                         onChange={handleChange}
                         required
                     />
+                </div>
+
+                {/* Initial */}
+                <div className="mb-3">
+                    <label htmlFor="Initial" className="form-label">
+                        Initial
+                    </label>
+                    <textarea
+                        id="Initial"
+                        name="Initial"
+                        className="form-control"
+                        value={formData.Initial}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                {/* Category */}
+                <div className="mb-3">
+                    <label htmlFor="Category" className="form-label">
+                        Category
+                    </label>
+                    <select
+                        id="Category"
+                        name="Category"
+                        className="form-select"
+                        value={formData.Category}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="Parent">Parent</option>
+                        <option value="Child">Child</option>
+                    </select>
                 </div>
 
                 {/* Notes */}
@@ -137,7 +154,7 @@ export default function UoMPage() {
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add UoM"}
+                    {loading ? "Submitting..." : "Add Channel"}
                 </button>
             </form>
         </div>

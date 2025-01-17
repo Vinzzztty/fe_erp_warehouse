@@ -108,7 +108,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                             isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
-                                            href="/master/product"
+                                            href="/master/product_dashboard"
                                             icon="bi-box"
                                             label="Product"
                                             isSidebarOpen={isSidebarOpen}

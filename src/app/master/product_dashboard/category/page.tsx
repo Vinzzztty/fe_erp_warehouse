@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ChannelPage() {
+export default function CategoryPage() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({
         Name: "",
-        Initial: "",
-        Category: "Parent",
+        SKUCode: "",
         Notes: "",
         Status: "Active",
     });
@@ -32,7 +31,7 @@ export default function ChannelPage() {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/channels`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/categories`,
                 {
                     method: "POST",
                     headers: {
@@ -44,11 +43,11 @@ export default function ChannelPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to add channel.");
+                throw new Error(errorData.message || "Failed to add category.");
             }
 
             // Navigate back to Product Page on success
-            router.push("/master/product");
+            router.push("/master/product_dashboard");
         } catch (error: any) {
             setErrorMessage(error.message || "An unexpected error occurred.");
         } finally {
@@ -58,20 +57,20 @@ export default function ChannelPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Manage Channels</h1>
-            <p>Add new channels to your system.</p>
+            <h1>Manage Categories</h1>
+            <p>Add new categories to your system.</p>
 
             {/* Error Message */}
             {errorMessage && (
                 <div className="alert alert-danger">{errorMessage}</div>
             )}
 
-            {/* Channel Form */}
+            {/* Category Form */}
             <form onSubmit={handleSubmit} className="mt-4">
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Channel Name
+                        Category Name
                     </label>
                     <input
                         type="text"
@@ -84,36 +83,19 @@ export default function ChannelPage() {
                     />
                 </div>
 
-                {/* Initial */}
+                {/* SKU Code */}
                 <div className="mb-3">
-                    <label htmlFor="Initial" className="form-label">
-                        Initial
+                    <label htmlFor="SKUCode" className="form-label">
+                        SKU Code
                     </label>
-                    <textarea
-                        id="Initial"
-                        name="Initial"
+                    <input
+                        type="text"
+                        id="SKUCode"
+                        name="SKUCode"
                         className="form-control"
-                        value={formData.Initial}
+                        value={formData.SKUCode}
                         onChange={handleChange}
                     />
-                </div>
-
-                {/* Category */}
-                <div className="mb-3">
-                    <label htmlFor="Category" className="form-label">
-                        Category
-                    </label>
-                    <select
-                        id="Category"
-                        name="Category"
-                        className="form-select"
-                        value={formData.Category}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="Parent">Parent</option>
-                        <option value="Child">Child</option>
-                    </select>
                 </div>
 
                 {/* Notes */}
@@ -154,7 +136,7 @@ export default function ChannelPage() {
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add Channel"}
+                    {loading ? "Submitting..." : "Add Category"}
                 </button>
             </form>
         </div>
