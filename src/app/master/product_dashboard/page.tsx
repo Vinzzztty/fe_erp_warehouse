@@ -163,7 +163,7 @@ export default function DashboardProductPage() {
                                 <p className="card-text">
                                     Manage your product details and inventory.
                                 </p>
-                                <Link href="/master/product/product">
+                                <Link href="/master/product_dashboard/product">
                                     <button className="btn btn-primary">
                                         Go to Product
                                     </button>
@@ -188,7 +188,7 @@ export default function DashboardProductPage() {
                                     Manage product categories and
                                     classification.
                                 </p>
-                                <Link href="/master/product/category">
+                                <Link href="/master/product_dashboard/category">
                                     <button className="btn btn-primary">
                                         Go to Category
                                     </button>
@@ -212,7 +212,7 @@ export default function DashboardProductPage() {
                                 <p className="card-text">
                                     Manage sales and distribution channels.
                                 </p>
-                                <Link href="/master/product/channel">
+                                <Link href="/master/product_dashboard/channel">
                                     <button className="btn btn-primary">
                                         Go to Channel
                                     </button>
@@ -236,7 +236,7 @@ export default function DashboardProductPage() {
                                 <p className="card-text">
                                     Manage units of measure for your products.
                                 </p>
-                                <Link href="/master/product/uom">
+                                <Link href="/master/product_dashboard/uom">
                                     <button className="btn btn-primary">
                                         Go to UOM
                                     </button>
@@ -260,7 +260,7 @@ export default function DashboardProductPage() {
                                 <p className="card-text">
                                     Manage product variants and options.
                                 </p>
-                                <Link href="/master/product/variant">
+                                <Link href="/master/product_dashboard/variant">
                                     <button className="btn btn-primary">
                                         Go to Variant
                                     </button>
@@ -288,7 +288,6 @@ export default function DashboardProductPage() {
                                 <th>Category Code</th>
                                 <th>Status</th>
                                 <th>Actions</th>
-                                <th>Detail</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -305,14 +304,14 @@ export default function DashboardProductPage() {
                                                 className="btn btn-warning btn-sm me-2"
                                                 onClick={() =>
                                                     router.push(
-                                                        `/master/product/edit/${product.Code}`
+                                                        `/master/product_dashboard/product/edit/${product.Code}`
                                                     )
                                                 }
                                             >
                                                 Edit
                                             </button>
                                             <button
-                                                className="btn btn-danger btn-sm"
+                                                className="btn btn-danger btn-sm me-2"
                                                 onClick={() =>
                                                     handleDelete(
                                                         "products",
@@ -322,8 +321,6 @@ export default function DashboardProductPage() {
                                             >
                                                 Delete
                                             </button>
-                                        </td>
-                                        <td>
                                             <button
                                                 className="btn btn-info btn-sm"
                                                 onClick={() =>
@@ -342,10 +339,224 @@ export default function DashboardProductPage() {
                             )}
                         </tbody>
                     </table>
+
                     {/* Categories Table */}
+                    <h2>Categories</h2>
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>SKUCode</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {categories.length > 0 ? (
+                                categories.map((category: any) => (
+                                    <tr key={category.Code}>
+                                        <td>{category.Code}</td>
+                                        <td>{category.Name}</td>
+                                        <td>{category.SKUCode}</td>
+                                        <td>{category.Notes || "N/A"} </td>
+                                        <td>{category.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/product_dashboard/category/edit/${category.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "categories",
+                                                        category.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6}>No Data available</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+
                     {/* Channels Table */}
+                    <h2>Channels</h2>
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Initial</th>
+                                <th>Category</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {channels.length > 0 ? (
+                                channels.map((channel: any) => (
+                                    <tr key={channel.Code}>
+                                        <td>{channel.Code}</td>
+                                        <td>{channel.Name}</td>
+                                        <td>{channel.Initial}</td>
+                                        <td>{channel.Category}</td>
+                                        <td>{channel.Notes || "N/A"} </td>
+                                        <td>{channel.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/product_dashboard/channel/edit/${channel.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "channels",
+                                                        channel.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6}>No Data available</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+
                     {/* UoMs Table */}
+                    <h2>UoMS</h2>
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {uoms.length > 0 ? (
+                                uoms.map((uom: any) => (
+                                    <tr key={uom.Code}>
+                                        <td>{uom.Code}</td>
+                                        <td>{uom.Name}</td>
+                                        <td>{uom.Notes || "N/A"} </td>
+                                        <td>{uom.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/product_dashboard/uom/edit/${uom.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "uoms",
+                                                        uom.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6}>No Data available</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+
                     {/* Variants Table */}
+                    <h2>Variants</h2>
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {variants.length > 0 ? (
+                                variants.map((variant: any) => (
+                                    <tr key={variant.Code}>
+                                        <td>{variant.Code}</td>
+                                        <td>{variant.Name}</td>
+                                        <td>{variant.Notes || "N/A"} </td>
+                                        <td>{variant.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/product_dashboard/variant/edit/${variant.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "variants",
+                                                        variant.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6}>No Data available</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </>
             )}
 

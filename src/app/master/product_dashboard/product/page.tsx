@@ -128,7 +128,7 @@ export default function ProductPage() {
                 );
             }
 
-            router.push("/master/product");
+            router.push("/master/product_dashboard");
         } catch (error: any) {
             console.error("Error occurred:", error);
             setErrorMessage(error.message || "An unexpected error occurred.");

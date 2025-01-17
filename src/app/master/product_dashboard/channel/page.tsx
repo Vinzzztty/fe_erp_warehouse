@@ -48,7 +48,7 @@ export default function ChannelPage() {
             }
 
             // Navigate back to Product Page on success
-            router.push("/master/product");
+            router.push("/master/product_dashboard");
         } catch (error: any) {
             setErrorMessage(error.message || "An unexpected error occurred.");
         } finally {
