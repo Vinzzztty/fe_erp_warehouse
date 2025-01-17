@@ -8,8 +8,9 @@ export default function CompanyPage() {
 
     const [formData, setFormData] = useState({
         Date: "",
+        PONumber:"",
         SupplierId: "",
-        Notes: "Active",
+        Notes: "",
     });
 
     const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ export default function CompanyPage() {
         try {
             console.log("Submitting data:", formData);
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices`,
                 {
                     method: "POST",
                     headers: {
@@ -56,13 +57,13 @@ export default function CompanyPage() {
                 const errorData = await response.json();
                 console.error("API Error Response:", errorData);
                 throw new Error(
-                    errorData.message || "Failed to create purchase order."
+                    errorData.message || "Failed to create proforma invoice."
                 );
             }
 
-            router.push("/transaction/po");
+            router.push("/transaction/pi");
         } catch (error: any) {
-            console.error("Error Submitting PO:", error);
+            console.error("Error Submitting PI:", error);
             setError(error.message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
@@ -71,7 +72,7 @@ export default function CompanyPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Add Purchase Order</h1>
+            <h1>Add Proforma Invoice</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 <div className="mb-3">
                     <label htmlFor="Date" className="form-label">Date</label>
@@ -109,13 +110,27 @@ export default function CompanyPage() {
                         required
                     />
                 </div>
+                <div className="mb-3">
+                    <label htmlFor="PONumber" className="form-label">PO Number</label>
+                    <input
+                        type="number"
+                        id="PONumber"
+                        name="PONumber"
+                        className="form-select"
+                        value={formData.PONumber}
+                        onChange={handleChange}
+                        required
+                    >
+                    
+                    </input>
+                </div>
 
                 <button
                     type="submit"
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add PO"}
+                    {loading ? "Submitting..." : "Add PI"}
                 </button>
             </form>
 

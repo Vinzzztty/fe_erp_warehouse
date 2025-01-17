@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function CategoryPage() {
+export default function VariantPage() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({
         Name: "",
-        SKUCode: "",
         Notes: "",
         Status: "Active",
     });
@@ -31,7 +30,7 @@ export default function CategoryPage() {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/categories`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/variants`,
                 {
                     method: "POST",
                     headers: {
@@ -43,11 +42,11 @@ export default function CategoryPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to add category.");
+                throw new Error(errorData.message || "Failed to add variant.");
             }
 
             // Navigate back to Product Page on success
-            router.push("/master/product");
+            router.push("/master/product_dashboard");
         } catch (error: any) {
             setErrorMessage(error.message || "An unexpected error occurred.");
         } finally {
@@ -57,20 +56,20 @@ export default function CategoryPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Manage Categories</h1>
-            <p>Add new categories to your system.</p>
+            <h1>Manage Variants</h1>
+            <p>Add new variants to your system.</p>
 
             {/* Error Message */}
             {errorMessage && (
                 <div className="alert alert-danger">{errorMessage}</div>
             )}
 
-            {/* Category Form */}
+            {/* Variant Form */}
             <form onSubmit={handleSubmit} className="mt-4">
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Category Name
+                        Variant Name
                     </label>
                     <input
                         type="text"
@@ -80,21 +79,6 @@ export default function CategoryPage() {
                         value={formData.Name}
                         onChange={handleChange}
                         required
-                    />
-                </div>
-
-                {/* SKU Code */}
-                <div className="mb-3">
-                    <label htmlFor="SKUCode" className="form-label">
-                        SKU Code
-                    </label>
-                    <input
-                        type="text"
-                        id="SKUCode"
-                        name="SKUCode"
-                        className="form-control"
-                        value={formData.SKUCode}
-                        onChange={handleChange}
                     />
                 </div>
 
@@ -136,7 +120,7 @@ export default function CategoryPage() {
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add Category"}
+                    {loading ? "Submitting..." : "Add Variant"}
                 </button>
             </form>
         </div>

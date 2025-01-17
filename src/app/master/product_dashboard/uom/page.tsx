@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function VariantPage() {
+export default function UoMPage() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({
+        Code: "",
         Name: "",
         Notes: "",
         Status: "Active",
@@ -30,7 +31,7 @@ export default function VariantPage() {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/variants`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/uoms`,
                 {
                     method: "POST",
                     headers: {
@@ -42,11 +43,11 @@ export default function VariantPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to add variant.");
+                throw new Error(errorData.message || "Failed to add UoM.");
             }
 
             // Navigate back to Product Page on success
-            router.push("/master/product");
+            router.push("/master/product_dashboard");
         } catch (error: any) {
             setErrorMessage(error.message || "An unexpected error occurred.");
         } finally {
@@ -56,20 +57,36 @@ export default function VariantPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Manage Variants</h1>
-            <p>Add new variants to your system.</p>
+            <h1>Manage Units of Measure (UoM)</h1>
+            <p>Add new UoMs to your system.</p>
 
             {/* Error Message */}
             {errorMessage && (
                 <div className="alert alert-danger">{errorMessage}</div>
             )}
 
-            {/* Variant Form */}
+            {/* UoM Form */}
             <form onSubmit={handleSubmit} className="mt-4">
+                {/* Code */}
+                <div className="mb-3">
+                    <label htmlFor="Code" className="form-label">
+                        Code
+                    </label>
+                    <input
+                        type="text"
+                        id="Code"
+                        name="Code"
+                        className="form-control"
+                        value={formData.Code}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Variant Name
+                        Name
                     </label>
                     <input
                         type="text"
@@ -120,7 +137,7 @@ export default function VariantPage() {
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add Variant"}
+                    {loading ? "Submitting..." : "Add UoM"}
                 </button>
             </form>
         </div>

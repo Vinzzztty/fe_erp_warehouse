@@ -3,13 +3,13 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function EditPurchaseOrder() {
+export default function EditProformalInvoice() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const id = searchParams.get("id"); // Get `id` from query parameters
 
     const [formData, setFormData] = useState({
-        Date: "",
+        Status: "",
         Notes: "",
     });
 
@@ -17,14 +17,14 @@ export default function EditPurchaseOrder() {
         if (!id) return; // Ensure `id` is available
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders/${id}`
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices/${id}`
             );
             if (!response.ok) throw new Error("Failed to fetch data.");
 
             const data = await response.json();
             console.log("Fetched Purchase Order:", data.data);
             setFormData({
-                Date: data.data.Date,
+                Status: data.data.Status,
                 Notes: data.data.Notes,
             });
         } catch (error: any) {
@@ -40,7 +40,7 @@ export default function EditPurchaseOrder() {
         e.preventDefault();
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders/${id}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices/${id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -53,12 +53,12 @@ export default function EditPurchaseOrder() {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(
-                    errorData.message || "Failed to update purchase order."
+                    errorData.message || "Failed to update proforma invoice."
                 );
             }
 
-            alert("Purchase order updated successfully.");
-            router.push("/transaction/po");
+            alert("Proforma Invoice updated successfully.");
+            router.push("/transaction/pi");
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
@@ -77,9 +77,9 @@ export default function EditPurchaseOrder() {
                         id="Date"
                         name="Date"
                         className="form-control"
-                        value={formData.Date}
+                        value={formData.Status}
                         onChange={(e) =>
-                            setFormData({ ...formData, Date: e.target.value })
+                            setFormData({ ...formData, Status: e.target.value })
                         }
                         required
                     />
