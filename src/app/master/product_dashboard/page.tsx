@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 interface Product {
@@ -562,8 +563,14 @@ export default function DashboardProductPage() {
 
             {/* Detail Modal */}
             {selectedProduct && (
-                <div className="modal show" style={{ display: "block" }}>
-                    <div className="modal-dialog">
+                <div
+                    className="modal show"
+                    style={{
+                        display: "block",
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    }}
+                >
+                    <div className="modal-dialog modal-lg">
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Product Details</h5>
@@ -574,66 +581,93 @@ export default function DashboardProductPage() {
                                 ></button>
                             </div>
                             <div className="modal-body">
-                                <p>
-                                    <strong>Code:</strong>{" "}
-                                    {selectedProduct.Code}
-                                </p>
-                                <p>
-                                    <strong>Name:</strong>{" "}
-                                    {selectedProduct.Name}
-                                </p>
-                                <p>
-                                    <strong>CodeName:</strong>{" "}
-                                    {selectedProduct.CodeName}
-                                </p>
-                                <p>
-                                    <strong>SKU Code:</strong>{" "}
-                                    {selectedProduct.SKUCode}
-                                </p>
-                                <p>
-                                    <strong>Category Code:</strong>{" "}
-                                    {selectedProduct.CategoryCode}
-                                </p>
-                                <p>
-                                    <strong>Status:</strong>{" "}
-                                    {selectedProduct.Status}
-                                </p>
-                                <p>
-                                    <strong>Content:</strong>{" "}
-                                    {selectedProduct.Content}
-                                </p>
-                                <p>
-                                    <strong>UoM:</strong> {selectedProduct.UoM}
-                                </p>
-                                <p>
-                                    <strong>Notes:</strong>{" "}
-                                    {selectedProduct.Notes}
-                                </p>
-                                <p>
-                                    <strong>Dimensions:</strong>{" "}
-                                    {selectedProduct.Length} x{" "}
-                                    {selectedProduct.Width} x{" "}
-                                    {selectedProduct.Height}
-                                </p>
-                                <p>
-                                    <strong>Weight:</strong>{" "}
-                                    {selectedProduct.Weight}
-                                </p>
-                                <p>
-                                    <strong>Keyword:</strong>{" "}
-                                    {selectedProduct.Keyword}
-                                </p>
-                                <p>
-                                    <strong>Image URL:</strong>{" "}
-                                    <a
-                                        href={selectedProduct.ImageURL}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        {selectedProduct.ImageURL}
-                                    </a>
-                                </p>
-                                {/* Add more fields as needed */}
+                                <div className="row">
+                                    {/* Product Image */}
+                                    <div className="col-md-5">
+                                        {selectedProduct.ImageURL ? (
+                                            <div className="image-container">
+                                                <Image
+                                                    src={
+                                                        selectedProduct.ImageURL
+                                                    }
+                                                    alt={selectedProduct.Name}
+                                                    layout="responsive"
+                                                    width={500}
+                                                    height={500}
+                                                    objectFit="contain"
+                                                    priority // For faster LCP
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className="d-flex align-items-center justify-content-center"
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    backgroundColor: "#f5f5f5",
+                                                    border: "1px solid #ddd",
+                                                    borderRadius: "8px",
+                                                }}
+                                            >
+                                                <p>No image available</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Product Details */}
+                                    <div className="col-md-7">
+                                        <p>
+                                            <strong>Code:</strong>{" "}
+                                            {selectedProduct.Code}
+                                        </p>
+                                        <p>
+                                            <strong>Name:</strong>{" "}
+                                            {selectedProduct.Name}
+                                        </p>
+                                        <p>
+                                            <strong>CodeName:</strong>{" "}
+                                            {selectedProduct.CodeName}
+                                        </p>
+                                        <p>
+                                            <strong>SKU Code:</strong>{" "}
+                                            {selectedProduct.SKUCode}
+                                        </p>
+                                        <p>
+                                            <strong>Category Code:</strong>{" "}
+                                            {selectedProduct.CategoryCode}
+                                        </p>
+                                        <p>
+                                            <strong>Status:</strong>{" "}
+                                            {selectedProduct.Status}
+                                        </p>
+                                        <p>
+                                            <strong>Content:</strong>{" "}
+                                            {selectedProduct.Content}
+                                        </p>
+                                        <p>
+                                            <strong>UoM:</strong>{" "}
+                                            {selectedProduct.UoM}
+                                        </p>
+                                        <p>
+                                            <strong>Notes:</strong>{" "}
+                                            {selectedProduct.Notes}
+                                        </p>
+                                        <p>
+                                            <strong>Dimensions:</strong>{" "}
+                                            {selectedProduct.Length} x{" "}
+                                            {selectedProduct.Width} x{" "}
+                                            {selectedProduct.Height}
+                                        </p>
+                                        <p>
+                                            <strong>Weight:</strong>{" "}
+                                            {selectedProduct.Weight}
+                                        </p>
+                                        <p>
+                                            <strong>Keyword:</strong>{" "}
+                                            {selectedProduct.Keyword}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             <div className="modal-footer">
                                 <button

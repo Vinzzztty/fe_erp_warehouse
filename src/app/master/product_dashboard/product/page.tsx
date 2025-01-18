@@ -17,6 +17,7 @@ export default function ProductPage() {
         StoreName: "",
         Channel: "",
         Notes: "",
+        Content: "",
         Status: "Active",
     });
 
@@ -102,7 +103,9 @@ export default function ProductPage() {
         if (formData.VariantId)
             formDataToSubmit.append("VariantId", formData.VariantId);
         if (formData.Notes) formDataToSubmit.append("Notes", formData.Notes);
-        if (imageFile) formDataToSubmit.append("ImageURL", imageFile);
+        if (formData.Content)
+            formDataToSubmit.append("Content", formData.Content);
+        if (imageFile) formDataToSubmit.append("file", imageFile);
 
         console.log("Payload being sent:");
         for (let [key, value] of formDataToSubmit.entries()) {
@@ -118,7 +121,17 @@ export default function ProductPage() {
                 }
             );
 
-            console.log("Response Status:", response.status);
+            const contentType = response.headers.get("content-type");
+
+            if (!contentType || !contentType.includes("application/json")) {
+                const errorText = await response.text();
+                throw new Error(
+                    `Unexpected response: ${
+                        errorText || "HTML content received"
+                    }`
+                );
+            }
+
             const responseData = await response.json();
             console.log("Response Data:", responseData);
 
@@ -127,6 +140,14 @@ export default function ProductPage() {
                     responseData.message || "Failed to add product."
                 );
             }
+
+            // Update the formData state with the auto-calculated dimensions
+            setFormData((prev) => ({
+                ...prev,
+                Length: responseData.data.Length,
+                Width: responseData.data.Width,
+                Height: responseData.data.Height,
+            }));
 
             router.push("/master/product_dashboard");
         } catch (error: any) {
@@ -168,7 +189,7 @@ export default function ProductPage() {
                 {/* Code Name */}
                 <div className="mb-3">
                     <label htmlFor="CodeName" className="form-label">
-                        Code Name
+                        Code Name (Auto-generated)
                     </label>
                     <input
                         type="text"
@@ -177,7 +198,40 @@ export default function ProductPage() {
                         className="form-control"
                         value={formData.CodeName}
                         onChange={handleChange}
-                        required
+                        readOnly // Make this field read-only since it is auto-generated
+                    />
+                    <button
+                        type="button"
+                        className="btn btn-secondary mt-2"
+                        onClick={() => {
+                            const words = formData.Name.trim().split(" ");
+                            const firstThreeWords = words.slice(0, 3).join("-");
+                            const randomString = Math.random()
+                                .toString(36)
+                                .substring(2, 6)
+                                .toUpperCase();
+                            const codeName = `${firstThreeWords}-${randomString}`;
+                            setFormData((prev) => ({
+                                ...prev,
+                                CodeName: codeName,
+                            }));
+                        }}
+                    >
+                        Generate Code Name
+                    </button>
+                </div>
+
+                {/* Additional Content */}
+                <div className="mb-3">
+                    <label htmlFor="Content" className="form-label">
+                        Contents
+                    </label>
+                    <textarea
+                        id="Content"
+                        name="Content"
+                        className="form-control"
+                        value={formData.Content}
+                        onChange={handleChange}
                     />
                 </div>
 
@@ -276,6 +330,55 @@ export default function ProductPage() {
                         ))}
                     </select>
                 </div>
+
+                {/* Category */}
+                <div className="mb-3">
+                    <label htmlFor="CategoryCode" className="form-label">
+                        Category
+                    </label>
+                    <select
+                        id="CategoryCode"
+                        name="CategoryCode"
+                        className="form-select"
+                        value={formData.CategoryCode}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="" disabled>
+                            Select a Category
+                        </option>
+                        {categories.map((category: any) => (
+                            <option key={category.Code} value={category.Code}>
+                                {category.Name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Variant */}
+                <div className="mb-3">
+                    <label htmlFor="VariantId" className="form-label">
+                        Variant
+                    </label>
+                    <select
+                        id="VariantId"
+                        name="VariantId"
+                        className="form-select"
+                        value={formData.VariantId}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="" disabled>
+                            Select a Variant
+                        </option>
+                        {variants.map((variant: any) => (
+                            <option key={variant.Code} value={variant.Code}>
+                                {variant.Name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
                 {/* Image Upload */}
                 <div className="mb-3">
                     <label htmlFor="ImageURL" className="form-label">
@@ -313,6 +416,24 @@ export default function ProductPage() {
                         value={formData.Notes}
                         onChange={handleChange}
                     />
+                </div>
+
+                {/* Status */}
+                <div className="mb-3">
+                    <label htmlFor="Status" className="form-label">
+                        Status
+                    </label>
+                    <select
+                        id="Status"
+                        name="Status"
+                        className="form-select"
+                        value={formData.Status}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="Active">Active</option>
+                        <option value="Non-Active">Non-Active</option>
+                    </select>
                 </div>
 
                 {/* Submit Button */}
