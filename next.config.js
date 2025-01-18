@@ -1,4 +1,7 @@
 module.exports = {
+    images: {
+        domains: ["ik.imagekit.io"],
+    },
     reactStrictMode: true,
     async rewrites() {
         return [
