@@ -3,54 +3,64 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
-export default function EditProductPage() {
+export default function EditCategoryPage() {
     const router = useRouter();
     const { id } = useParams();
 
-    // State for the product
-    const [product, setProduct] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // State for form fields
     const [formData, setFormData] = useState({
         Name: "",
         SKUCode: "",
-        ImageURL: "",
+        Notes: "",
         Status: "Active",
     });
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Fetch product data
-    const fetchProduct = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/products/${id}`
-            );
-            if (!response.ok) throw new Error("Failed to fetch product.");
-            const data = await response.json();
-            setProduct(data.data);
-            setFormData({
-                Name: data.data.Name || "",
-                SKUCode: data.data.SKUCode || "",
-                ImageURL: data.data.ImageURL || "",
-                Status: data.data.Status || "Active",
-            });
-        } catch (error: any) {
-            setError(error.message || "An unexpected error occurred.");
-        } finally {
-            setLoading(false);
-        }
+    useEffect(() => {
+        const fetchCategoryDetails = async () => {
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/categories/${id}`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch category details.");
+                }
+                const category = await response.json();
+
+                setFormData({
+                    Name: category.data.Name || "",
+                    SKUCode: category.data.SKUCode || "",
+                    Notes: category.data.Notes || "",
+                    Status: category.data.Status || "Active",
+                });
+            } catch (error: any) {
+                console.error("Error fetching category details:", error);
+                setErrorMessage(
+                    error.message || "Failed to load category details."
+                );
+            }
+        };
+
+        fetchCategoryDetails();
+    }, [id]);
+
+    const handleChange = (
+        e: React.ChangeEvent<
+            HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+        >
+    ) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // Update product
-    const updateProduct = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         setLoading(true);
-        setError(null);
+        setErrorMessage(null);
+
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/products/${id}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/categories/${id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -59,116 +69,103 @@ export default function EditProductPage() {
                     body: JSON.stringify(formData),
                 }
             );
-            if (!response.ok) throw new Error("Failed to update product.");
-            alert("Product updated successfully!");
-            router.push("/master/product");
+
+            if (!response.ok) {
+                const responseData = await response.json();
+                throw new Error(
+                    responseData.message || "Failed to update category."
+                );
+            }
+
+            router.push("/master/product_dashboard");
         } catch (error: any) {
-            setError(error.message || "An unexpected error occurred.");
+            console.error("Error updating category:", error);
+            setErrorMessage(error.message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
         }
     };
 
-    // Handle form input changes
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-    };
-
-    // Fetch product data on mount
-    useEffect(() => {
-        fetchProduct();
-    }, [id]);
-
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div className="text-danger">Error: {error}</div>;
-
     return (
         <div className="container mt-4">
-            <h1>Edit Product</h1>
-            <p>Modify the details of the product below.</p>
+            <h1>Edit Category</h1>
 
-            {product && (
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        updateProduct();
-                    }}
-                >
-                    <div className="mb-3">
-                        <label htmlFor="Name" className="form-label">
-                            Product Name
-                        </label>
-                        <input
-                            type="text"
-                            id="Name"
-                            name="Name"
-                            className="form-control"
-                            value={formData.Name}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-3">
-                        <label htmlFor="SKUCode" className="form-label">
-                            SKU Code
-                        </label>
-                        <input
-                            type="text"
-                            id="SKUCode"
-                            name="SKUCode"
-                            className="form-control"
-                            value={formData.SKUCode}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="mb-3">
-                        <label htmlFor="ImageURL" className="form-label">
-                            Image URL
-                        </label>
-                        <input
-                            type="text"
-                            id="ImageURL"
-                            name="ImageURL"
-                            className="form-control"
-                            value={formData.ImageURL}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="mb-3">
-                        <label htmlFor="Status" className="form-label">
-                            Status
-                        </label>
-                        <select
-                            id="Status"
-                            name="Status"
-                            className="form-select"
-                            value={formData.Status}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Non-Active">Non-Active</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" className="btn btn-primary">
-                        Save Changes
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-secondary ms-2"
-                        onClick={() => router.push("/master/products")}
-                    >
-                        Cancel
-                    </button>
-                </form>
+            {errorMessage && (
+                <div className="alert alert-danger">{errorMessage}</div>
             )}
+
+            <form onSubmit={handleSubmit} className="mt-4">
+                {/* Name */}
+                <div className="mb-3">
+                    <label htmlFor="Name" className="form-label">
+                        Category Name
+                    </label>
+                    <input
+                        type="text"
+                        id="Name"
+                        name="Name"
+                        className="form-control"
+                        value={formData.Name}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                {/* SKU Code */}
+                <div className="mb-3">
+                    <label htmlFor="SKUCode" className="form-label">
+                        SKU Code
+                    </label>
+                    <input
+                        type="text"
+                        id="SKUCode"
+                        name="SKUCode"
+                        className="form-control"
+                        value={formData.SKUCode}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                {/* Notes */}
+                <div className="mb-3">
+                    <label htmlFor="Notes" className="form-label">
+                        Notes
+                    </label>
+                    <textarea
+                        id="Notes"
+                        name="Notes"
+                        className="form-control"
+                        value={formData.Notes}
+                        onChange={handleChange}
+                    ></textarea>
+                </div>
+
+                {/* Status */}
+                <div className="mb-3">
+                    <label htmlFor="Status" className="form-label">
+                        Status
+                    </label>
+                    <select
+                        id="Status"
+                        name="Status"
+                        className="form-select"
+                        value={formData.Status}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="Active">Active</option>
+                        <option value="Non-Active">Non-Active</option>
+                    </select>
+                </div>
+
+                <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                >
+                    {loading ? "Updating..." : "Update Category"}
+                </button>
+            </form>
         </div>
     );
 }
