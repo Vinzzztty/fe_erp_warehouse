@@ -45,7 +45,7 @@ export default function CXQuo() {
         fetchCompanies();
     }, []);
     const handleEdit = (id: string) => {
-        router.push(`/transaction/cx-quotation/edicxquo?id=${id}`);
+        router.push(`/transaction/cx-quotaton/editcxquo?id=${id}`);
     };
 
     const handleDelete = async (id: string) => {
@@ -136,6 +136,7 @@ export default function CXQuo() {
                             <tbody>
                                 {CXQuo.map((purchase: any) => (
                                     <tr key={purchase.Code}>
+                                        <td>{purchase.Code}</td>
                                   
                                         <td>{purchase.Date}</td>
                                    
