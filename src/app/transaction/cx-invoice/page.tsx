@@ -99,7 +99,7 @@ export default function CXInvoice() {
                             <p className="card-text">
                                 View and edit cx-invoice details.
                             </p>
-                            <Link href="/transaction/cx-quotaton/addcxquo">
+                            <Link href="/transaction/cx-invoice/addcxinvoice">
                                 <button className="btn btn-primary">
                                     Add Cx-invoice
                                 </button>
