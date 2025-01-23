@@ -138,25 +138,7 @@ export default function POPage() {
                 </div>
 
                 {/* Store */}
-                <div className="col-md-3">
-                    <div className="card text-center shadow-sm">
-                        <div className="card-body">
-                            <i
-                                className="bi bi-shop"
-                                style={{ fontSize: "2rem", color: "#6c757d" }}
-                            ></i>
-                            <h5 className="card-title mt-3">Store</h5>
-                            <p className="card-text">
-                                Manage your stores and locations.
-                            </p>
-                            <Link href="/master/business/store">
-                                <button className="btn btn-primary">
-                                    Go to Store
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+          
             </div>
 
             <div className="mt-5">
