@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AddPage() {
+export default function goodsPage() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({
@@ -14,34 +14,73 @@ export default function AddPage() {
         Notes: "",
     });
 
-    const [lastMileCodes, setLastMileCodes] = useState<
-        { Code: number; Note: string }[]
-    >([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [loadingLastMileCodes, setLoadingLastMileCodes] = useState(false);
+    const [forwarders, setForwarders] = useState<{ Code: number; Name: string }[]>(
+        []
+    );
+    const [LMCOde, setLM] = useState<{ Code: number; Name: string }[]>(
+        []
+    );
+    const [warehouses, setWarehouse] = useState<{ Code: number; Name: string }[]>(
+        []
+    );
 
     useEffect(() => {
-        const fetchLastMileCodes = async () => {
-            setLoadingLastMileCodes(true);
+        // Fetch forwarder data from API
+        const fetchForwarders = async () => {
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/forwarders`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch forwarder data.");
+                }
+                const data = await response.json();
+                setForwarders(data.data || []);
+            } catch (error) {
+                console.error("Error fetching forwarders:", error);
+                setError("Could not load forwarder data.");
+            }
+        };
+        const fetchLM = async () => {
             try {
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/last-mile`
                 );
                 if (!response.ok) {
-                    throw new Error("Failed to fetch last-mile codes.");
+                    throw new Error("Failed to fetch LM data.");
                 }
                 const data = await response.json();
-                setLastMileCodes([data.data] || []);
+                setLM(data.data || []);
             } catch (error) {
-                console.error("Error fetching last-mile codes:", error);
-                setError("Could not load last-mile codes.");
-            } finally {
-                setLoadingLastMileCodes(false);
+                console.error("Error fetching Lms:", error);
+                setError("Could not load LM data.");
             }
         };
 
-        fetchLastMileCodes();
+        const fetchWarehouse = async () => {
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/warehouses`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch warehouse data.");
+                }
+                const data = await response.json();
+                setWarehouse(data.data || []);
+            } catch (error) {
+                console.error("Error fetching warehouse:", error);
+                setError("Could not load warehouse data.");
+            }
+        };
+
+        fetchLM();
+
+
+        fetchForwarders();
+
+        fetchWarehouse();
     }, []);
 
     const handleChange = (
@@ -53,9 +92,9 @@ export default function AddPage() {
 
         setFormData((prev) => ({
             ...prev,
-            [name]: name === "ForwarderId" || name === "LMCode" || name === "WarehouseId"
-                ? parseInt(value) || ""
-                : value,
+            [name]: name === "ForwarderId" ? parseInt(value) || "" : value,
+            [name]: name === "WarehouseId" ? parseInt(value) || "" : value,
+            [name]: name === "LMCode" ? parseInt(value) || "" : value,
         }));
     };
 
@@ -65,21 +104,14 @@ export default function AddPage() {
         setError(null);
 
         if (!formData.ForwarderId || isNaN(Number(formData.ForwarderId))) {
-            setError("ForwarderId must be a valid number.");
-            setLoading(false);
-            return;
-        }
-
-        if (!formData.LMCode || isNaN(Number(formData.LMCode))) {
-            setError("LMCode must be a valid number.");
+            setError("Forwarder must be selected.");
             setLoading(false);
             return;
         }
 
         try {
-            console.log("Submitting data:", formData);
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotations`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/goods-receipts`,
                 {
                     method: "POST",
                     headers: {
@@ -91,15 +123,14 @@ export default function AddPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error("API Error Response:", errorData);
                 throw new Error(
-                    errorData.message || "Failed to create CX-Quotation."
+                    errorData.message || "Failed to create goods receipt."
                 );
             }
 
-            router.push("/transaction/cx-quotation");
+            router.push("/transaction/goods-receipt");
         } catch (error: any) {
-            console.error("Error Submitting CX-Quotation:", error);
+            console.error("Error submitting goods-receipt:", error);
             setError(error.message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
@@ -108,7 +139,7 @@ export default function AddPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Add CX-Quotation</h1>
+            <h1>Add Goods-receipt</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 <div className="mb-3">
                     <label htmlFor="Date" className="form-label">Date</label>
@@ -124,20 +155,25 @@ export default function AddPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label htmlFor="ForwarderId" className="form-label">Forwarder Id</label>
-                    <input
-                        type="number"
+                    <label htmlFor="ForwarderId" className="form-label">Forwarder</label>
+                    <select
                         id="ForwarderId"
                         name="ForwarderId"
-                        className="form-control"
+                        className="form-select"
                         value={formData.ForwarderId}
                         onChange={handleChange}
                         required
-                    />
+                    >
+                        <option value="">Select a Forwarder</option>
+                        {forwarders.map((forwarder) => (
+                            <option key={forwarder.Code} value={forwarder.Code}>
+                                {forwarder.Name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-
                 <div className="mb-3">
-                    <label htmlFor="LMCode" className="form-label">Last Mile Code</label>
+                    <label htmlFor="LMCode" className="form-label">Last-mile's Codes</label>
                     <select
                         id="LMCode"
                         name="LMCode"
@@ -146,32 +182,31 @@ export default function AddPage() {
                         onChange={handleChange}
                         required
                     >
-                        <option value="">Select a Last Mile Code</option>
-                        {loadingLastMileCodes ? (
-                            <option disabled>Loading Last Mile Codes...</option>
-                        ) : lastMileCodes.length > 0 ? (
-                            lastMileCodes.map((lm) => (
-                                <option key={lm.Code} value={lm.Code}>
-                                    {lm.Code} - {lm.Note}
-                                </option>
-                            ))
-                        ) : (
-                            <option disabled>No Last Mile Codes Available</option>
-                        )}
+                        <option value="">Select a Code</option>
+                        {LMCOde.map((lm) => (
+                            <option key={lm.Code} value={lm.Code}>
+                                {lm.Name}
+                            </option>
+                        ))}
                     </select>
                 </div>
-
                 <div className="mb-3">
-                    <label htmlFor="WarehouseId" className="form-label">Warehouse Id</label>
-                    <input
-                        type="number"
+                    <label htmlFor="WarehouseId" className="form-label">Warehouse</label>
+                    <select
                         id="WarehouseId"
                         name="WarehouseId"
-                        className="form-control"
+                        className="form-select"
                         value={formData.WarehouseId}
                         onChange={handleChange}
                         required
-                    />
+                    >
+                        <option value="">Select a warehouse</option>
+                        {warehouses.map((lm) => (
+                            <option key={lm.Code} value={lm.Code}>
+                                {lm.Name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="mb-3">
