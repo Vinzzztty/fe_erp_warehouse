@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function CXInvoice() {
-    const [CxInvoice, setCxInvoice] = useState([]);
+export default function Lastmile() {
+    const [Lm, setLm] = useState([]);
     const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
         // Fetch Companies
-        const fetchCx = async () => {
+        const fetchLm = async () => {
             setLoadingCompanies(true);
             setErrorCompanies(null);
             try {
@@ -25,11 +25,11 @@ export default function CXInvoice() {
                 const data = await response.json();
                 if (data.status.code !== 200) {
                     throw new Error(
-                        data.status.message || "Failed to fetch CX Invoices."
+                        data.status.message || "Failed to fetch Last-miles."
                     );
                 }
-                setCxInvoice(data.data);
-                console.log("Fetched CX Invoices:", data.data);
+                setLm(data.data);
+                console.log("Fetched Lms:", data.data);
 
             } catch (error: any) {
                 setErrorCompanies(
@@ -42,10 +42,10 @@ export default function CXInvoice() {
 
         // Fetch Stores
         
-        fetchCx();
+        fetchLm();
     }, []);
     const handleEdit = (id: string) => {
-        router.push(`/transaction/cx-invoice/last-mile?id=${id}`);
+        router.push(`/transaction/last-mile/editlastmile?id=${id}`);
     };
 
     const handleDelete = async (id: string) => {
@@ -68,8 +68,8 @@ export default function CXInvoice() {
             }
     
             // Update state to remove deleted item
-            setCxInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== id));
-            alert("CX invoices deleted successfully.");
+            setLm((prev) => prev.filter((purchase: any) => purchase.Code !== id));
+            alert("last-mile deleted successfully.");
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
@@ -95,13 +95,13 @@ export default function CXInvoice() {
                                 className="bi bi-building"
                                 style={{ fontSize: "2rem", color: "#6c757d" }}
                             ></i>
-                            <h5 className="card-title mt-3">CX-Invoices</h5>
+                            <h5 className="card-title mt-3">Last-miles</h5>
                             <p className="card-text">
-                                View and edit cx-invoice details.
+                                View and edit Last-mile details.
                             </p>
-                            <Link href="/transaction/cx-invoice/addcxinvoice">
+                            <Link href="/transaction/last-mile/addlastmile">
                                 <button className="btn btn-primary">
-                                    Add Cx-invoice
+                                    Add last mile
                                 </button>
                             </Link>
                         </div>
@@ -112,17 +112,17 @@ export default function CXInvoice() {
             </div>
 
             <div className="mt-5">
-                <h2>CX-Invoice</h2>
-                {loadingCompanies && <p>Loading CX-Invoices...</p>}
+                <h2>Last-miles</h2>
+                {loadingCompanies && <p>Loading Last-miles...</p>}
                 {errorCompanies && (
                     <p className="text-danger">{errorCompanies}</p>
                 )}
                 {!loadingCompanies &&
                     !errorCompanies &&
-                  CxInvoice.length === 0 && <p>No CX-Quotations found.</p>}
+                  Lm.length === 0 && <p>No  found.</p>}
                 {!loadingCompanies &&
                     !errorCompanies &&
-                    CxInvoice.length > 0 && (
+                    Lm.length > 0 && (
                         <table className="table table-bordered mt-3">
                             <thead>
                                 <tr>
@@ -134,7 +134,7 @@ export default function CXInvoice() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {CxInvoice.map((purchase: any) => (
+                                {Lm.map((purchase: any) => (
                                     <tr key={purchase.Code}>
                                         <td>{purchase.Code}</td>
                                   
