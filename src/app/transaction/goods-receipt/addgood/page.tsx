@@ -16,15 +16,13 @@ export default function GoodsPage() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [forwarders, setForwarders] = useState<{ Code: number; Name: string }[]>(
-        []
-    );
-    const [LMCOde, setLM] = useState<{ Code: number; Name: string }[]>(
-        []
-    );
-    const [warehouses, setWarehouse] = useState<{ Code: number; Name: string }[]>(
-        []
-    );
+    const [forwarders, setForwarders] = useState<
+        { Code: number; Name: string }[]
+    >([]);
+    const [LMCOde, setLM] = useState<{ Code: number; Name: string }[]>([]);
+    const [warehouses, setWarehouse] = useState<
+        { Code: number; Name: string }[]
+    >([]);
 
     useEffect(() => {
         // Fetch forwarder data from API
@@ -76,7 +74,6 @@ export default function GoodsPage() {
         };
 
         fetchLM();
-
 
         fetchForwarders();
 
@@ -142,7 +139,9 @@ export default function GoodsPage() {
             <h1>Add Goods-receipt</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 <div className="mb-3">
-                    <label htmlFor="Date" className="form-label">Date</label>
+                    <label htmlFor="Date" className="form-label">
+                        Date
+                    </label>
                     <input
                         type="date"
                         id="Date"
@@ -155,7 +154,9 @@ export default function GoodsPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label htmlFor="ForwarderId" className="form-label">Forwarder</label>
+                    <label htmlFor="ForwarderId" className="form-label">
+                        Forwarder
+                    </label>
                     <select
                         id="ForwarderId"
                         name="ForwarderId"
@@ -173,7 +174,9 @@ export default function GoodsPage() {
                     </select>
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="LMCode" className="form-label">Last-mile's Codes</label>
+                    <label htmlFor="LMCode" className="form-label">
+                        Last-miles Codes
+                    </label>
                     <select
                         id="LMCode"
                         name="LMCode"
@@ -191,7 +194,9 @@ export default function GoodsPage() {
                     </select>
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="WarehouseId" className="form-label">Warehouse</label>
+                    <label htmlFor="WarehouseId" className="form-label">
+                        Warehouse
+                    </label>
                     <select
                         id="WarehouseId"
                         name="WarehouseId"
@@ -210,7 +215,9 @@ export default function GoodsPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label htmlFor="Notes" className="form-label">Notes</label>
+                    <label htmlFor="Notes" className="form-label">
+                        Notes
+                    </label>
                     <textarea
                         id="Notes"
                         name="Notes"

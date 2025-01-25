@@ -109,57 +109,57 @@ export default function GoodsReceipt() {
             <div className="mt-5">
                 <h2>Good-receipt</h2>
                 {loadingCompanies && <p>Loading Good-receipt...</p>}
-                {errorCompanies && <p className="text-danger">{errorCompanies}</p>}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    gr.length === 0 && <p>No records found.</p>}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    gr.length > 0 && (
-                        <table className="table table-bordered mt-3">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Date</th>
-                                    <th>Forwarder ID</th>
-                                    <th>Last-mile's Code</th>
-                                    <th>Warehouse Id</th>
-                                    <th>Notes</th>
-                                    <th>Action</th>
+                {errorCompanies && (
+                    <p className="text-danger">{errorCompanies}</p>
+                )}
+                {!loadingCompanies && !errorCompanies && gr.length === 0 && (
+                    <p>No records found.</p>
+                )}
+                {!loadingCompanies && !errorCompanies && gr.length > 0 && (
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Date</th>
+                                <th>Forwarder ID</th>
+                                <th>Last-miles Code</th>
+                                <th>Warehouse Id</th>
+                                <th>Notes</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {gr.map((purchase: any) => (
+                                <tr key={purchase.Code}>
+                                    <td>{purchase.Code}</td>
+                                    <td>{purchase.Date}</td>
+                                    <td>{purchase.ForwarderId}</td>
+                                    <td>{purchase.LMCode}</td>
+                                    <td>{purchase.WarehouseId}</td>
+                                    <td>{purchase.Notes}</td>
+                                    <td>
+                                        <button
+                                            className="btn btn-warning btn-sm me-2"
+                                            onClick={() =>
+                                                handleEdit(purchase.Code)
+                                            }
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            className="btn btn-danger btn-sm"
+                                            onClick={() =>
+                                                handleDelete(purchase.Code)
+                                            }
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {gr.map((purchase: any) => (
-                                    <tr key={purchase.Code}>
-                                        <td>{purchase.Code}</td>
-                                        <td>{purchase.Date}</td>
-                                        <td>{purchase.ForwarderId}</td>
-                                        <td>{purchase.LMCode}</td>
-                                        <td>{purchase.WarehouseId}</td>
-                                        <td>{purchase.Notes}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-warning btn-sm me-2"
-                                                onClick={() =>
-                                                    handleEdit(purchase.Code)
-                                                }
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() =>
-                                                    handleDelete(purchase.Code)
-                                                }
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </div>
     );
