@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function goodsPage() {
+export default function GoodsPage() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({

@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function goodsReceipt() {
+export default function GoodsReceipt() {
     const [gr, setGr] = useState([]);
     const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
-        // Fetch Companies
-        const fetchGr= async () => {
+        // Fetch Goods Receipts
+        const fetchGr = async () => {
             setLoadingCompanies(true);
             setErrorCompanies(null);
             try {
@@ -30,7 +30,6 @@ export default function goodsReceipt() {
                 }
                 setGr(data.data);
                 console.log("Fetched GRs:", data.data);
-
             } catch (error: any) {
                 setErrorCompanies(
                     error.message || "An unexpected error occurred."
@@ -40,18 +39,19 @@ export default function goodsReceipt() {
             }
         };
 
-        // Fetch Stores
-        
         fetchGr();
     }, []);
+
     const handleEdit = (id: string) => {
         router.push(`/transaction/goods-receipt/editgood?id=${id}`);
     };
 
     const handleDelete = async (id: string) => {
-        const confirmDelete = confirm("Are you sure you want to delete this good-receipt?");
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this good-receipt?"
+        );
         if (!confirmDelete) return;
-    
+
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/goods-receipts/${id}`,
@@ -59,24 +59,23 @@ export default function goodsReceipt() {
                     method: "DELETE",
                 }
             );
-    
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(
                     errorData.message || "Failed to delete good-receipt."
                 );
             }
-    
+
             // Update state to remove deleted item
-            setGr((prev) => prev.filter((purchase: any) => purchase.Code !== id));
-            alert("good-receipt deleted successfully.");
+            setGr((prev) =>
+                prev.filter((purchase: any) => purchase.Code !== id)
+            );
+            alert("Good-receipt deleted successfully.");
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
     };
-    
-    
-    
 
     return (
         <div className="container mt-4">
@@ -86,8 +85,6 @@ export default function goodsReceipt() {
             <p>View and manage Good-receipt here.</p>
 
             <div className="row mt-4">
-
-                {/* Company */}
                 <div className="col-md-3">
                     <div className="card text-center shadow-sm">
                         <div className="card-body">
@@ -107,19 +104,15 @@ export default function goodsReceipt() {
                         </div>
                     </div>
                 </div>
-
-               
             </div>
 
             <div className="mt-5">
                 <h2>Good-receipt</h2>
                 {loadingCompanies && <p>Loading Good-receipt...</p>}
-                {errorCompanies && (
-                    <p className="text-danger">{errorCompanies}</p>
-                )}
+                {errorCompanies && <p className="text-danger">{errorCompanies}</p>}
                 {!loadingCompanies &&
                     !errorCompanies &&
-                  gr.length === 0 && <p>No  found.</p>}
+                    gr.length === 0 && <p>No records found.</p>}
                 {!loadingCompanies &&
                     !errorCompanies &&
                     gr.length > 0 && (
@@ -139,15 +132,11 @@ export default function goodsReceipt() {
                                 {gr.map((purchase: any) => (
                                     <tr key={purchase.Code}>
                                         <td>{purchase.Code}</td>
-                                  
                                         <td>{purchase.Date}</td>
-                                   
                                         <td>{purchase.ForwarderId}</td>
                                         <td>{purchase.LMCode}</td>
                                         <td>{purchase.WarehouseId}</td>
                                         <td>{purchase.Notes}</td>
-                                        
-                                    
                                         <td>
                                             <button
                                                 className="btn btn-warning btn-sm me-2"
