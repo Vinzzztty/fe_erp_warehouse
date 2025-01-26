@@ -3,17 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function StorePage() {
+export default function AddStorePage() {
     const router = useRouter();
-
     const [formData, setFormData] = useState({
         Name: "",
         Notes: "",
         Status: "Active",
     });
-
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleChange = (
         e: React.ChangeEvent<
@@ -30,7 +28,7 @@ export default function StorePage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
+        setErrorMessage(null);
 
         try {
             const response = await fetch(
@@ -46,13 +44,13 @@ export default function StorePage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to create store.");
+                throw new Error(errorData.message || "Failed to add store.");
             }
 
-            // Redirect to Store List Page or Refresh Page After Successful Submission
+            // Navigate back to the main page on success
             router.push("/master/business");
         } catch (error: any) {
-            setError(error.message || "An unexpected error occurred.");
+            setErrorMessage(error.message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
         }
@@ -61,6 +59,14 @@ export default function StorePage() {
     return (
         <div className="container mt-4">
             <h1>Add New Store</h1>
+            <p>Fill in the details below to add a new store to the system.</p>
+
+            {/* Error Message */}
+            {errorMessage && (
+                <div className="alert alert-danger">{errorMessage}</div>
+            )}
+
+            {/* Store Form */}
             <form onSubmit={handleSubmit} className="mt-4">
                 {/* Name Field */}
                 <div className="mb-3">
@@ -89,6 +95,7 @@ export default function StorePage() {
                         className="form-control"
                         value={formData.Notes}
                         onChange={handleChange}
+                        rows={4}
                     />
                 </div>
 
@@ -119,9 +126,6 @@ export default function StorePage() {
                     {loading ? "Submitting..." : "Add Store"}
                 </button>
             </form>
-
-            {/* Error Message */}
-            {error && <div className="alert alert-danger mt-4">{error}</div>}
         </div>
     );
 }
