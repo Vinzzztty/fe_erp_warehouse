@@ -1,74 +1,104 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function BusinessPage() {
+    const router = useRouter();
+
     const [companies, setCompanies] = useState([]);
     const [stores, setStores] = useState([]);
-    const [loadingCompanies, setLoadingCompanies] = useState(false);
-    const [loadingStores, setLoadingStores] = useState(false);
-    const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
-    const [errorStores, setErrorStores] = useState<string | null>(null);
+    const [suppliers, setSuppliers] = useState([]);
+    const [forwarders, setForwarders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fetch Companies
-        const fetchCompanies = async () => {
-            setLoadingCompanies(true);
-            setErrorCompanies(null);
+        const fetchData = async () => {
             try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/companies`
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch companies.");
+                const [companiesRes, storesRes, suppliersRes, forwardersRes] =
+                    await Promise.all([
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/companies`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/stores`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/suppliers`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/forwarders`
+                        ),
+                    ]);
+                if (
+                    !companiesRes.ok ||
+                    !storesRes.ok ||
+                    !suppliersRes.ok ||
+                    !forwardersRes.ok
+                ) {
+                    throw new Error("Failed to fetch data");
                 }
-                const data = await response.json();
-                if (data.status.code !== 200) {
-                    throw new Error(
-                        data.status.message || "Failed to fetch companies."
-                    );
-                }
-                setCompanies(data.data);
+
+                const [
+                    companiesData,
+                    storesData,
+                    suppliersData,
+                    forwardersData,
+                ] = await Promise.all([
+                    companiesRes.json(),
+                    storesRes.json(),
+                    suppliersRes.json(),
+                    forwardersRes.json(),
+                ]);
+
+                setCompanies(companiesData?.data || []);
+                setStores(storesData?.data || []);
+                setSuppliers(suppliersData?.data || []);
+                setForwarders(forwardersData?.data || []);
             } catch (error: any) {
-                setErrorCompanies(
+                setErrorMessage(
                     error.message || "An unexpected error occurred."
                 );
             } finally {
-                setLoadingCompanies(false);
+                setLoading(false);
             }
         };
 
-        // Fetch Stores
-        const fetchStores = async () => {
-            setLoadingStores(true);
-            setErrorStores(null);
-            try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/stores`
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch stores.");
-                }
-                const data = await response.json();
-                if (data.status.code !== 200) {
-                    throw new Error(
-                        data.status.message || "Failed to fetch stores."
-                    );
-                }
-                setStores(data.data);
-            } catch (error: any) {
-                setErrorStores(
-                    error.message || "An unexpected error occurred."
-                );
-            } finally {
-                setLoadingStores(false);
-            }
-        };
-
-        fetchCompanies();
-        fetchStores();
+        fetchData();
     }, []);
+
+    const handleDelete = async (endpoint: string, id: number) => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}/${id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to delete item.");
+            }
+
+            // Refresh the data after deletion
+            const fetchData = async () => {
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
+                );
+                const data = await res.json();
+                return data?.data || [];
+            };
+
+            if (endpoint === "companies") setCompanies(await fetchData());
+            if (endpoint === "stores") setStores(await fetchData());
+            if (endpoint === "suppliers") setSuppliers(await fetchData());
+            if (endpoint === "forwarders") setForwarders(await fetchData());
+        } catch (error: any) {
+            alert(error.message || "An unexpected error occurred.");
+        }
+    };
 
     return (
         <div className="container mt-4">
@@ -76,6 +106,9 @@ export default function BusinessPage() {
                 <i className="bi bi-building me-2"></i> Business
             </h1>
             <p>View and manage your business-related data here.</p>
+            {errorMessage && (
+                <div className="alert alert-danger">{errorMessage}</div>
+            )}
 
             <div className="row mt-4">
                 {/* Supplier */}
@@ -162,21 +195,15 @@ export default function BusinessPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Companies List */}
-            <div className="mt-5">
-                <h2>Companies</h2>
-                {loadingCompanies && <p>Loading companies...</p>}
-                {errorCompanies && (
-                    <p className="text-danger">{errorCompanies}</p>
-                )}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    companies.length === 0 && <p>No companies found.</p>}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    companies.length > 0 && (
-                        <table className="table table-bordered mt-3">
+            {/* Data Tables */}
+            {loading ? (
+                <p className="text-center mt-5">Loading data.....</p>
+            ) : (
+                <>
+                    {/* Comapanies Table */}
+                    <div className="mt-5">
+                        <h2>Companies</h2>
+                        <table className="table table-bordered">
                             <thead>
                                 <tr>
                                     <th>Code</th>
@@ -184,6 +211,7 @@ export default function BusinessPage() {
                                     <th>Notes</th>
                                     <th>Status</th>
                                     <th>Created At</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -198,50 +226,219 @@ export default function BusinessPage() {
                                                 company.createdAt
                                             ).toLocaleString()}
                                         </td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/business/company/edit/${company.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "companies",
+                                                        company.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                    )}
-            </div>
+                    </div>
 
-            {/* Stores List */}
-            <div className="mt-5">
-                <h2>Stores</h2>
-                {loadingStores && <p>Loading stores...</p>}
-                {errorStores && <p className="text-danger">{errorStores}</p>}
-                {!loadingStores && !errorStores && stores.length === 0 && (
-                    <p>No stores found.</p>
-                )}
-                {!loadingStores && !errorStores && stores.length > 0 && (
-                    <table className="table table-bordered mt-3">
-                        <thead>
-                            <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th>Notes</th>
-                                <th>Status</th>
-                                <th>Created At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {stores.map((store: any) => (
-                                <tr key={store.Code}>
-                                    <td>{store.Code}</td>
-                                    <td>{store.Name}</td>
-                                    <td>{store.Notes || "N/A"}</td>
-                                    <td>{store.Status}</td>
-                                    <td>
-                                        {new Date(
-                                            store.createdAt
-                                        ).toLocaleString()}
-                                    </td>
+                    <div className="mt-5">
+                        <h2>Suppliers</h2>
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Address</th>
+                                    <th>City</th>
+                                    <th>Province</th>
+                                    <th>Country</th>
+                                    <th>Notes</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
+                            </thead>
+                            <tbody>
+                                {suppliers.map((supplier: any) => (
+                                    <tr key={supplier.Code}>
+                                        <td>{supplier.Code}</td>
+                                        <td>{supplier.Name}</td>
+                                        <td>{supplier.Address}</td>
+                                        <td>{supplier.City?.Name || "N/A"}</td>
+                                        <td>
+                                            {supplier.Province?.Name || "N/A"}
+                                        </td>
+                                        <td>
+                                            {supplier.Country?.Name || "N/A"}
+                                        </td>
+                                        <td>{supplier.Notes || "N/A"}</td>
+                                        <td>{supplier.Status}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/business/supplier/edit/${supplier.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "suppliers",
+                                                        supplier.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="mt-5">
+                        <h2>Forwarders</h2>
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Notes</th>
+                                    <th>Country</th>
+                                    <th>Address</th>
+                                    <th>Status</th>
+                                    <th>Contact Method</th>
+                                    <th>Website</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {forwarders.map((forwarder: any) => (
+                                    <tr key={forwarder.Code}>
+                                        <td>{forwarder.Code}</td>
+                                        <td>{forwarder.Name}</td>
+                                        <td>{forwarder.Notes || "N/A"}</td>
+                                        <td>
+                                            {forwarder.Country?.Name || "N/A"}
+                                        </td>
+                                        <td>
+                                            {forwarder.AddressIndonesia ||
+                                                "N/A"}
+                                        </td>
+                                        <td>{forwarder.Status}</td>
+                                        <td>{forwarder.ContactMethod}</td>
+                                        <td>
+                                            <a
+                                                href={forwarder.Website}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                {forwarder.Website}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/business/forwarder/edit/${forwarder.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "forwarders",
+                                                        forwarder.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="mt-5">
+                        <h2>Stores</h2>
+                        <table className="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Notes</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stores.map((store: any) => (
+                                    <tr key={store.Code}>
+                                        <td>{store.Code}</td>
+                                        <td>{store.Name}</td>
+                                        <td>{store.Notes || "N/A"}</td>
+                                        <td>{store.Status}</td>
+                                        <td>
+                                            {new Date(
+                                                store.createdAt
+                                            ).toLocaleString()}
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/master/business/store/edit/${store.Code}`
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        "stores",
+                                                        store.Code
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
