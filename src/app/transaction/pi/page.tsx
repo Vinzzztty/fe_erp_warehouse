@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+// Define the type for the detail modal data
 interface ProformaInvoiceDetail {
     Id: number;
     ProformaInvoiceId: number;
@@ -29,6 +30,7 @@ interface ProformaInvoiceDetail {
     Total: string;
     createdAt: string;
     updatedAt: string;
+    Code?: string; // Ensure Code is optional but included
 }
 
 export default function POPage() {
@@ -38,10 +40,11 @@ export default function POPage() {
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
     const [errorDetail, setErrorDetail] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
     const router = useRouter();
 
     useEffect(() => {
+        // Fetch Companies
         const fetchCompanies = async () => {
             setLoadingCompanies(true);
             setErrorCompanies(null);
@@ -68,8 +71,12 @@ export default function POPage() {
         fetchCompanies();
     }, []);
 
-    const handleEdit = (id: string) => {
-        router.push(`/transaction/pi/editpi?id=${id}`);
+    const handleEdit = (code: string) => {
+        router.push(`/transaction/pi/editpi?id=${code}`);
+    };
+
+    const handleAddDetail = (code: string) => {
+        router.push(`/transaction/pi/adddetailpi?id=${code}`);
     };
 
     const handleDetails = async (id: string) => {
@@ -86,7 +93,7 @@ export default function POPage() {
             if (data.status.code !== 200) {
                 throw new Error(data.status.message || "Failed to fetch details.");
             }
-            setSelectedDetail(data.data);
+            setSelectedDetail({ ...data.data, Code: id }); // Ensure Code is included
             setIsModalOpen(true);
         } catch (error: any) {
             setErrorDetail(error.message || "An unexpected error occurred.");
@@ -95,13 +102,13 @@ export default function POPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (code: string) => {
         const confirmDelete = confirm("Are you sure you want to delete this proforma invoice?");
         if (!confirmDelete) return;
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices/${id}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices/${code}`,
                 {
                     method: "DELETE",
                 }
@@ -112,16 +119,12 @@ export default function POPage() {
                 throw new Error(errorData.message || "Failed to delete purchase order.");
             }
 
-            setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== id));
+            setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== code));
             alert("Purchase order deleted successfully.");
-            setIsModalOpen(false);
+            setIsModalOpen(false); // Close modal after deletion
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
-    };
-
-    const handleAddDetail = (id: string) => {
-        router.push(`/transaction/pi/adddetailpi?id=${id}`);
     };
 
     const handleCloseModal = () => {
@@ -131,11 +134,12 @@ export default function POPage() {
     return (
         <div className="container mt-4">
             <h1>
-                <i className="bi bi-building me-2"></i> Proformal Invoice
+                <i className="bi bi-building me-2"></i> Proforma Invoice
             </h1>
             <p>View and manage your orders here.</p>
 
             <div className="row mt-4">
+                {/* Company */}
                 <div className="col-md-3">
                     <div className="card text-center shadow-sm">
                         <div className="card-body">
@@ -143,10 +147,8 @@ export default function POPage() {
                                 className="bi bi-building"
                                 style={{ fontSize: "2rem", color: "#6c757d" }}
                             ></i>
-                            <h5 className="card-title mt-3">Proformal Invoice</h5>
-                            <p className="card-text">
-                                View and edit PI details.
-                            </p>
+                            <h5 className="card-title mt-3">Proforma Invoice</h5>
+                            <p className="card-text">View and edit PI details.</p>
                             <Link href="/transaction/pi/addpi">
                                 <button className="btn btn-primary">Go to PI</button>
                             </Link>
@@ -156,7 +158,7 @@ export default function POPage() {
             </div>
 
             <div className="mt-5">
-                <h2>Proformal Invoice</h2>
+                <h2>Proforma Invoice</h2>
                 {loadingCompanies && <p>Loading PIs...</p>}
                 {errorCompanies && <p className="text-danger">{errorCompanies}</p>}
                 {!loadingCompanies && !errorCompanies && Invoice.length === 0 && <p>No PIs found.</p>}
@@ -207,6 +209,7 @@ export default function POPage() {
                 )}
             </div>
 
+            {/* Detail Modal */}
             {isModalOpen && selectedDetail && (
                 <div
                     className="modal show"
@@ -219,11 +222,7 @@ export default function POPage() {
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Proforma Invoice Detail</h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    onClick={handleCloseModal}
-                                ></button>
+                                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
                             </div>
                             <div className="modal-body">
                                 {loadingDetail ? (
@@ -239,8 +238,7 @@ export default function POPage() {
                                             <strong>QTY Ordered:</strong> {selectedDetail.QTYOrdered}
                                         </p>
                                         <p>
-                                            <strong>Unit Price Ordered:</strong>{" "}
-                                            {selectedDetail.UnitPriceOrdered}
+                                            <strong>Unit Price Ordered:</strong> {selectedDetail.UnitPriceOrdered}
                                         </p>
                                         <p>
                                             <strong>Total:</strong> {selectedDetail.Total}
@@ -252,53 +250,28 @@ export default function POPage() {
                                 )}
                             </div>
                             <div className="modal-footer">
-    <button
-        className="btn btn-secondary"
-        onClick={handleCloseModal}
-    >
-        Close
-    </button>
-    <button
-        className="btn btn-primary"
-        onClick={() => {
-            if (selectedDetail?.ProformaInvoiceId) {
-                handleEdit(selectedDetail.ProformaInvoiceId.toString());
-            } else {
-                console.error("ProformaInvoiceId is undefined.");
-                alert("Cannot edit: Proforma Invoice ID is missing.");
-            }
-        }}
-    >
-        Edit
-    </button>
-    <button
-        className="btn btn-danger"
-        onClick={() => {
-            if (selectedDetail?.ProformaInvoiceId) {
-                handleDelete(selectedDetail.ProformaInvoiceId.toString());
-            } else {
-                console.error("ProformaInvoiceId is undefined.");
-                alert("Cannot delete: Proforma Invoice ID is missing.");
-            }
-        }}
-    >
-        Delete
-    </button>
-    <button
-        className="btn btn-success"
-        onClick={() => {
-            if (selectedDetail?.ProformaInvoiceId) {
-                handleAddDetail(selectedDetail.ProformaInvoiceId.toString());
-            } else {
-                console.error("ProformaInvoiceId is undefined.");
-                alert("Cannot add detail: Proforma Invoice ID is missing.");
-            }
-        }}
-    >
-        Add Detail
-    </button>
-</div>
-
+                                <button className="btn btn-secondary" onClick={handleCloseModal}>
+                                    Close
+                                </button>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => handleEdit(selectedDetail.Code!)}
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={() => handleDelete(selectedDetail.Code!)}
+                                >
+                                    Delete
+                                </button>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={() => handleAddDetail(selectedDetail.Code!)}
+                                >
+                                    Add Detail
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
