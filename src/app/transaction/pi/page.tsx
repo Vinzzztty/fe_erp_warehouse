@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Define the type for the detail modal data
 interface ProformaInvoiceDetail {
     Id: number;
     ProformaInvoiceId: number;
@@ -30,7 +29,7 @@ interface ProformaInvoiceDetail {
     Total: string;
     createdAt: string;
     updatedAt: string;
-    Code?: string; // Ensure Code is optional but included
+    Code?: string;
 }
 
 export default function POPage() {
@@ -40,11 +39,14 @@ export default function POPage() {
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
     const [errorDetail, setErrorDetail] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalLoading, setIsModalLoading] = useState(true); // To handle modal loading state
     const router = useRouter();
+    const [piCode, setPiCode] = useState<string>(""); // Add a state to store piCode
+
+ 
 
     useEffect(() => {
-        // Fetch Companies
         const fetchCompanies = async () => {
             setLoadingCompanies(true);
             setErrorCompanies(null);
@@ -78,27 +80,43 @@ export default function POPage() {
     const handleAddDetail = (code: string) => {
         router.push(`/transaction/pi/adddetailpi?id=${code}`);
     };
+    const handleEditDetail = (code: string) => {
+        router.push(`/transaction/pi/editpidetail?id=${code}`);
+    };
 
-    const handleDetails = async (id: string) => {
+    const handleDetails = async (code: string) => {
         setLoadingDetail(true);
+        setIsModalLoading(true); // Set the modal to loading state
         setErrorDetail(null);
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices/${id}`
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoice-details/by-proforma-invoice/${code}`
             );
             if (!response.ok) {
                 throw new Error("Failed to fetch proforma invoice details.");
             }
             const data = await response.json();
-            if (data.status.code !== 200) {
-                throw new Error(data.status.message || "Failed to fetch details.");
+            console.log("Fetched Details:", data);
+
+            if (data.status.code !== 200 || !data.data || data.data.length === 0) {
+                setSelectedDetail(null); // Set to null when no details are available
+                setSelectedDetail(null); // Set to null when no details are available
+                setPiCode(code); // Store piCode in state
+                throw new Error("No details available for this Proforma Invoice.");
+            } else {
+                setSelectedDetail(data.data[0]); // Set the first detail as the selected detail
+                setPiCode(code); // Store piCode in state
             }
-            setSelectedDetail({ ...data.data, Code: id }); // Ensure Code is included
-            setIsModalOpen(true);
+            setIsModalOpen(true); // Open modal even when there's no data
         } catch (error: any) {
             setErrorDetail(error.message || "An unexpected error occurred.");
+            setSelectedDetail(null); // Set to null if there's an error
+            setIsModalOpen(true); // Ensure modal opens on error as well
+            setPiCode(code); // Store piCode in state
         } finally {
             setLoadingDetail(false);
+            setIsModalLoading(false); // Set the modal to data state
+            setPiCode(code); // Store piCode in state
         }
     };
 
@@ -121,11 +139,35 @@ export default function POPage() {
 
             setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== code));
             alert("Purchase order deleted successfully.");
-            setIsModalOpen(false); // Close modal after deletion
+            setIsModalOpen(false);
+        } catch (error: any) {
+            alert(error.message || "An unexpected error occurred.");
+        }
+    };const handleDeleteDetail = async (code: string) => {
+        const confirmDelete = confirm("Are you sure you want to delete this proforma invoice?");
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoice-details/${code}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to delete proforma invoice detail.");
+            }
+
+            setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== code));
+            alert("Proforma invoice deleted successfully.");
+            setIsModalOpen(false);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
     };
+
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
@@ -139,7 +181,6 @@ export default function POPage() {
             <p>View and manage your orders here.</p>
 
             <div className="row mt-4">
-                {/* Company */}
                 <div className="col-md-3">
                     <div className="card text-center shadow-sm">
                         <div className="card-body">
@@ -190,7 +231,7 @@ export default function POPage() {
                                             Edit
                                         </button>
                                         <button
-                                            className="btn btn-danger btn-sm"
+                                            className="btn btn-danger btn-sm me-2"
                                             onClick={() => handleDelete(purchase.Code)}
                                         >
                                             Delete
@@ -209,8 +250,7 @@ export default function POPage() {
                 )}
             </div>
 
-            {/* Detail Modal */}
-            {isModalOpen && selectedDetail && (
+            {isModalOpen && (
                 <div
                     className="modal show"
                     style={{
@@ -225,28 +265,29 @@ export default function POPage() {
                                 <button type="button" className="btn-close" onClick={handleCloseModal}></button>
                             </div>
                             <div className="modal-body">
-                                {loadingDetail ? (
+                                {isModalLoading ? (
                                     <p>Loading details...</p>
                                 ) : errorDetail ? (
                                     <p className="text-danger">{errorDetail}</p>
-                                ) : (
+                                ) : selectedDetail ? (
                                     <div>
-                                        <p>
-                                            <strong>Product Name:</strong> {selectedDetail.ProductName}
-                                        </p>
-                                        <p>
-                                            <strong>QTY Ordered:</strong> {selectedDetail.QTYOrdered}
-                                        </p>
-                                        <p>
-                                            <strong>Unit Price Ordered:</strong> {selectedDetail.UnitPriceOrdered}
-                                        </p>
-                                        <p>
-                                            <strong>Total:</strong> {selectedDetail.Total}
-                                        </p>
-                                        <p>
-                                            <strong>Note:</strong> {selectedDetail.Note}
-                                        </p>
+                                        <p><strong>Product Name:</strong> {selectedDetail.ProductName}</p>
+                                        <p><strong>SKU Code:</strong> {selectedDetail.SKUCode}</p>
+                                        <p><strong>Variant:</strong> {selectedDetail.Variant || "N/A"}</p>
+                                        <p><strong>QTY Ordered:</strong> {selectedDetail.QTYOrdered}</p>
+                                        <p><strong>QTY Approved:</strong> {selectedDetail.QTYApproved}</p>
+                                        <p><strong>Unit Price Ordered:</strong> {selectedDetail.UnitPriceOrdered}</p>
+                                        <p><strong>Unit Price Approved:</strong> {selectedDetail.UnitPriceApproved}</p>
+                                        <p><strong>Carton Dimensions (P x L x T):</strong> {selectedDetail.CartonP} x {selectedDetail.CartonL} x {selectedDetail.CartonT}</p>
+                                        <p><strong>Carton Quantity:</strong> {selectedDetail.CartonQty}</p>
+                                        <p><strong>Price Per Carton:</strong> {selectedDetail.PricePerCarton}</p>
+                                        <p><strong>Estimated CBM Total:</strong> {selectedDetail.EstimatedCBMTotal}</p>
+                                        <p><strong>Credit:</strong> {selectedDetail.Credit}</p>
+                                        <p><strong>Note:</strong> {selectedDetail.Note}</p>
+                                        <p><strong>Total:</strong> {selectedDetail.Total}</p>
                                     </div>
+                                ) : (
+                                    <p>No detail data available for this Proforma Invoice.</p>
                                 )}
                             </div>
                             <div className="modal-footer">
@@ -255,19 +296,24 @@ export default function POPage() {
                                 </button>
                                 <button
                                     className="btn btn-primary"
-                                    onClick={() => handleEdit(selectedDetail.Code!)}
+                                    
+                                    onClick={() => {
+                                        
+                                            handleEditDetail(selectedDetail?.Id?.toString() || '');
+                                        
+                                    }}
                                 >
                                     Edit
                                 </button>
                                 <button
                                     className="btn btn-danger"
-                                    onClick={() => handleDelete(selectedDetail.Code!)}
+                                    onClick={() => handleDeleteDetail(selectedDetail?.Id?.toString() || '')}
                                 >
                                     Delete
                                 </button>
                                 <button
                                     className="btn btn-success"
-                                    onClick={() => handleAddDetail(selectedDetail.Code!)}
+                                    onClick={() => handleAddDetail(piCode)}
                                 >
                                     Add Detail
                                 </button>

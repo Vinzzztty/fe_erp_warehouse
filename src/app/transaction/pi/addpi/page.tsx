@@ -16,7 +16,9 @@ export default function CompanyPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [suppliers, setSuppliers] = useState<{ Code: number; Name: string }[]>([]);
+    const [purchaseOrders, setPurchaseOrders] = useState<{ Code: number }[]>([]); // For PO Numbers
     const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+    const [loadingPurchaseOrders, setLoadingPurchaseOrders] = useState(false);
 
     // Fetch suppliers on component mount
     useEffect(() => {
@@ -43,6 +45,33 @@ export default function CompanyPage() {
         };
 
         fetchSuppliers();
+    }, []);
+
+    // Fetch Purchase Orders on component mount
+    useEffect(() => {
+        const fetchPurchaseOrders = async () => {
+            setLoadingPurchaseOrders(true);
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch purchase orders.");
+                }
+                const data = await response.json();
+                if (data.status.code !== 200) {
+                    throw new Error(data.status.message || "Failed to fetch purchase orders.");
+                }
+                setPurchaseOrders(data.data);
+            } catch (error: any) {
+                console.error("Error fetching purchase orders:", error);
+                setError(error.message || "Failed to fetch purchase orders.");
+            } finally {
+                setLoadingPurchaseOrders(false);
+            }
+        };
+
+        fetchPurchaseOrders();
     }, []);
 
     const handleChange = (
@@ -155,21 +184,28 @@ export default function CompanyPage() {
                     <label htmlFor="PONumber" className="form-label">
                         PO Number
                     </label>
-                    <input
-                        type="number"
+                    <select
                         id="PONumber"
                         name="PONumber"
-                        className="form-control"
+                        className="form-select"
                         value={formData.PONumber}
                         onChange={handleChange}
                         required
-                    />
+                        disabled={loadingPurchaseOrders}
+                    >
+                        <option value="">-- Select PO Number --</option>
+                        {purchaseOrders.map((po) => (
+                            <option key={po.Code} value={po.Code}>
+                                {po.Code}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={loading || loadingSuppliers}
+                    disabled={loading || loadingSuppliers || loadingPurchaseOrders}
                 >
                     {loading ? "Submitting..." : "Add PI"}
                 </button>
