@@ -4,13 +4,30 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface BuyingPrice {
+    Code: string;
+    Date: string;
+    Warehouse: { Name: string };
+    Note: string;
+}
+
+interface SettingPrice {
+    Code: string;
+    Date: string;
+    BPCode: string;
+    Note: string;
+}
+
 export default function ProductPricingPage() {
     const router = useRouter();
 
-    const [buyingPricings, setBuyingPricings] = useState<any[]>([]);
-    const [settingPricings, setSettingPricings] = useState<any[]>([]);
-    // const [selectedBP, setSelectedBP] = useState<BuyingPrice | null>(null)
+    const [buyingPricings, setBuyingPricings] = useState<BuyingPrice[]>([]);
+    const [settingPricings, setSettingPricings] = useState<SettingPrice[]>([]);
+    const [selectedBP, setSelectedBP] = useState<BuyingPrice | null>(null);
+    const [selectedSP, setSelectedSP] = useState<SettingPrice | null>(null);
+    const [details, setDetails] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const [detailsLoading, setDetailsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -49,6 +66,46 @@ export default function ProductPricingPage() {
         fetchData();
     }, []);
 
+    const fetchDetails = async (endpoint: string, code: string) => {
+        setDetailsLoading(true);
+        setDetails(null);
+        try {
+            // Fetch the ID for SettingPriceDetil
+            const idResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/product_pricing/${endpoint}/${code}`
+            );
+
+            if (!idResponse.ok) {
+                throw new Error("Failed to fetch SettingPriceDetil ID.");
+            }
+
+            const { id } = await idResponse.json();
+
+            // Use the fetched ID to get the actual details
+            const detailsResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/product_pricing/details/${id}`
+            );
+
+            if (!detailsResponse.ok) {
+                throw new Error("Failed to fetch details.");
+            }
+
+            const detailsData = await detailsResponse.json();
+            setDetails(detailsData);
+        } catch (error: any) {
+            setDetails(null); // No details found or error
+        } finally {
+            setDetailsLoading(false);
+        }
+    };
+    const handleViewDetails = async (
+        endpoint: string,
+        item: any,
+        setSelected: any
+    ) => {
+        setSelected(item);
+        await fetchDetails(endpoint, item.Code);
+    };
     // Delete an item
     const handleDelete = async (endpoint: string, id: number) => {
         try {
@@ -191,16 +248,29 @@ export default function ProductPricingPage() {
                                             >
                                                 Delete
                                             </button>
-                                            <button
-                                                className="btn btn-info btn-sm"
-                                                onClick={() =>
-                                                    router.push(
-                                                        `/pricing/buying-price/details/${buyingPricing.Code}`
-                                                    )
-                                                }
-                                            >
-                                                View Detail
-                                            </button>
+                                            {buyingPricing.Details ? (
+                                                <button
+                                                    className="btn btn-info btn-sm"
+                                                    onClick={() =>
+                                                        setSelectedBP(
+                                                            buyingPricing
+                                                        )
+                                                    }
+                                                >
+                                                    View Details
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="btn btn-primary btn-sm"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/pricing/buying-price/add-details/${buyingPricing.Code}`
+                                                        )
+                                                    }
+                                                >
+                                                    Add Details
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
@@ -244,7 +314,7 @@ export default function ProductPricingPage() {
                                                 Edit
                                             </button>
                                             <button
-                                                className="btn btn-danger btn-sm"
+                                                className="btn btn-danger btn-sm me-2"
                                                 onClick={() =>
                                                     handleDelete(
                                                         "setting-prices",
@@ -254,6 +324,42 @@ export default function ProductPricingPage() {
                                             >
                                                 Delete
                                             </button>
+                                            <button
+                                                className="btn btn-info btn-sm"
+                                                onClick={() =>
+                                                    handleViewDetails(
+                                                        "setting-price-details",
+                                                        settingPricing,
+                                                        setSelectedSP
+                                                    )
+                                                }
+                                            >
+                                                View Details
+                                            </button>
+
+                                            {settingPricing.Details ? (
+                                                <button
+                                                    className="btn btn-info btn-sm"
+                                                    onClick={() =>
+                                                        setSelectedSP(
+                                                            settingPricing
+                                                        )
+                                                    }
+                                                >
+                                                    View Details
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="btn btn-primary btn-sm"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/pricing/setting-price/add-details/${settingPricing.Code}`
+                                                        )
+                                                    }
+                                                >
+                                                    Add Details
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
@@ -266,6 +372,202 @@ export default function ProductPricingPage() {
                     </table>
                 </>
             )}
+
+            {/* Modal for Viewing Details */}
+            {(selectedBP || selectedSP) && (
+                <div
+                    className="modal show"
+                    style={{
+                        display: "block",
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    }}
+                >
+                    <div className="modal-dialog modal-lg">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    {selectedBP
+                                        ? "Buying Price Details"
+                                        : "Setting Price Details"}
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => {
+                                        setSelectedBP(null);
+                                        setSelectedSP(null);
+                                    }}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                {detailsLoading ? (
+                                    <p>Loading details...</p>
+                                ) : details ? (
+                                    <>
+                                        <p>
+                                            <strong>Code:</strong>{" "}
+                                            {details.Code}
+                                        </p>
+                                        <p>
+                                            <strong>Date:</strong>{" "}
+                                            {details.Date}
+                                        </p>
+                                        {details.WarehouseName && (
+                                            <p>
+                                                <strong>Warehouse:</strong>{" "}
+                                                {details.WarehouseName}
+                                            </p>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div>
+                                        <p>No details found.</p>
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={() =>
+                                                router.push(
+                                                    `/pricing/${
+                                                        selectedBP
+                                                            ? "buying-price"
+                                                            : "setting-price"
+                                                    }/add-details/${
+                                                        selectedBP
+                                                            ? selectedBP.Code
+                                                            : selectedSP?.Code
+                                                    }`
+                                                )
+                                            }
+                                        >
+                                            Add Details
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        setSelectedBP(null);
+                                        setSelectedSP(null);
+                                    }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Detail Buying Price Modal */}
+            {/* {selectedBP && (
+                <div
+                    className="modal show"
+                    style={{
+                        display: "block",
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    }}
+                >
+                    <div className="modal-dialog modal-lg">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    Buying Price Details
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setSelectedBP(null)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <p>
+                                    <strong>Code:</strong> {selectedBP.Code}
+                                </p>
+                                <p>
+                                    <strong>Date:</strong> {selectedBP.Date}
+                                </p>
+                                <p>
+                                    <strong>Warehouse:</strong>{" "}
+                                    {selectedBP.Warehouse.Name}
+                                </p>
+                                <p>
+                                    <strong>Note:</strong> {selectedBP.Note}
+                                </p>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setSelectedBP(null)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )} */}
+
+            {/* Modal for Viewing Setting Price Details */}
+            {/* {selectedSP && (
+                <div
+                    className="modal show"
+                    style={{
+                        display: "block",
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    }}
+                >
+                    <div className="modal-dialog modal-lg">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">
+                                    Setting Price Details
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setSelectedSP(null)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                {detailsLoading ? (
+                                    <p>Loading details...</p>
+                                ) : details ? (
+                                    <>
+                                        <p>
+                                            <strong>Code:</strong>{" "}
+                                            {details.Code}
+                                        </p>
+                                        <p>
+                                            <strong>Date:</strong>{" "}
+                                            {details.Date}
+                                        </p>
+                                        <p>
+                                            <strong>Buying Price Code:</strong>{" "}
+                                            {details.BPCode}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div>
+                                        <p>No details found.</p>
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={() =>
+                                                router.push(
+                                                    `/pricing/setting-price/add-details/${selectedSP.Code}`
+                                                )
+                                            }
+                                        >
+                                            Add Details
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )} */}
         </div>
     );
 }
