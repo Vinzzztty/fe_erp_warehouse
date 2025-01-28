@@ -3,9 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 
-type BuyingPrice = { Code: number; Name: string };
-type ProformaInvoice = { Code: number; Description: string };
-type Cost = { Code: number; Name: string };
+type ProformaInvoice = {
+    Code: number;
+    Description: string;
+    SKUFull: string;
+    ProdCost: number;
+    FirstMileCost: number;
+    LastMileCost: number;
+    SellingPrice: number;
+    OrderedQty: number;
+};
+
+type Cost = { Code: number; Name: string; Amount: number };
 
 export default function AddBuyingPriceDetailsPage() {
     const { id } = useParams(); // BuyingPriceId
@@ -14,15 +23,16 @@ export default function AddBuyingPriceDetailsPage() {
     const [formData, setFormData] = useState({
         PICode: "",
         SKUFull: "",
-        SKUParent: "",
-        SKUCode: "",
-        SKUCodeChild: "",
-        Name: "",
         ProdCost: "",
         FirstMileCost: "",
         LastMileCost: "",
+        DDPCost: "",
         Biaya: "",
+        TrueCost: "",
+        TrueCostEach: "",
+        DDPCostEach: "",
         SellingPrice: "",
+        OrderedQty: "",
     });
 
     const [proformaInvoices, setProformaInvoices] = useState<ProformaInvoice[]>(
@@ -67,7 +77,78 @@ export default function AddBuyingPriceDetailsPage() {
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
+
+        // Autofill fields based on PI Code
+        if (name === "PICode") {
+            const selectedPI = proformaInvoices.find(
+                (pi) => pi.Code.toString() === value
+            );
+            if (selectedPI) {
+                const ddpCost =
+                    selectedPI.ProdCost +
+                    selectedPI.FirstMileCost +
+                    selectedPI.LastMileCost;
+
+                setFormData((prev) => ({
+                    ...prev,
+                    PICode: value,
+                    SKUFull: selectedPI.SKUFull,
+                    ProdCost: selectedPI.ProdCost.toFixed(2).toString(),
+                    FirstMileCost:
+                        selectedPI.FirstMileCost.toFixed(2).toString(),
+                    LastMileCost: selectedPI.LastMileCost.toFixed(2).toString(),
+                    DDPCost: ddpCost.toFixed(2).toString(),
+                    OrderedQty: selectedPI.OrderedQty.toString(),
+                    DDPCostEach: (ddpCost / selectedPI.OrderedQty)
+                        .toFixed(2)
+                        .toString(),
+                    SellingPrice: selectedPI.SellingPrice.toFixed(2).toString(),
+                }));
+                return;
+            }
+        }
+
+        // Autofill Biaya (Cost)
+        if (name === "Biaya") {
+            const selectedCost = costs.find(
+                (cost) => cost.Code.toString() === value
+            );
+            if (selectedCost) {
+                setFormData((prev) => {
+                    const trueCost =
+                        parseFloat(prev.DDPCost || "0") + selectedCost.Amount;
+                    return {
+                        ...prev,
+                        Biaya: value,
+                        TrueCost: trueCost.toFixed(2).toString(),
+                        TrueCostEach: prev.OrderedQty
+                            ? (trueCost / parseFloat(prev.OrderedQty))
+                                  .toFixed(2)
+                                  .toString()
+                            : "0",
+                    };
+                });
+                return;
+            }
+        }
+
+        // Normal state update
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleManualUpdate = () => {
+        const ddpCost =
+            parseFloat(formData.ProdCost || "0") +
+            parseFloat(formData.FirstMileCost || "0") +
+            parseFloat(formData.LastMileCost || "0");
+
+        setFormData((prev) => ({
+            ...prev,
+            DDPCost: ddpCost.toFixed(2).toString(),
+            DDPCostEach: prev.OrderedQty
+                ? (ddpCost / parseFloat(prev.OrderedQty)).toFixed(2).toString()
+                : "0",
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -89,7 +170,6 @@ export default function AddBuyingPriceDetailsPage() {
                 throw new Error("Failed to add buying price detail.");
             }
 
-            // Redirect back to details page
             router.push(`/pricing/buying-price/details/${id}`);
         } catch (error: any) {
             setError(error.message || "An unexpected error occurred.");
@@ -127,36 +207,50 @@ export default function AddBuyingPriceDetailsPage() {
                     </select>
                 </div>
 
-                {/* SKU Full */}
-                <div className="mb-3">
-                    <label htmlFor="SKUFull" className="form-label">
-                        SKU Full
-                    </label>
-                    <input
-                        type="text"
-                        id="SKUFull"
-                        name="SKUFull"
-                        className="form-control"
-                        value={formData.SKUFull}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                {/* SKU Parent */}
-                <div className="mb-3">
-                    <label htmlFor="SKUParent" className="form-label">
-                        SKU Parent
-                    </label>
-                    <input
-                        type="text"
-                        id="SKUParent"
-                        name="SKUParent"
-                        className="form-control"
-                        value={formData.SKUParent}
-                        onChange={handleChange}
-                    />
-                </div>
+                {/* Editable Fields */}
+                {[
+                    { label: "SKU Full", name: "SKUFull", readOnly: true },
+                    {
+                        label: "Prod. Cost / EXW",
+                        name: "ProdCost",
+                        readOnly: false,
+                    },
+                    {
+                        label: "First Mile Cost",
+                        name: "FirstMileCost",
+                        readOnly: false,
+                    },
+                    {
+                        label: "Last Mile Cost",
+                        name: "LastMileCost",
+                        readOnly: false,
+                    },
+                    {
+                        label: "Selling Price",
+                        name: "SellingPrice",
+                        readOnly: false,
+                    },
+                ].map((field) => (
+                    <div className="mb-3" key={field.name}>
+                        <label htmlFor={field.name} className="form-label">
+                            {field.label}
+                        </label>
+                        <input
+                            type="text"
+                            id={field.name}
+                            name={field.name}
+                            className="form-control"
+                            value={
+                                formData[field.name as keyof typeof formData]
+                            }
+                            onChange={handleChange}
+                            readOnly={field.readOnly}
+                            onBlur={
+                                !field.readOnly ? handleManualUpdate : undefined
+                            }
+                        />
+                    </div>
+                ))}
 
                 {/* Cost Dropdown */}
                 <div className="mb-3">
@@ -181,38 +275,7 @@ export default function AddBuyingPriceDetailsPage() {
                     </select>
                 </div>
 
-                {/* Production Cost */}
-                <div className="mb-3">
-                    <label htmlFor="ProdCost" className="form-label">
-                        Production Cost
-                    </label>
-                    <input
-                        type="number"
-                        id="ProdCost"
-                        name="ProdCost"
-                        className="form-control"
-                        value={formData.ProdCost}
-                        onChange={handleChange}
-                        step="0.01"
-                    />
-                </div>
-
-                {/* Selling Price */}
-                <div className="mb-3">
-                    <label htmlFor="SellingPrice" className="form-label">
-                        Selling Price
-                    </label>
-                    <input
-                        type="number"
-                        id="SellingPrice"
-                        name="SellingPrice"
-                        className="form-control"
-                        value={formData.SellingPrice}
-                        onChange={handleChange}
-                        step="0.01"
-                    />
-                </div>
-
+                {/* Submit Button */}
                 <button
                     type="submit"
                     className="btn btn-primary"
