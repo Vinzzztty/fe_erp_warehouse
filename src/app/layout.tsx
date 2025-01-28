@@ -162,7 +162,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                             isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
-                                            href="/transaction/cx-quotation"
+                                            href="/transaction/cx-quotaton"
                                             icon="bi-chat-quote"
                                             label="CX Quotation"
                                             isSidebarOpen={isSidebarOpen}
@@ -187,31 +187,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                         />
                                     </SidebarDropdown>
 
-                                    {/* Product Pricing Section */}
-                                    <SidebarDropdown
+                                    {/* Product Pricing */}
+                                    <SidebarItem
+                                        href="/pricing"
+                                        icon="bi-currency-dollar"
                                         label="Product Pricing"
-                                        icon="bi-folder"
-                                        isOpen={productPricingOpen}
-                                        toggleOpen={() =>
-                                            setProductPricingOpen(
-                                                !productPricingOpen
-                                            )
-                                        }
                                         isSidebarOpen={isSidebarOpen}
-                                    >
-                                        <SidebarItem
-                                            href="/pricing/buying-price"
-                                            icon="bi-currency-dollar"
-                                            label="Buying Price"
-                                            isSidebarOpen={isSidebarOpen}
-                                        />
-                                        <SidebarItem
-                                            href="/pricing/setting-price"
-                                            icon="bi-tags"
-                                            label="Setting Price"
-                                            isSidebarOpen={isSidebarOpen}
-                                        />
-                                    </SidebarDropdown>
+                                    />
 
                                     {/* Logout */}
                                     <SidebarItem

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CompanyPage() {
@@ -8,18 +8,45 @@ export default function CompanyPage() {
 
     const [formData, setFormData] = useState({
         Date: "",
-        PONumber:"",
+        PONumber: "",
         SupplierId: "",
         Notes: "",
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [suppliers, setSuppliers] = useState<{ Code: number; Name: string }[]>([]);
+    const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+
+    // Fetch suppliers on component mount
+    useEffect(() => {
+        const fetchSuppliers = async () => {
+            setLoadingSuppliers(true);
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/suppliers`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch suppliers.");
+                }
+                const data = await response.json();
+                if (data.status.code !== 200) {
+                    throw new Error(data.status.message || "Failed to fetch suppliers.");
+                }
+                setSuppliers(data.data);
+            } catch (error: any) {
+                console.error("Error fetching suppliers:", error);
+                setError(error.message || "Failed to fetch suppliers.");
+            } finally {
+                setLoadingSuppliers(false);
+            }
+        };
+
+        fetchSuppliers();
+    }, []);
 
     const handleChange = (
-        e: React.ChangeEvent<
-            HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-        >
+        e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
 
@@ -75,7 +102,9 @@ export default function CompanyPage() {
             <h1>Add Proforma Invoice</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 <div className="mb-3">
-                    <label htmlFor="Date" className="form-label">Date</label>
+                    <label htmlFor="Date" className="form-label">
+                        Date
+                    </label>
                     <input
                         type="date"
                         id="Date"
@@ -88,7 +117,9 @@ export default function CompanyPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label htmlFor="Notes" className="form-label">Notes</label>
+                    <label htmlFor="Notes" className="form-label">
+                        Notes
+                    </label>
                     <textarea
                         id="Notes"
                         name="Notes"
@@ -99,36 +130,46 @@ export default function CompanyPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label htmlFor="SupplierId" className="form-label">Supplier Id</label>
-                    <input
-                        type="number"
+                    <label htmlFor="SupplierId" className="form-label">
+                        Supplier
+                    </label>
+                    <select
                         id="SupplierId"
                         name="SupplierId"
-                        className="form-control"
+                        className="form-select"
                         value={formData.SupplierId}
                         onChange={handleChange}
                         required
-                    />
+                        disabled={loadingSuppliers}
+                    >
+                        <option value="">-- Select Supplier --</option>
+                        {suppliers.map((supplier) => (
+                            <option key={supplier.Code} value={supplier.Code}>
+                                {supplier.Name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
+
                 <div className="mb-3">
-                    <label htmlFor="PONumber" className="form-label">PO Number</label>
+                    <label htmlFor="PONumber" className="form-label">
+                        PO Number
+                    </label>
                     <input
                         type="number"
                         id="PONumber"
                         name="PONumber"
-                        className="form-select"
+                        className="form-control"
                         value={formData.PONumber}
                         onChange={handleChange}
                         required
-                    >
-                    
-                    </input>
+                    />
                 </div>
 
                 <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={loading}
+                    disabled={loading || loadingSuppliers}
                 >
                     {loading ? "Submitting..." : "Add PI"}
                 </button>

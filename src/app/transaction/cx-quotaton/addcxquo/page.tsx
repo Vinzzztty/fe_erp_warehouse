@@ -3,41 +3,40 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function CompanyPage() {
+export default function CxquoPage() {
     const router = useRouter();
 
     const [formData, setFormData] = useState({
         Date: "",
-        SupplierId: "",
+        ForwarderId: "",
         Notes: "",
-        Status: "Active",
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [suppliers, setSuppliers] = useState<{ Code: number; Name: string }[]>(
+    const [forwarders, setForwarders] = useState<{ Code: number; Name: string }[]>(
         []
     );
 
     useEffect(() => {
-        // Fetch supplier data from API
-        const fetchSuppliers = async () => {
+        // Fetch forwarder data from API
+        const fetchForwarders = async () => {
             try {
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/suppliers`
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/forwarders`
                 );
                 if (!response.ok) {
-                    throw new Error("Failed to fetch supplier data.");
+                    throw new Error("Failed to fetch forwarder data.");
                 }
                 const data = await response.json();
-                setSuppliers(data.data || []);
+                setForwarders(data.data || []);
             } catch (error) {
-                console.error("Error fetching suppliers:", error);
-                setError("Could not load supplier data.");
+                console.error("Error fetching forwarders:", error);
+                setError("Could not load forwarder data.");
             }
         };
 
-        fetchSuppliers();
+        fetchForwarders();
     }, []);
 
     const handleChange = (
@@ -49,7 +48,7 @@ export default function CompanyPage() {
 
         setFormData((prev) => ({
             ...prev,
-            [name]: name === "SupplierId" ? parseInt(value) || "" : value,
+            [name]: name === "ForwarderId" ? parseInt(value) || "" : value,
         }));
     };
 
@@ -58,15 +57,15 @@ export default function CompanyPage() {
         setLoading(true);
         setError(null);
 
-        if (!formData.SupplierId || isNaN(Number(formData.SupplierId))) {
-            setError("Supplier must be selected.");
+        if (!formData.ForwarderId || isNaN(Number(formData.ForwarderId))) {
+            setError("Forwarder must be selected.");
             setLoading(false);
             return;
         }
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payments`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotations`,
                 {
                     method: "POST",
                     headers: {
@@ -79,13 +78,13 @@ export default function CompanyPage() {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(
-                    errorData.message || "Failed to create Proforma Invoice Payment."
+                    errorData.message || "Failed to create CX-Quotation."
                 );
             }
 
-            router.push("/transaction/pi-payment");
+            router.push("/transaction/cx-quotaton");
         } catch (error: any) {
-            console.error("Error submitting PI:", error);
+            console.error("Error submitting CX-Quotation:", error);
             setError(error.message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
@@ -94,7 +93,7 @@ export default function CompanyPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Add Proforma Invoice Payment</h1>
+            <h1>Add CX-Quotation</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 <div className="mb-3">
                     <label htmlFor="Date" className="form-label">Date</label>
@@ -110,6 +109,25 @@ export default function CompanyPage() {
                 </div>
 
                 <div className="mb-3">
+                    <label htmlFor="ForwarderId" className="form-label">Forwarder</label>
+                    <select
+                        id="ForwarderId"
+                        name="ForwarderId"
+                        className="form-select"
+                        value={formData.ForwarderId}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">Select a Forwarder</option>
+                        {forwarders.map((forwarder) => (
+                            <option key={forwarder.Code} value={forwarder.Code}>
+                                {forwarder.Name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="mb-3">
                     <label htmlFor="Notes" className="form-label">Notes</label>
                     <textarea
                         id="Notes"
@@ -120,51 +138,12 @@ export default function CompanyPage() {
                     />
                 </div>
 
-                <div className="mb-3">
-                    <label htmlFor="SupplierId" className="form-label">Supplier</label>
-                    <select
-                        id="SupplierId"
-                        name="SupplierId"
-                        className="form-select"
-                        value={formData.SupplierId}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Select a Supplier</option>
-                        {suppliers.map((supplier) => (
-                            <option key={supplier.Code} value={supplier.Code}>
-                                {supplier.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="mb-3">
-                    <label htmlFor="Status" className="form-label">Status</label>
-                    <select
-                        id="Status"
-                        name="Status"
-                        className="form-select"
-                        value={formData.Status}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="Unpaid">Unpaid</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Arrived">Arrived</option>
-                        <option value="Inbound">Inbound</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-
                 <button
                     type="submit"
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add PI-Payment"}
+                    {loading ? "Submitting..." : "Add CX-Quotation"}
                 </button>
             </form>
 
