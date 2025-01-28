@@ -20,7 +20,6 @@ interface Product {
     Weight?: number;
     Keyword?: string;
     ImageURL?: string;
-    // Add any other fields from your product model as needed
 }
 
 export default function DashboardProductPage() {
