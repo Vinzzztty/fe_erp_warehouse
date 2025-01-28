@@ -9,6 +9,7 @@ export default function ProductPricingPage() {
 
     const [buyingPricings, setBuyingPricings] = useState<any[]>([]);
     const [settingPricings, setSettingPricings] = useState<any[]>([]);
+    // const [selectedBP, setSelectedBP] = useState<BuyingPrice | null>(null)
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -180,7 +181,7 @@ export default function ProductPricingPage() {
                                                 Edit
                                             </button>
                                             <button
-                                                className="btn btn-danger btn-sm"
+                                                className="btn btn-danger btn-sm me-2"
                                                 onClick={() =>
                                                     handleDelete(
                                                         "buying-prices",
@@ -189,6 +190,16 @@ export default function ProductPricingPage() {
                                                 }
                                             >
                                                 Delete
+                                            </button>
+                                            <button
+                                                className="btn btn-info btn-sm"
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/pricing/buying-price/details/${buyingPricing.Code}`
+                                                    )
+                                                }
+                                            >
+                                                View Detail
                                             </button>
                                         </td>
                                     </tr>
