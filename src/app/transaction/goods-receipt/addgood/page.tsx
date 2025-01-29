@@ -188,7 +188,7 @@ export default function GoodsPage() {
                         <option value="">Select a Code</option>
                         {LMCOde.map((lm) => (
                             <option key={lm.Code} value={lm.Code}>
-                                {lm.Name}
+                                {lm.Code}
                             </option>
                         ))}
                     </select>
