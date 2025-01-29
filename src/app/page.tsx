@@ -93,7 +93,7 @@ export default function Home() {
 
     return (
         <div>
-            <h1 className="text-center">Selamat Datang di ERP Warehouse!</h1>
+            <h1 className="text-center">Selamat Datang di ERP Importir!</h1>
             <p className="text-center">
                 Kelola inventaris dan pesanan Anda dengan lebih efisien!
             </p>
