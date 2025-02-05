@@ -97,71 +97,78 @@ export default function FinancePage() {
         fields: { key: string; label: string }[],
         updateState: () => void
     ) => (
-        <div className="mt-4">
-            <h2>{entity}</h2>
+        <div className="card shadow-lg p-4 rounded mt-4">
+            <p className="mb-4 fw-bold">{entity}</p>
             {loading && <p>Loading {entity.toLowerCase()}...</p>}
             {error && <p className="text-danger">{error}</p>}
             {!loading && data.length > 0 && (
-                <table className="table table-bordered mt-3">
-                    <thead>
-                        <tr>
-                            {fields.map((field, index) => (
-                                <th key={index}>{field.label}</th>
-                            ))}
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((item, idx) => (
-                            <tr key={idx}>
+                <div className="table-responsive">
+                    <table className="table table-striped table-bordered table-hover align-middle text-center">
+                        <thead className="table-dark">
+                            <tr>
                                 {fields.map((field, index) => (
-                                    <td key={index}>
-                                        {item[field.key] || "N/A"}
-                                    </td>
+                                    <th key={index}>{field.label}</th>
                                 ))}
-                                <td>
-                                    <button
-                                        className="btn btn-warning btn-sm me-2"
-                                        onClick={() => {
-                                            const entityPath = entity
-                                                .toLowerCase()
-                                                .replace(/\s+/g, "-") // Convert spaces to dashes
-                                                .replace(/_/g, "-"); // Ensure underscores are also replaced with dashes
-                                            const itemId = item[fields[0].key]; // Retrieve the ID field dynamically
-                                            router.push(
-                                                `/master/finance/${entityPath}/edit/${itemId}`
-                                            );
-                                        }}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() =>
-                                            deleteItem(
-                                                `/master/${entity.toLowerCase()}s`,
-                                                item[fields[0].key],
-                                                updateState
-                                            )
-                                        }
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {data.map((item, idx) => (
+                                <tr key={idx}>
+                                    {fields.map((field, index) => (
+                                        <td key={index}>
+                                            {item[field.key] || "N/A"}
+                                        </td>
+                                    ))}
+                                    <td>
+                                        <button
+                                            className="btn btn-warning btn-sm me-2"
+                                            onClick={() => {
+                                                const entityPath = entity
+                                                    .toLowerCase()
+                                                    .replace(/\s+/g, "-") // Convert spaces to dashes
+                                                    .replace(/_/g, "-"); // Ensure underscores are also replaced with dashes
+                                                const itemId =
+                                                    item[fields[0].key]; // Retrieve the ID field dynamically
+                                                router.push(
+                                                    `/master/finance/${entityPath}/edit/${itemId}`
+                                                );
+                                            }}
+                                        >
+                                            <i className="bi bi-pencil-square"></i>{" "}
+                                            Edit
+                                        </button>
+                                        <button
+                                            className="btn btn-danger btn-sm"
+                                            onClick={() =>
+                                                deleteItem(
+                                                    `/master/${entity.toLowerCase()}s`,
+                                                    item[fields[0].key],
+                                                    updateState
+                                                )
+                                            }
+                                        >
+                                            <i className="bi bi-trash"></i>{" "}
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );
 
     return (
-        <div className="container mt-4">
-            <h1>
-                <i className="bi bi-cash-stack me-2"></i> Finance
-            </h1>
-            <p>View and manage your finance-related data here.</p>
+        <div className="container-fluid mt-4">
+            <div className="text-center card shadow-lg p-4 rounded">
+                <h1>
+                    <i className="bi bi-cash-stack me-2"></i> Finance
+                </h1>
+                <p>View and manage your finance-related data here</p>
+            </div>
 
             {/* Cards for Quick Navigation */}
             <div className="row mt-4">
@@ -206,7 +213,7 @@ export default function FinancePage() {
                                 </h5>
                                 <p className="card-text">{card.description}</p>
                                 <Link href={card.link}>
-                                    <button className="btn btn-primary">
+                                    <button className="btn btn-dark">
                                         Go to {card.title}
                                     </button>
                                 </Link>
