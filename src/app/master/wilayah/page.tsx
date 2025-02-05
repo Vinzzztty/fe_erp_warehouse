@@ -341,8 +341,8 @@ export default function WilayahPage() {
                             </div>
                         )}
                         <div className="table-responsive">
-                            <table className="table table-bordered mt-3">
-                                <thead>
+                            <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                <thead className="table-dark">
                                     <tr>
                                         <th>No</th>
                                         <th>Name</th>

@@ -34,7 +34,8 @@ interface ProformaInvoiceDetail {
 
 export default function POPage() {
     const [Invoice, setInvoice] = useState([]);
-    const [selectedDetail, setSelectedDetail] = useState<ProformaInvoiceDetail | null>(null);
+    const [selectedDetail, setSelectedDetail] =
+        useState<ProformaInvoiceDetail | null>(null);
     const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
@@ -43,8 +44,6 @@ export default function POPage() {
     const [isModalLoading, setIsModalLoading] = useState(true); // To handle modal loading state
     const router = useRouter();
     const [piCode, setPiCode] = useState<string>(""); // Add a state to store piCode
-
- 
 
     useEffect(() => {
         const fetchCompanies = async () => {
@@ -59,12 +58,16 @@ export default function POPage() {
                 }
                 const data = await response.json();
                 if (data.status.code !== 200) {
-                    throw new Error(data.status.message || "Failed to fetch PI.");
+                    throw new Error(
+                        data.status.message || "Failed to fetch PI."
+                    );
                 }
                 setInvoice(data.data);
                 console.log("Fetched Proforma Invoice:", data.data);
             } catch (error: any) {
-                setErrorCompanies(error.message || "An unexpected error occurred.");
+                setErrorCompanies(
+                    error.message || "An unexpected error occurred."
+                );
             } finally {
                 setLoadingCompanies(false);
             }
@@ -98,11 +101,17 @@ export default function POPage() {
             const data = await response.json();
             console.log("Fetched Details:", data);
 
-            if (data.status.code !== 200 || !data.data || data.data.length === 0) {
+            if (
+                data.status.code !== 200 ||
+                !data.data ||
+                data.data.length === 0
+            ) {
                 setSelectedDetail(null); // Set to null when no details are available
                 setSelectedDetail(null); // Set to null when no details are available
                 setPiCode(code); // Store piCode in state
-                throw new Error("No details available for this Proforma Invoice.");
+                throw new Error(
+                    "No details available for this Proforma Invoice."
+                );
             } else {
                 setSelectedDetail(data.data[0]); // Set the first detail as the selected detail
                 setPiCode(code); // Store piCode in state
@@ -121,7 +130,9 @@ export default function POPage() {
     };
 
     const handleDelete = async (code: string) => {
-        const confirmDelete = confirm("Are you sure you want to delete this proforma invoice?");
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this proforma invoice?"
+        );
         if (!confirmDelete) return;
 
         try {
@@ -134,17 +145,24 @@ export default function POPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to delete purchase order.");
+                throw new Error(
+                    errorData.message || "Failed to delete purchase order."
+                );
             }
 
-            setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== code));
+            setInvoice((prev) =>
+                prev.filter((purchase: any) => purchase.Code !== code)
+            );
             alert("Purchase order deleted successfully.");
             setIsModalOpen(false);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
-    };const handleDeleteDetail = async (code: string) => {
-        const confirmDelete = confirm("Are you sure you want to delete this proforma invoice?");
+    };
+    const handleDeleteDetail = async (code: string) => {
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this proforma invoice?"
+        );
         if (!confirmDelete) return;
 
         try {
@@ -157,10 +175,15 @@ export default function POPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to delete proforma invoice detail.");
+                throw new Error(
+                    errorData.message ||
+                        "Failed to delete proforma invoice detail."
+                );
             }
 
-            setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== code));
+            setInvoice((prev) =>
+                prev.filter((purchase: any) => purchase.Code !== code)
+            );
             alert("Proforma invoice deleted successfully.");
             setIsModalOpen(false);
         } catch (error: any) {
@@ -168,101 +191,111 @@ export default function POPage() {
         }
     };
 
-
     const handleCloseModal = () => {
         setIsModalOpen(false);
     };
 
     return (
-        <div className="container mt-4">
-            <h1>
-                <i className="bi bi-building me-2"></i> Proforma Invoice
-            </h1>
-            <p>View and manage your orders here.</p>
+        <div className="container-fluid mt-4">
+            <div className="text-center card shadow-lg p-4 rounded">
+                <h1>
+                    <i className="bi bi-building me-2"></i> Proforma Invoice
+                </h1>
 
-            <div className="row mt-4">
-                <div className="col-md-3">
-                    <div className="card text-center shadow-sm">
-                        <div className="card-body">
-                            <i
-                                className="bi bi-building"
-                                style={{ fontSize: "2rem", color: "#6c757d" }}
-                            ></i>
-                            <h5 className="card-title mt-3">Proforma Invoice</h5>
-                            <p className="card-text">View and edit PI details.</p>
-                            <Link href="/transaction/pi/addpi">
-                                <button className="btn btn-primary">Go to PI</button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+                <p>View and manage your orders here.</p>
+                <Link href="/transaction/pi/addpi">
+                    <button className="btn btn-dark">
+                        Go to Proforma Invoice
+                    </button>
+                </Link>
             </div>
 
-            <div className="mt-5">
-                <h2>Proforma Invoice</h2>
+            <div className="card shadow-lg p-4 rounded mt-4">
+                <p className="mb-4 fw-bold">Proforma Invoice</p>
                 {loadingCompanies && <p>Loading PIs...</p>}
-                {errorCompanies && <p className="text-danger">{errorCompanies}</p>}
-                {!loadingCompanies && !errorCompanies && Invoice.length === 0 && <p>No PIs found.</p>}
+                {errorCompanies && (
+                    <p className="text-danger">{errorCompanies}</p>
+                )}
+                {!loadingCompanies &&
+                    !errorCompanies &&
+                    Invoice.length === 0 && <p>No PIs found.</p>}
                 {!loadingCompanies && !errorCompanies && Invoice.length > 0 && (
-                    <table className="table table-bordered mt-3">
-                        <thead>
-                            <tr>
-                                <th>Code</th>
-                                <th>Date</th>
-                                <th>PO Number</th>
-                                <th>Supplier Id</th>
-                                <th>Notes</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Invoice.map((purchase: any) => (
-                                <tr key={purchase.Code}>
-                                    <td>{purchase.Code}</td>
-                                    <td>{purchase.Date}</td>
-                                    <td>{purchase.PONumber}</td>
-                                    <td>{purchase.SuppplierId}</td>
-                                    <td>{purchase.Notes}</td>
-                                    <td>
-                                        <button
-                                            className="btn btn-warning btn-sm me-2"
-                                            onClick={() => handleEdit(purchase.Code)}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="btn btn-danger btn-sm me-2"
-                                            onClick={() => handleDelete(purchase.Code)}
-                                        >
-                                            Delete
-                                        </button>
-                                        <button
-                                            className="btn btn-info btn-sm"
-                                            onClick={() => handleDetails(purchase.Code)}
-                                        >
-                                            View Detail
-                                        </button>
-                                    </td>
+                    <div className="table-responsive">
+                        <table className="table table-striped table-bordered table-hover align-middle text-center">
+                            <thead className="table-dark">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Date</th>
+                                    <th>PO Number</th>
+                                    <th>Supplier Id</th>
+                                    <th>Notes</th>
+                                    <th>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {Invoice.map((purchase: any, index: number) => (
+                                    <tr key={purchase.Code}>
+                                        <td className="fw-bold">{index + 1}</td>
+                                        <td>{purchase.Date}</td>
+                                        <td>{purchase.PONumber}</td>
+                                        <td>{purchase.Supplier.Name}</td>
+                                        <td>{purchase.Notes || "N/A"}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    handleEdit(purchase.Code)
+                                                }
+                                            >
+                                                <i className="bi bi-pencil-square"></i>{" "}
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm me-2"
+                                                onClick={() =>
+                                                    handleDelete(purchase.Code)
+                                                }
+                                            >
+                                                <i className="bi bi-trash"></i>{" "}
+                                                Delete
+                                            </button>
+                                            <button
+                                                className="btn btn-info btn-sm"
+                                                onClick={() =>
+                                                    handleDetails(purchase.Code)
+                                                }
+                                            >
+                                                <i className="bi bi-search"></i>{" "}
+                                                View Detail
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
             {isModalOpen && (
                 <div
-                    className="modal show"
+                    className="modal show d-flex align-items-center justify-content-center"
                     style={{
                         display: "block",
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
                     }}
                 >
-                    <div className="modal-dialog modal-lg">
+                    <div className="modal-dialog modal-xl">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title">Proforma Invoice Detail</h5>
-                                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                                <h5 className="modal-title">
+                                    Proforma Invoice Detail
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close"
+                                    onClick={() => setIsModalOpen(false)}
+                                ></button>
                             </div>
                             <div className="modal-body">
                                 {isModalLoading ? (
@@ -270,51 +303,132 @@ export default function POPage() {
                                 ) : errorDetail ? (
                                     <p className="text-danger">{errorDetail}</p>
                                 ) : selectedDetail ? (
-                                    <div>
-                                        <p><strong>Product Name:</strong> {selectedDetail.ProductName}</p>
-                                        <p><strong>SKU Code:</strong> {selectedDetail.SKUCode}</p>
-                                        <p><strong>Variant:</strong> {selectedDetail.Variant || "N/A"}</p>
-                                        <p><strong>QTY Ordered:</strong> {selectedDetail.QTYOrdered}</p>
-                                        <p><strong>QTY Approved:</strong> {selectedDetail.QTYApproved}</p>
-                                        <p><strong>Unit Price Ordered:</strong> {selectedDetail.UnitPriceOrdered}</p>
-                                        <p><strong>Unit Price Approved:</strong> {selectedDetail.UnitPriceApproved}</p>
-                                        <p><strong>Carton Dimensions (P x L x T):</strong> {selectedDetail.CartonP} x {selectedDetail.CartonL} x {selectedDetail.CartonT}</p>
-                                        <p><strong>Carton Quantity:</strong> {selectedDetail.CartonQty}</p>
-                                        <p><strong>Price Per Carton:</strong> {selectedDetail.PricePerCarton}</p>
-                                        <p><strong>Estimated CBM Total:</strong> {selectedDetail.EstimatedCBMTotal}</p>
-                                        <p><strong>Credit:</strong> {selectedDetail.Credit}</p>
-                                        <p><strong>Note:</strong> {selectedDetail.Note}</p>
-                                        <p><strong>Total:</strong> {selectedDetail.Total}</p>
+                                    <div className="table-responsive">
+                                        <table className="table table-bordered table-striped align-middle text-center">
+                                            <thead className="table-dark">
+                                                <tr>
+                                                    <th>Product Name</th>
+                                                    <th>SKU Code</th>
+                                                    <th>Variant</th>
+                                                    <th>QTY Ordered</th>
+                                                    <th>QTY Approved</th>
+                                                    <th>Unit Price Ordered</th>
+                                                    <th>Unit Price Approved</th>
+                                                    <th>
+                                                        Carton Dimensions (P x L
+                                                        x T)
+                                                    </th>
+                                                    <th>Carton Quantity</th>
+                                                    <th>Price Per Carton</th>
+                                                    <th>Estimated CBM Total</th>
+                                                    <th>Credit</th>
+                                                    <th>Note</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.ProductName
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.SKUCode}
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Variant ||
+                                                            "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.QTYOrdered
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.QTYApproved
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.UnitPriceOrdered
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.UnitPriceApproved
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.CartonP}{" "}
+                                                        x{" "}
+                                                        {selectedDetail.CartonL}{" "}
+                                                        x{" "}
+                                                        {selectedDetail.CartonT}
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.CartonQty
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.PricePerCarton
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.EstimatedCBMTotal
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Credit}
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Note}
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Total}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 ) : (
-                                    <p>No detail data available for this Proforma Invoice.</p>
+                                    <p>
+                                        No detail data available for this
+                                        Proforma Invoice.
+                                    </p>
                                 )}
                             </div>
                             <div className="modal-footer">
-                                <button className="btn btn-secondary" onClick={handleCloseModal}>
-                                    Close
-                                </button>
                                 <button
                                     className="btn btn-primary"
-                                    
-                                    onClick={() => {
-                                        
-                                            handleEditDetail(selectedDetail?.Id?.toString() || '');
-                                        
-                                    }}
+                                    onClick={() =>
+                                        router.push(
+                                            `/transaction/proforma-invoice/edit?id=${selectedDetail?.Id}`
+                                        )
+                                    }
                                 >
+                                    <i className="bi bi-pencil-square me-2"></i>{" "}
                                     Edit
                                 </button>
                                 <button
                                     className="btn btn-danger"
-                                    onClick={() => handleDeleteDetail(selectedDetail?.Id?.toString() || '')}
+                                    onClick={() =>
+                                        handleDeleteDetail(
+                                            selectedDetail?.Id?.toString() || ""
+                                        )
+                                    }
                                 >
-                                    Delete
+                                    <i className="bi bi-trash me-2"></i>Delete
                                 </button>
                                 <button
                                     className="btn btn-success"
                                     onClick={() => handleAddDetail(piCode)}
                                 >
+                                    <i className="bi bi-plus-square me-2"></i>{" "}
                                     Add Detail
                                 </button>
                             </div>
