@@ -155,10 +155,12 @@ export default function POPage() {
         } catch (error: any) {
             setErrorDetail(error.message);
             setSelectedDetail(null);
+            setPoCode(code);
         } finally {
             setLoadingDetail(false);
             setIsModalLoading(false);
             setIsModalOpen(true);
+            setPoCode(code);
         }
     };
 
@@ -313,11 +315,14 @@ export default function POPage() {
                                 </button>
                                 <button
                                     className="btn btn-success"
-                                    onClick={() => handleAddDetail(poCode)}
+                                    onClick={() => {
+                                        console.log("poCode before adding detail:", poCode);
+                                        handleAddDetail(poCode);
+                                    }}
                                 >
-                                    <i className="bi bi-plus-square me-2"></i>{" "}
-                                    Add Detail
+                                    <i className="bi bi-plus-square me-2"></i> Add Detail
                                 </button>
+
                             </div>
                         </div>
                     </div>
