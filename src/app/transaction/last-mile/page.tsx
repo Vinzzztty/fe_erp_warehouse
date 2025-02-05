@@ -30,7 +30,6 @@ export default function Lastmile() {
                 }
                 setLm(data.data);
                 console.log("Fetched Lms:", data.data);
-
             } catch (error: any) {
                 setErrorCompanies(
                     error.message || "An unexpected error occurred."
@@ -41,7 +40,7 @@ export default function Lastmile() {
         };
 
         // Fetch Stores
-        
+
         fetchLm();
     }, []);
     const handleEdit = (id: string) => {
@@ -49,9 +48,11 @@ export default function Lastmile() {
     };
 
     const handleDelete = async (id: string) => {
-        const confirmDelete = confirm("Are you sure you want to delete this last-mile?");
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this last-mile?"
+        );
         if (!confirmDelete) return;
-    
+
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/last-mile/${id}`,
@@ -59,74 +60,51 @@ export default function Lastmile() {
                     method: "DELETE",
                 }
             );
-    
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(
                     errorData.message || "Failed to delete last-mile."
                 );
             }
-    
+
             // Update state to remove deleted item
-            setLm((prev) => prev.filter((purchase: any) => purchase.Code !== id));
+            setLm((prev) =>
+                prev.filter((purchase: any) => purchase.Code !== id)
+            );
             alert("last-mile deleted successfully.");
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
     };
-    
-    
-    
 
     return (
-        <div className="container mt-4">
-            <h1>
-                <i className="bi bi-building me-2"></i> Last-mile
-            </h1>
-            <p>View and manage your last-mile here.</p>
-
-            <div className="row mt-4">
-
-                {/* Company */}
-                <div className="col-md-3">
-                    <div className="card text-center shadow-sm">
-                        <div className="card-body">
-                            <i
-                                className="bi bi-building"
-                                style={{ fontSize: "2rem", color: "#6c757d" }}
-                            ></i>
-                            <h5 className="card-title mt-3">Last-miles</h5>
-                            <p className="card-text">
-                                View and edit Last-mile details.
-                            </p>
-                            <Link href="/transaction/last-mile/addlastmile">
-                                <button className="btn btn-primary">
-                                    Add last mile
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
-               
+        <div className="container-fluid mt-4">
+            <div className="text-center card shadow-lg p-4 rounded">
+                <h1>
+                    <i className="bi bi-truck me-2"></i> Last-mile
+                </h1>
+                <p>View and manage your last-mile here.</p>
+                <Link href="/transaction/last-mile/addlastmile">
+                    <button className="btn btn-dark">Add last mile</button>
+                </Link>
             </div>
 
-            <div className="mt-5">
-                <h2>Last-miles</h2>
+            <div className="card shadow-lg p-4 rounded mt-4">
+                <p className="mb-4 fw-bold">Last-miles</p>
                 {loadingCompanies && <p>Loading Last-miles...</p>}
                 {errorCompanies && (
                     <p className="text-danger">{errorCompanies}</p>
                 )}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                  Lm.length === 0 && <p>No  found.</p>}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    Lm.length > 0 && (
-                        <table className="table table-bordered mt-3">
-                            <thead>
+                {!loadingCompanies && !errorCompanies && Lm.length === 0 && (
+                    <p>No found.</p>
+                )}
+                {!loadingCompanies && !errorCompanies && Lm.length > 0 && (
+                    <div className="table-responsive">
+                        <table className="table table-striped table-bordered table-hover align-middle text-center">
+                            <thead className="table-dark">
                                 <tr>
-                                    <th>Code</th>
+                                    <th>No</th>
                                     <th>Date</th>
                                     <th>Forwarder ID</th>
                                     <th>Notes</th>
@@ -134,15 +112,15 @@ export default function Lastmile() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {Lm.map((purchase: any) => (
+                                {Lm.map((purchase: any, index: number) => (
                                     <tr key={purchase.Code}>
-                                        <td>{purchase.Code}</td>
-                                  
+                                        <td className="fw-bold">{index + 1}</td>
+
                                         <td>{purchase.Date}</td>
-                                   
-                                        <td>{purchase.ForwarderId}</td>
-                                        <td>{purchase.Notes}</td>
-                                    
+
+                                        <td>{purchase.Forwarder.Name}</td>
+                                        <td>{purchase.Notes || "N/A"}</td>
+
                                         <td>
                                             <button
                                                 className="btn btn-warning btn-sm me-2"
@@ -150,6 +128,7 @@ export default function Lastmile() {
                                                     handleEdit(purchase.Code)
                                                 }
                                             >
+                                                <i className="bi bi-pencil-square"></i>{" "}
                                                 Edit
                                             </button>
                                             <button
@@ -158,6 +137,7 @@ export default function Lastmile() {
                                                     handleDelete(purchase.Code)
                                                 }
                                             >
+                                                <i className="bi bi-trash"></i>{" "}
                                                 Delete
                                             </button>
                                         </td>
@@ -165,7 +145,8 @@ export default function Lastmile() {
                                 ))}
                             </tbody>
                         </table>
-                    )}
+                    </div>
+                )}
             </div>
         </div>
     );
