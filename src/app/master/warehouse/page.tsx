@@ -65,27 +65,36 @@ export default function WarehousePage() {
     }
 
     return (
-        <div className="container mt-4">
-            <h1>Warehouse Dashboard</h1>
-            <p>Manage your warehouses below.</p>
-
-            {/* Add Warehouse Button */}
-            <div className="mb-4">
-                <button
-                    className="btn btn-primary"
-                    onClick={() => router.push("/master/warehouse/add")}
-                >
-                    Add Warehouse
-                </button>
+        <div className="container-fluid mt-4">
+            <div className="text-center card shadow-lg p-4 rounded">
+                <h1>
+                    <i className="bi-geo-alt me-2"></i> Warehouse Dashboard
+                </h1>
+                <p>Manage your warehouses below.</p>
+                {errorMessage && (
+                    <div className="alert alert-danger">{errorMessage}</div>
+                )}
+                {/* Add Warehouse Button */}
+                <div className="mb-4">
+                    <button
+                        className="btn btn-dark"
+                        onClick={() => router.push("/master/warehouse/add")}
+                    >
+                        Add Warehouse
+                    </button>
+                </div>
             </div>
 
-            <div className="row">
+            <div className="row mt-4">
                 {warehouses.length === 0 && <p>No warehouses available.</p>}
                 {warehouses.map((warehouse: any) => (
                     <div className="col-md-4 mb-4" key={warehouse.Code}>
                         <div className="card shadow-sm">
                             <div className="card-body">
-                                <h5 className="card-title">{warehouse.Name}</h5>
+                                <h5 className="card-title">
+                                    <i className="bi bi-truck me-2"></i>
+                                    {warehouse.Name}
+                                </h5>
                                 <p className="card-text">
                                     <strong>Address:</strong>{" "}
                                     {warehouse.Address}
@@ -95,7 +104,16 @@ export default function WarehousePage() {
                                     {warehouse.Notes || "N/A"}
                                 </p>
                                 <p className="card-text">
-                                    <strong>Status:</strong> {warehouse.Status}
+                                    <strong>Status:</strong>{" "}
+                                    <span
+                                        className={`badge ${
+                                            warehouse.Status === "Active"
+                                                ? "bg-success"
+                                                : "bg-secondary"
+                                        }`}
+                                    >
+                                        {warehouse.Status}
+                                    </span>
                                 </p>
                                 <div className="d-flex justify-content-between">
                                     <button
@@ -106,6 +124,7 @@ export default function WarehousePage() {
                                             )
                                         }
                                     >
+                                        <i className="bi bi-pencil-square"></i>{" "}
                                         Edit
                                     </button>
                                     <button
@@ -114,7 +133,7 @@ export default function WarehousePage() {
                                             handleDelete(warehouse.Code)
                                         }
                                     >
-                                        Delete
+                                        <i className="bi bi-trash"></i> Delete
                                     </button>
                                 </div>
                             </div>
