@@ -134,9 +134,14 @@ export default function ProductPricingPage() {
     };
 
     return (
-        <div className="container mt-4">
-            <h1>Product Pricing</h1>
-            <p>Dapat mengatur Harga Product</p>
+        <div className="container-fluid mt-4">
+            <div className="text-center card shadow-lg p-4 rounded">
+                <h1>
+                    <i className="bi bi-box me-2"></i> Product Pricing
+                </h1>
+                <p>Dapat mengatur Harga Product</p>
+            </div>
+
             {errorMessage && (
                 <div className="alert alert-danger">{errorMessage}</div>
             )}
@@ -162,7 +167,7 @@ export default function ProductPricingPage() {
                                     Mengatur Harga Pembelian
                                 </p>
                                 <Link href="/pricing/buying-price">
-                                    <button className="btn btn-primary">
+                                    <button className="btn btn-dark">
                                         Go to Buying Price
                                     </button>
                                 </Link>
@@ -186,7 +191,7 @@ export default function ProductPricingPage() {
                                 </h5>
                                 <p className="card-text">Mengatur Harga</p>
                                 <Link href="/pricing/setting-price">
-                                    <button className="btn btn-primary">
+                                    <button className="btn btn-dark">
                                         Go to Setting Price
                                     </button>
                                 </Link>
@@ -202,147 +207,199 @@ export default function ProductPricingPage() {
             ) : (
                 <>
                     {/* Buying Pricing Table */}
-                    <h2>Buying Pricing</h2>
-                    <table className="table table-bordered mt-3">
-                        <thead>
-                            <tr>
-                                <th>Code</th>
-                                <th>Date</th>
-                                <th>Warehouse</th>
-                                <th>Note</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {buyingPricings.length > 0 ? (
-                                buyingPricings.map((buyingPricing: any) => (
-                                    <tr key={buyingPricing.Code}>
-                                        <td>{buyingPricing.Code}</td>
-                                        <td>{buyingPricing.Date}</td>
-                                        <td>{buyingPricing.Warehouse.Name}</td>
-                                        <td>{buyingPricing.Note}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-warning btn-sm me-2"
-                                                onClick={() =>
-                                                    router.push(
-                                                        `/pricing/buying-price/edit/${buyingPricing.Code}`
-                                                    )
-                                                }
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm me-2"
-                                                onClick={() =>
-                                                    handleDelete(
-                                                        "buying-prices",
-                                                        buyingPricing.Code
-                                                    )
-                                                }
-                                            >
-                                                Delete
-                                            </button>
-                                            <button
-                                                className="btn btn-info btn-sm"
-                                                onClick={() =>
-                                                    handleViewDetails(
-                                                        "buying-price",
-                                                        buyingPricing,
-                                                        setSelectedBP
-                                                    )
-                                                }
-                                            >
-                                                View Details
-                                            </button>
-                                        </td>
+                    <div className="card shadow-lg p-4 rounded mt-4">
+                        <p className="mb-4 fw-bold">Buying Pricing</p>
+                        <div className="table-responsive">
+                            <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Date</th>
+                                        <th>Warehouse</th>
+                                        <th>Note</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4}>No data available</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    {buyingPricings.length > 0 ? (
+                                        buyingPricings.map(
+                                            (
+                                                buyingPricing: any,
+                                                index: number
+                                            ) => (
+                                                <tr key={buyingPricing.Code}>
+                                                    <td className="fw-bold">
+                                                        {index + 1}
+                                                    </td>
+                                                    <td>
+                                                        {buyingPricing.Date}
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            buyingPricing
+                                                                .Warehouse.Name
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {buyingPricing.Note ||
+                                                            "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn btn-warning btn-sm me-2"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/pricing/buying-price/edit/${buyingPricing.Code}`
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil-square"></i>{" "}
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm me-2"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    "buying-prices",
+                                                                    buyingPricing.Code
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Delete
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-info btn-sm"
+                                                            onClick={() =>
+                                                                handleViewDetails(
+                                                                    "buying-price",
+                                                                    buyingPricing,
+                                                                    setSelectedBP
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-search"></i>{" "}
+                                                            View Details
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4}>
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                     {/* Setting Pricing Table */}
-                    <h2>Setting Pricing</h2>
-                    <table className="table table-bordered mt-3">
-                        <thead>
-                            <tr>
-                                <th>Code</th>
-                                <th>Date</th>
-                                <th>Buying Price Code</th>
-                                <th>Note</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {settingPricings.length > 0 ? (
-                                settingPricings.map((settingPricing: any) => (
-                                    <tr key={settingPricing.Code}>
-                                        <td>{settingPricing.Code}</td>
-                                        <td>{settingPricing.Date}</td>
-                                        <td>{settingPricing.BPCode}</td>
-                                        <td>{settingPricing.Note}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-warning btn-sm me-2"
-                                                onClick={() =>
-                                                    router.push(
-                                                        `/pricing/setting-price/edit/${settingPricing.Code}`
-                                                    )
-                                                }
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm me-2"
-                                                onClick={() =>
-                                                    handleDelete(
-                                                        "setting-prices",
-                                                        settingPricing.Code
-                                                    )
-                                                }
-                                            >
-                                                Delete
-                                            </button>
-                                            <button
-                                                className="btn btn-info btn-sm"
-                                                onClick={() =>
-                                                    handleViewDetails(
-                                                        "setting-price",
-                                                        settingPricing,
-                                                        setSelectedSP
-                                                    )
-                                                }
-                                            >
-                                                View Details
-                                            </button>
-                                        </td>
+                    <div className="card shadow-lg p-4 rounded mt-4">
+                        <p className="mb-4 fw-bold">Setting Pricing</p>
+                        <div className="table-responsive">
+                            <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Date</th>
+                                        <th>Buying Price Code</th>
+                                        <th>Note</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4}>No data available</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    {settingPricings.length > 0 ? (
+                                        settingPricings.map(
+                                            (
+                                                settingPricing: any,
+                                                index: number
+                                            ) => (
+                                                <tr key={settingPricing.Code}>
+                                                    <td className="fw-bold">
+                                                        {index + 1}
+                                                    </td>
+                                                    <td>
+                                                        {settingPricing.Date}
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            settingPricing
+                                                                .BuyingPrice
+                                                                .Code
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {settingPricing.Note}
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn btn-warning btn-sm me-2"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/pricing/setting-price/edit/${settingPricing.Code}`
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil-square"></i>{" "}
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm me-2"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    "setting-prices",
+                                                                    settingPricing.Code
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Delete
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-info btn-sm"
+                                                            onClick={() =>
+                                                                handleViewDetails(
+                                                                    "setting-price",
+                                                                    settingPricing,
+                                                                    setSelectedSP
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-search"></i>{" "}
+                                                            View Details
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4}>
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </>
             )}
 
             {/* Modal for Viewing Details */}
             {(selectedBP || selectedSP) && (
                 <div
-                    className="modal show"
+                    className="modal show d-flex align-items-center justify-content-center"
                     style={{
                         display: "block",
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
                     }}
                 >
-                    <div className="modal-dialog modal-lg">
+                    <div className="modal-dialog modal-xl">
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">
@@ -363,88 +420,136 @@ export default function ProductPricingPage() {
                                 {detailsLoading ? (
                                     <p>Loading details...</p>
                                 ) : details ? (
-                                    selectedSP ? ( // Render SettingPriceDetil
-                                        <>
-                                            <h5>Setting Price Details</h5>
-                                            <p>
-                                                <strong>SKU Full:</strong>{" "}
-                                                {details.SKUFull || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>SKU Parent:</strong>{" "}
-                                                {details.SKUParent || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>SKU Code:</strong>{" "}
-                                                {details.SKUCode || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>SKU Code Child:</strong>{" "}
-                                                {details.SKUCodeChild || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Product Name:</strong>{" "}
-                                                {details.ProductName || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Selling Price:</strong>{" "}
-                                                {details.SellingPrice || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Normal Price:</strong>{" "}
-                                                {details.NormalPrice || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>
-                                                    Strikethrough Price:
-                                                </strong>{" "}
-                                                {details.StrikethroughPrice ||
-                                                    "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Campaign Price:</strong>{" "}
-                                                {details.CampaignPrice || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Bottom Price:</strong>{" "}
-                                                {details.BottomPrice || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Note:</strong>{" "}
-                                                {details.SettingPrice?.Note ||
-                                                    "N/A"}
-                                            </p>
-                                        </>
-                                    ) : selectedBP ? ( // Render BuyingPriceDetil
-                                        <>
-                                            <h5>Buying Price Details</h5>
-                                            <p>
-                                                <strong>
-                                                    Buying Price Code:
-                                                </strong>{" "}
-                                                {details.BuyingPrice?.Code ||
-                                                    "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>
-                                                    Proforma Invoice:
-                                                </strong>{" "}
-                                                {details.ProformaInvoice
-                                                    ?.number || "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Cost:</strong>{" "}
-                                                {details.Cost
-                                                    ? `$${details.Cost.amount}`
-                                                    : "N/A"}
-                                            </p>
-                                            <p>
-                                                <strong>Note:</strong>{" "}
-                                                {details.BuyingPrice?.Note ||
-                                                    "N/A"}
-                                            </p>
-                                        </>
-                                    ) : null
+                                    <div className="table-responsive">
+                                        <table className="table table-bordered table-striped align-middle text-center">
+                                            <thead className="table-dark">
+                                                <tr>
+                                                    {selectedSP ? (
+                                                        <>
+                                                            <th>SKU Full</th>
+                                                            <th>SKU Parent</th>
+                                                            <th>SKU Code</th>
+                                                            <th>
+                                                                SKU Code Child
+                                                            </th>
+                                                            <th>
+                                                                Product Name
+                                                            </th>
+                                                            <th>
+                                                                Selling Price
+                                                            </th>
+                                                            <th>
+                                                                Normal Price
+                                                            </th>
+                                                            <th>
+                                                                Strikethrough
+                                                                Price
+                                                            </th>
+                                                            <th>
+                                                                Campaign Price
+                                                            </th>
+                                                            <th>
+                                                                Bottom Price
+                                                            </th>
+                                                            <th>Note</th>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <th>
+                                                                Buying Price
+                                                                Code
+                                                            </th>
+                                                            <th>
+                                                                Proforma Invoice
+                                                            </th>
+                                                            <th>Cost</th>
+                                                            <th>Note</th>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    {selectedSP ? (
+                                                        <>
+                                                            <td>
+                                                                {details.SKUFull ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.SKUParent ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.SKUCode ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.SKUCodeChild ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.ProductName ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.SellingPrice ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.NormalPrice ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.StrikethroughPrice ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.CampaignPrice ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.BottomPrice ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details
+                                                                    .SettingPrice
+                                                                    ?.Note ||
+                                                                    "N/A"}
+                                                            </td>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td>
+                                                                {details
+                                                                    .BuyingPrice
+                                                                    ?.Code ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details
+                                                                    .ProformaInvoice
+                                                                    ?.number ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details.Cost
+                                                                    ? `$${details.Cost.amount}`
+                                                                    : "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {details
+                                                                    .BuyingPrice
+                                                                    ?.Note ||
+                                                                    "N/A"}
+                                                            </td>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 ) : (
                                     <div>
                                         <p>
@@ -452,7 +557,7 @@ export default function ProductPricingPage() {
                                             details.
                                         </p>
                                         <button
-                                            className="btn btn-primary"
+                                            className="btn btn-dark"
                                             onClick={() =>
                                                 router.push(
                                                     `/pricing/${
@@ -472,7 +577,6 @@ export default function ProductPricingPage() {
                                     </div>
                                 )}
                             </div>
-
                             <div className="modal-footer">
                                 <button
                                     type="button"
