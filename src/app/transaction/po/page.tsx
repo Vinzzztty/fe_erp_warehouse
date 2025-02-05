@@ -4,204 +4,249 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+interface PurchaseOrderDetail {
+    Id: number;
+    POId: number;
+    SKUCode: string;
+    ProductName: string;
+    Variant: string | null;
+    ProductImage: string | null;
+    QTYOrdered: string;
+    QTYApproved: string;
+    UnitPriceOrdered: string;
+    UnitPriceApproved: string;
+    FirstMile: string | null;
+    CartonP: string;
+    CartonL: string;
+    CartonT: string;
+    CartonQty: string;
+    PricePerCarton: string;
+    EstimatedCBMTotal: string;
+    CartonWeight: string | null;
+    MarkingNumber: string | null;
+    Credit: string;
+    Note: string;
+    Total: string;
+    createdAt: string;
+    updatedAt: string;
+    Code?: string;
+}
+
 export default function POPage() {
-    const [Purchase, setPurchase] = useState([]);
-    const [stores, setStores] = useState([]);
-    const [loadingCompanies, setLoadingCompanies] = useState(false);
-    const [loadingStores, setLoadingStores] = useState(false);
-    const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
-    const [errorStores, setErrorStores] = useState<string | null>(null);
+    const [POList, setPOList] = useState([]);
+    const [selectedDetail, setSelectedDetail] = useState<PurchaseOrderDetail | null>(null);
+    const [loadingPO, setLoadingPO] = useState(false);
+    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [errorPO, setErrorPO] = useState<string | null>(null);
+    const [errorDetail, setErrorDetail] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalLoading, setIsModalLoading] = useState(true);
+    const [poCode, setPoCode] = useState<string>("");
+
     const router = useRouter();
 
     useEffect(() => {
-        // Fetch Companies
-        const fetchCompanies = async () => {
-            setLoadingCompanies(true);
-            setErrorCompanies(null);
+        const fetchPOs = async () => {
+            setLoadingPO(true);
+            setErrorPO(null);
             try {
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders`
                 );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch companies.");
-                }
-                const data = await response.json();
-                if (data.status.code !== 200) {
-                    throw new Error(
-                        data.status.message || "Failed to fetch companies."
-                    );
-                }
-                setPurchase(data.data);
-                console.log("Fetched Purchase Orders:", data.data);
+                if (!response.ok) throw new Error("Failed to fetch Purchase Orders.");
 
+                const data = await response.json();
+                if (data.status.code !== 200) throw new Error(data.status.message);
+
+                setPOList(data.data);
             } catch (error: any) {
-                setErrorCompanies(
-                    error.message || "An unexpected error occurred."
-                );
+                setErrorPO(error.message);
             } finally {
-                setLoadingCompanies(false);
+                setLoadingPO(false);
             }
         };
 
-        // Fetch Stores
-        const fetchStores = async () => {
-            setLoadingStores(true);
-            setErrorStores(null);
-            try {
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/stores`
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch stores.");
-                }
-                const data = await response.json();
-                if (data.status.code !== 200) {
-                    throw new Error(
-                        data.status.message || "Failed to fetch stores."
-                    );
-                }
-                setStores(data.data);
-            } catch (error: any) {
-                setErrorStores(
-                    error.message || "An unexpected error occurred."
-                );
-            } finally {
-                setLoadingStores(false);
-            }
-        };
-
-        fetchCompanies();
-        fetchStores();
+        fetchPOs();
     }, []);
-    const handleEdit = (id: string) => {
-        router.push(`/transaction/po/editpo?id=${id}`);
+
+    const handleEdit = (code: string) => {
+        router.push(`/transaction/po/editpo?id=${code}`);
     };
 
-    const handleDelete = async (id: string) => {
-        const confirmDelete = confirm("Are you sure you want to delete this purchase order?");
-        if (!confirmDelete) return;
-    
+    const handleAddDetail = (code: string) => {
+        router.push(`/transaction/po/addpodetail?id=${code}`);
+    };
+
+    const handleEditDetail = (code: string) => {
+        router.push(`/transaction/po/editpodetail?id=${code}`);
+    };
+
+    const handleDelete = async (code: string) => {
+        if (!confirm("Are you sure you want to delete this Purchase Order?")) return;
+
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders/${id}`,
-                {
-                    method: "DELETE",
-                }
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders/${code}`,
+                { method: "DELETE" }
             );
-    
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(
-                    errorData.message || "Failed to delete purchase order."
-                );
-            }
-    
-            // Update state to remove deleted item
-            setPurchase((prev) => prev.filter((purchase: any) => purchase.Code !== id));
-            alert("Purchase order deleted successfully.");
+            if (!response.ok) throw new Error("Failed to delete Purchase Order.");
+
+            setPOList((prev) => prev.filter((po: any) => po.Code !== code));
+            alert("Purchase Order deleted successfully.");
+            setIsModalOpen(false);
         } catch (error: any) {
-            alert(error.message || "An unexpected error occurred.");
+            alert(error.message);
         }
     };
-    
-    
-    
+
+    const handleDeleteDetail = async (code: string) => {
+        if (!confirm("Are you sure you want to delete this Purchase Order detail?")) return;
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-order-details/${code}`,
+                { method: "DELETE" }
+            );
+            if (!response.ok) throw new Error("Failed to delete Purchase Order detail.");
+
+            alert("Purchase Order detail deleted successfully.");
+            setIsModalOpen(false);
+        } catch (error: any) {
+            alert(error.message);
+        }
+    };
+
+    const handleDetails = async (code: string) => {
+        setLoadingDetail(true);
+        setIsModalLoading(true);
+        setErrorDetail(null);
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-order-details/by-purchase-order/${code}`
+            );
+            if (!response.ok) throw new Error("Failed to fetch Purchase Order details.");
+
+            const data = await response.json();
+            if (data.status.code !== 200 || !data.data || data.data.length === 0) {
+                throw new Error("No details available for this Purchase Order.");
+            }
+
+            setSelectedDetail(data.data[0]);
+            setPoCode(code);
+        } catch (error: any) {
+            setErrorDetail(error.message);
+            setSelectedDetail(null);
+        } finally {
+            setLoadingDetail(false);
+            setIsModalLoading(false);
+            setIsModalOpen(true);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
 
     return (
         <div className="container mt-4">
             <h1>
-                <i className="bi bi-building me-2"></i> Purchase Order
+                <i className="bi bi-cart me-2"></i> Purchase Order
             </h1>
-            <p>View and manage your orders here.</p>
-
-            <div className="row mt-4">
-
-                {/* Company */}
-                <div className="col-md-3">
-                    <div className="card text-center shadow-sm">
-                        <div className="card-body">
-                            <i
-                                className="bi bi-building"
-                                style={{ fontSize: "2rem", color: "#6c757d" }}
-                            ></i>
-                            <h5 className="card-title mt-3">Purchase Orders</h5>
-                            <p className="card-text">
-                                View and edit PO details.
-                            </p>
+            <p>View and manage your purchase orders here.</p>
                             <Link href="/transaction/po/addpo">
-                                <button className="btn btn-primary">
-                                    Go to PO
-                                </button>
+                                <button className="btn btn-primary">Add PO</button>
                             </Link>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Store */}
-          
-            </div>
 
             <div className="mt-5">
                 <h2>Purchase Orders</h2>
-                {loadingCompanies && <p>Loading POs...</p>}
-                {errorCompanies && (
-                    <p className="text-danger">{errorCompanies}</p>
-                )}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    Purchase.length === 0 && <p>No POs found.</p>}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    Purchase.length > 0 && (
-                        <table className="table table-bordered mt-3">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Date</th>
-                                    <th>Supplier Id</th>
-                                    <th>Notes</th>
-                                    <th>Created At</th>
-                                    <th>Action</th>
+                {loadingPO && <p>Loading Purchase Orders...</p>}
+                {errorPO && <p className="text-danger">{errorPO}</p>}
+                {!loadingPO && !errorPO && POList.length === 0 && <p>No Purchase Orders found.</p>}
+                {!loadingPO && !errorPO && POList.length > 0 && (
+                    <table className="table table-bordered mt-3">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Date</th>
+                                <th>Supplier</th>
+                                <th>Notes</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {POList.map((po: any) => (
+                                <tr key={po.Code}>
+                                    <td>{po.Code}</td>
+                                    <td>{po.Date}</td>
+                                    <td>{po.SupplierId}</td>
+                                    <td>{po.Notes}</td>
+                                    <td>
+                                        <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(po.Code)}>
+                                            Edit
+                                        </button>
+                                        <button className="btn btn-danger btn-sm me-2" onClick={() => handleDelete(po.Code)}>
+                                            Delete
+                                        </button>
+                                        <button className="btn btn-info btn-sm" onClick={() => handleDetails(po.Code)}>
+                                            View Detail
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {Purchase.map((purchase: any) => (
-                                    <tr key={purchase.Code}>
-                                        <td>{purchase.Code}</td>
-                                        <td>{purchase.Date}</td>
-                                        <td>{purchase.SupplierId}</td>
-                                        <td>{purchase.Notes || "N/A"}</td>
-                                        <td>
-                                            {new Date(
-                                                purchase.CreatedAt
-                                            ).toLocaleString()}
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn btn-warning btn-sm me-2"
-                                                onClick={() =>
-                                                    handleEdit(purchase.Code)
-                                                }
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() =>
-                                                    handleDelete(purchase.Code)
-                                                }
-                                            >
-                                                Delete
-                                            </button>
-                                            
-                                            
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
+
+            {isModalOpen && (
+                <div className="modal show" style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+                    <div className="modal-dialog modal-lg">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Purchase Order Detail</h5>
+                                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                            </div>
+                            <div className="modal-body">
+                                {isModalLoading ? <p>Loading details...</p> : selectedDetail ? (
+                                    <>
+                                        <p><strong>Product Name:</strong> {selectedDetail.ProductName}</p>
+                                        <p><strong>SKU Code:</strong> {selectedDetail.SKUCode}</p>
+                                    </>
+                                ) : <p>No details available.</p>}
+                            </div>
+                            <div className="modal-footer">
+                            <button className="btn btn-secondary" onClick={handleCloseModal}>
+                                    Close
+                                </button>
+                                <button
+                                    className="btn btn-primary"
+                                    
+                                    onClick={() => {
+                                        
+                                            handleEditDetail(selectedDetail?.Id?.toString() || '');
+                                        
+                                    }}
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={() => handleDeleteDetail(selectedDetail?.Id?.toString() || '')}
+                                >
+                                    Delete
+                                </button>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={() => handleAddDetail(poCode)}
+                                >
+                                    Add Detail
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
