@@ -30,7 +30,6 @@ export default function POPage() {
                 }
                 setInvoice(data.data);
                 console.log("Fetched Proforma Invoice:", data.data);
-
             } catch (error: any) {
                 setErrorCompanies(
                     error.message || "An unexpected error occurred."
@@ -41,7 +40,7 @@ export default function POPage() {
         };
 
         // Fetch Stores
-        
+
         fetchCompanies();
     }, []);
     const handleEdit = (id: string) => {
@@ -49,9 +48,11 @@ export default function POPage() {
     };
 
     const handleDelete = async (id: string) => {
-        const confirmDelete = confirm("Are you sure you want to delete this proforma invoice?");
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this proforma invoice?"
+        );
         if (!confirmDelete) return;
-    
+
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payments/${id}`,
@@ -59,74 +60,52 @@ export default function POPage() {
                     method: "DELETE",
                 }
             );
-    
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(
                     errorData.message || "Failed to delete purchase order."
                 );
             }
-    
+
             // Update state to remove deleted item
-            setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== id));
+            setInvoice((prev) =>
+                prev.filter((purchase: any) => purchase.Code !== id)
+            );
             alert("Purchase order deleted successfully.");
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
     };
-    
-    
-    
 
     return (
-        <div className="container mt-4">
-            <h1>
-                <i className="bi bi-building me-2"></i> Proformal Invoice Payment
-            </h1>
-            <p>View and manage your orders here.</p>
-
-            <div className="row mt-4">
-
-                {/* Company */}
-                <div className="col-md-3">
-                    <div className="card text-center shadow-sm">
-                        <div className="card-body">
-                            <i
-                                className="bi bi-building"
-                                style={{ fontSize: "2rem", color: "#6c757d" }}
-                            ></i>
-                            <h5 className="card-title mt-3">Proformal Invoice Payment</h5>
-                            <p className="card-text">
-                                View and edit PI details.
-                            </p>
-                            <Link href="/transaction/pi-payment/addpipayment">
-                                <button className="btn btn-primary">
-                                    Go to PI-Payment
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
-               
+        <div className="container-fluid mt-4">
+            <div className="text-center card shadow-lg p-4 rounded">
+                <h1>
+                    <i className="bi bi-building me-2"></i> Proformal Invoice
+                    Payment
+                </h1>
+                <p>View and manage your orders here.</p>
+                <Link href="/transaction/pi-payment/addpipayment">
+                    <button className="btn btn-dark">Go to PI-Payment</button>
+                </Link>
             </div>
 
-            <div className="mt-5">
-                <h2>Proformal Invoice Payment</h2>
+            <div className="card shadow-lg p-4 rounded mt-4">
+                <h2>Proforma Invoice Payment</h2>
                 {loadingCompanies && <p>Loading PI-Payments...</p>}
                 {errorCompanies && (
                     <p className="text-danger">{errorCompanies}</p>
                 )}
                 {!loadingCompanies &&
                     !errorCompanies &&
-                  Invoice.length === 0 && <p>No PIs found.</p>}
-                {!loadingCompanies &&
-                    !errorCompanies &&
-                    Invoice.length > 0 && (
-                        <table className="table table-bordered mt-3">
-                            <thead>
+                    Invoice.length === 0 && <p>No PIs found.</p>}
+                {!loadingCompanies && !errorCompanies && Invoice.length > 0 && (
+                    <div className="table-responsive">
+                        <table className="table table-striped table-bordered table-hover align-middle text-center">
+                            <thead className="table-dark">
                                 <tr>
-                                    <th>Code</th>
+                                    <th>No</th>
                                     <th>Date</th>
                                     <th>Supplier Id</th>
                                     <th>Notes</th>
@@ -135,14 +114,29 @@ export default function POPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {Invoice.map((purchase: any) => (
+                                {Invoice.map((purchase: any, index: number) => (
                                     <tr key={purchase.Code}>
-                                        <td>{purchase.Code}</td>
+                                        <td className="fw-bold">{index + 1}</td>
                                         <td>{purchase.Date}</td>
-                                        <td>{purchase.SupplierId}</td>
+                                        <td>{purchase.Supplier.Name}</td>
                                         <td>{purchase.Notes || "N/A"}</td>
-                                        <td>{purchase.Status}</td>
-                                    
+                                        <td>
+                                            <span
+                                                className={`badge ${
+                                                    [
+                                                        "Completed",
+                                                        "Paid",
+                                                        "Arrived",
+                                                        "Shipped",
+                                                    ].includes(purchase.Status)
+                                                        ? "bg-success"
+                                                        : "bg-secondary"
+                                                }`}
+                                            >
+                                                {purchase.Status}
+                                            </span>
+                                        </td>
+
                                         <td>
                                             <button
                                                 className="btn btn-warning btn-sm me-2"
@@ -150,6 +144,7 @@ export default function POPage() {
                                                     handleEdit(purchase.Code)
                                                 }
                                             >
+                                                <i className="bi bi-pencil-square"></i>{" "}
                                                 Edit
                                             </button>
                                             <button
@@ -158,6 +153,7 @@ export default function POPage() {
                                                     handleDelete(purchase.Code)
                                                 }
                                             >
+                                                <i className="bi bi-trash"></i>{" "}
                                                 Delete
                                             </button>
                                         </td>
@@ -165,7 +161,8 @@ export default function POPage() {
                                 ))}
                             </tbody>
                         </table>
-                    )}
+                    </div>
+                )}
             </div>
         </div>
     );
