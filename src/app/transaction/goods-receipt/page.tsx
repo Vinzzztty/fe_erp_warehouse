@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import jsPDF from "jspdf"; // Import jsPDF
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 
 interface GoodsReceipt {
     Code: number;
@@ -185,71 +187,97 @@ export default function GoodsReceiptPage() {
     const generatePDF = () => {
         if (selectedDetail) {
             const doc = new jsPDF("landscape", "mm", "a4"); // Landscape orientation
-
+    
             // Title
             doc.setFontSize(18);
             doc.text("Goods Receipt Invoice", 150, 20);
-
+    
             // Goods Receipt Information
             doc.setFontSize(12);
             const gr = selectedDetail.GoodsReceipt;
-
+    
             doc.text(`Goods Receipt Code: ${gr.Code}`, 20, 40);
             doc.text(`Date: ${gr.Date}`, 20, 50);
             doc.text(`Forwarder ID: ${gr.ForwarderId}`, 20, 60);
             doc.text(`Warehouse ID: ${gr.WarehouseId}`, 20, 70);
             doc.text(`Note: ${gr.Note || "N/A"}`, 20, 80);
-
-            // Goods Receipt Detail
-            doc.text(`Product Name: ${selectedDetail.ProductName}`, 120, 40);
-            doc.text(`SKU Code: ${selectedDetail.SKUCode}`, 120, 50);
-            doc.text(`Ordered Qty: ${selectedDetail.OrderedQty}`, 120, 60);
-            doc.text(`Received Qty: ${selectedDetail.ReceivedQty}`, 120, 70);
-            doc.text(`Remaining Qty: ${selectedDetail.RemainQty}`, 120, 80);
-            doc.text(`Condition: ${selectedDetail.Condition}`, 120, 90);
-            doc.text(`Notes: ${selectedDetail.Notes}`, 120, 100);
-
-            // Additional Info
+    
+            // Table for Goods Receipt Details using autoTable plugin
+            const tableHeaders = [
+                "Product Name", "SKU Code", "Ordered Qty", "Received Qty", "Remaining Qty", "Condition", "Notes"
+            ];
+            const tableData = [
+                [
+                    selectedDetail.ProductName,
+                    selectedDetail.SKUCode,
+                    selectedDetail.OrderedQty,
+                    selectedDetail.ReceivedQty,
+                    selectedDetail.RemainQty,
+                    selectedDetail.Condition,
+                    selectedDetail.Notes
+                ]
+            ];
+    
+            // Using autoTable to draw the table
+            doc.autoTable({
+                startY: 90, // starting position of the table
+                head: [tableHeaders], // Table headers
+                body: tableData, // Table data
+                theme: "grid", // Table theme
+                margin: { left: 20 }, // Set left margin for table
+                styles: {
+                    fontSize: 10, // Font size for the table
+                    cellPadding: 3, // Padding inside each cell
+                    tableWidth: "wrap", // Auto-adjust table width
+                },
+                headStyles: {
+                    fontStyle: "bold", // Bold headers
+                },
+            });
+    
+            // Additional Info below table
+            const yOffset = doc.lastAutoTable.finalY + 10; // Calculate Y position after table
             doc.text(
-                `Last Mile Tracking: ${
-                    selectedDetail.LastMileTracking || "N/A"
-                }`,
+                `Last Mile Tracking: ${selectedDetail.LastMileTracking || "N/A"}`,
                 20,
-                120
+                yOffset
             );
             doc.text(
                 `Freight Code: ${selectedDetail.FreightCode || "N/A"}`,
                 20,
-                130
+                yOffset + 10
             );
             doc.text(
                 `Created At: ${new Date(
                     selectedDetail.createdAt
                 ).toLocaleString()}`,
                 120,
-                120
+                yOffset
             );
             doc.text(
                 `Updated At: ${new Date(
                     selectedDetail.updatedAt
                 ).toLocaleString()}`,
                 120,
-                130
+                yOffset + 10
             );
-
+    
             // Footer
             doc.setFontSize(10);
-
             doc.text(
                 `Goods Receipt ID: ${selectedDetail.GoodsReceiptId}`,
                 20,
-                210
+                yOffset + 30
             );
-
+    
             // Save the PDF
             doc.save(`goods-receipt-invoice-${selectedDetail.SKUCode}.pdf`);
         }
     };
+    
+    
+    
+
 
     return (
         <div className="container-fluid mt-4">
@@ -443,7 +471,9 @@ export default function GoodsReceiptPage() {
                                 </Link>
                                 <button
                                     className="btn btn-success"
-                                    onClick={() => console.log("Print Invoice")}
+                                    onClick={generatePDF
+                                        
+                                    }
                                 >
                                     <i className="bi bi-printer-fill me-2"></i>
                                     Print Invoice
