@@ -232,7 +232,7 @@ export default function GoodsPage() {
                     className="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Add CX-Quotation"}
+                    {loading ? "Submitting..." : "Add Receipts"}
                 </button>
             </form>
 
