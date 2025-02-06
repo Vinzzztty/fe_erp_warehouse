@@ -6,15 +6,13 @@ import { useRouter } from "next/navigation";
 
 interface PurchaseOrderDetail {
     Id: number;
-    POId: number;
+    PurchaseOrderId: number;
     SKUCode: string;
     ProductName: string;
     Variant: string | null;
     ProductImage: string | null;
-    QTYOrdered: string;
-    QTYApproved: string;
-    UnitPriceOrdered: string;
-    UnitPriceApproved: string;
+    QTY: string;
+    UnitPrice: string;
     FirstMile: string | null;
     CartonP: string;
     CartonL: string;
@@ -24,9 +22,8 @@ interface PurchaseOrderDetail {
     EstimatedCBMTotal: string;
     CartonWeight: string | null;
     MarkingNumber: string | null;
-    Credit: string;
+    Credit: string | null;
     Note: string;
-    Total: string;
     createdAt: string;
     updatedAt: string;
     Code?: string;
@@ -155,10 +152,12 @@ export default function POPage() {
         } catch (error: any) {
             setErrorDetail(error.message);
             setSelectedDetail(null);
+            setPoCode(code);
         } finally {
             setLoadingDetail(false);
             setIsModalLoading(false);
             setIsModalOpen(true);
+            setPoCode(code);
         }
     };
 
@@ -265,25 +264,33 @@ export default function POPage() {
                                 ) : selectedDetail ? (
                                     <div className="table-responsive">
                                         <table className="table table-bordered table-striped align-middle text-center">
-                                            <thead className="table-primary">
-                                                <tr>
-                                                    <th>Product Name</th>
-                                                    <th>SKU Code</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.ProductName
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.SKUCode}
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <thead className="table-primary">
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>SKU</th>
+                                            <th>Variant</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price</th>
+                                            <th>Carton Size</th>
+                                            <th>Carton QTY</th>
+                                            <th>Price/Carton</th>
+                                            <th>Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>{selectedDetail.ProductName}</td>
+                                            <td>{selectedDetail.SKUCode}</td>
+                                            <td>{selectedDetail.Variant || "-"}</td>
+                                            <td>{selectedDetail.QTY}</td>
+                                            <td>${selectedDetail.UnitPrice}</td>
+                                            <td>{selectedDetail.CartonP} x {selectedDetail.CartonL} x {selectedDetail.CartonT}</td>
+                                            <td>{selectedDetail.CartonQty}</td>
+                                            <td>${selectedDetail.PricePerCarton}</td>
+                                            <td>{selectedDetail.Note}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                                     </div>
                                 ) : (
                                     <p>No details available.</p>
@@ -293,9 +300,7 @@ export default function POPage() {
                                 <button
                                     className="btn btn-primary"
                                     onClick={() =>
-                                        router.push(
-                                            `/transaction/purchase-order/edit?id=${selectedDetail?.Id}`
-                                        )
+                                        handleEditDetail(selectedDetail?.Id?.toString() || "")
                                     }
                                 >
                                     <i className="bi bi-pencil-square me-2"></i>{" "}
@@ -313,11 +318,14 @@ export default function POPage() {
                                 </button>
                                 <button
                                     className="btn btn-success"
-                                    onClick={() => handleAddDetail(poCode)}
+                                    onClick={() => {
+                                        console.log("poCode before adding detail:", poCode);
+                                        handleAddDetail(poCode);
+                                    }}
                                 >
-                                    <i className="bi bi-plus-square me-2"></i>{" "}
-                                    Add Detail
+                                    <i className="bi bi-plus-square me-2"></i> Add Detail
                                 </button>
+
                             </div>
                         </div>
                     </div>

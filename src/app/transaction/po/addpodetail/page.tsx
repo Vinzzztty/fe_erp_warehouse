@@ -47,7 +47,12 @@ export default function AddPODetailPage() {
     CartonQty: 0,
     Note: "",
   });
-
+  useEffect(() => {
+    const poCodeFromURL = searchParams.get("id");
+    if (poCodeFromURL) {
+      setPoId(poCodeFromURL);
+    }
+  }, [searchParams]);
   // Fetch product data
   useEffect(() => {
     const fetchProductData = async () => {
