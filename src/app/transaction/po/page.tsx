@@ -264,7 +264,7 @@ export default function POPage() {
                                 ) : selectedDetail ? (
                                     <div className="table-responsive">
                                         <table className="table table-bordered table-striped align-middle text-center">
-                                    <thead className="table-primary">
+                                    <thead className="table-dark">
                                         <tr>
                                             <th>Product</th>
                                             <th>SKU</th>

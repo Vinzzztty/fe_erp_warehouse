@@ -193,106 +193,91 @@ export default function GoodsReceiptPage() {
     };
 
     // Function to generate PDF
+
+
+    
+    
     const generatePDF = () => {
         if (selectedDetail) {
-            const doc = new jsPDF("landscape", "mm", "a4"); // Landscape orientation
-
-            // Title
+            const doc = new jsPDF("landscape", "mm", "a4");
+    
+            // Hitung posisi tengah halaman untuk judul
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const titleX = pageWidth / 2; 
+    
+            // Judul Invoice (di tengah)
             doc.setFontSize(18);
-            doc.text("Goods Receipt Invoice", 150, 20);
-
+            doc.text("Goods Receipt Invoice", titleX, 20, { align: "center" });
+    
             // Goods Receipt Information
             doc.setFontSize(12);
             const gr = selectedDetail.GoodsReceipt;
-
-            doc.text(`Goods Receipt Code: ${gr.Code}`, 20, 40);
-            doc.text(`Date: ${gr.Date}`, 20, 50);
-            doc.text(`Forwarder: ${gr.Forwarder?.Name || "N/A"}`, 20, 60); // Change ForwarderId to Forwarder.Name
-            doc.text(`Warehouse: ${gr.Warehouse?.Name || "N/A"}`, 20, 70); // Change WarehouseId to Warehouse.Name
-            doc.text(`Note: ${gr.Note || "N/A"}`, 20, 80);
-
-            // Table for Goods Receipt Details using autoTable plugin
+    
+            let yOffset = 40; 
+            doc.text(`Goods Receipt Code: ${gr.Code}`, 20, yOffset);
+            doc.text(`Date: ${gr.Date}`, 20, yOffset + 10);
+            doc.text(`Forwarder: ${gr.Forwarder?.Name || "N/A"}`, 20, yOffset + 20);
+            doc.text(`Warehouse: ${gr.Warehouse?.Name || "N/A"}`, 20, yOffset + 30);
+            doc.text(`Note: ${gr.Note || "N/A"}`, 20, yOffset + 40);
+    
+            yOffset += 60; 
+    
+            // Additional Info
+            doc.text(`Last Mile Tracking: ${selectedDetail.LastMileTracking || "N/A"}`, 20, yOffset);
+            doc.text(`Freight Code: ${selectedDetail.FreightCode || "N/A"}`, 20, yOffset + 10);
+            doc.text(`Created At: ${new Date(selectedDetail.createdAt).toLocaleString()}`, 120, yOffset);
+            doc.text(`Updated At: ${new Date(selectedDetail.updatedAt).toLocaleString()}`, 120, yOffset + 10);
+    
+            yOffset += 30;
+    
+            // Footer
+            doc.setFontSize(10);
+            doc.text(`Goods Receipt ID: ${selectedDetail.GoodsReceiptId}`, 20, yOffset);
+    
+            yOffset += 20;
+    
+            // --- TABEL di bagian paling bawah ---
             const tableHeaders = [
-                "Product Name",
-                "SKU Code",
-                "Ordered Qty",
-                "Received Qty",
-                "Remaining Qty",
-                "Condition",
-                "Notes",
+                "Product Name", "SKU Code", "Ordered Qty", "Received Qty", "Remaining Qty", "Condition", "Notes"
             ];
-            const tableData = [
-                [
-                    selectedDetail.ProductName,
-                    selectedDetail.SKUCode,
-                    selectedDetail.OrderedQty,
-                    selectedDetail.ReceivedQty,
-                    selectedDetail.RemainQty,
-                    selectedDetail.Condition,
-                    selectedDetail.Notes,
-                ],
-            ];
-
-            // Ensure TypeScript recognizes autoTable
-            (autoTable as any)(doc, {
-                startY: 90,
+            const tableData = [[
+                selectedDetail.ProductName,
+                selectedDetail.SKUCode,
+                selectedDetail.OrderedQty,
+                selectedDetail.ReceivedQty,
+                selectedDetail.RemainQty,
+                selectedDetail.Condition,
+                selectedDetail.Notes
+            ]];
+    
+            // Gunakan autoTable dengan cara yang benar
+            autoTable(doc, {
+                startY: yOffset, 
                 head: [tableHeaders],
                 body: tableData,
                 theme: "grid",
                 margin: { left: 20 },
+                tableWidth: "auto", // Pindahkan dari styles ke sini
                 styles: {
                     fontSize: 10,
                     cellPadding: 3,
-                    tableWidth: "wrap",
+                    lineColor: [0, 0, 0], // Border tabel hitam
+                    textColor: [0, 0, 0], // Teks dalam tabel tetap hitam
                 },
                 headStyles: {
+                    fillColor: [0, 0, 0], // Header tabel warna hitam
+                    textColor: [255, 255, 255], // Teks header warna putih
                     fontStyle: "bold",
                 },
             });
-
-            // To avoid 'lastAutoTable' error, check before accessing
-            const lastY = (doc as any).lastAutoTable?.finalY || 100;
-
-            // Additional Info below table
-            doc.text(
-                `Last Mile Tracking: ${
-                    selectedDetail.LastMileTracking || "N/A"
-                }`,
-                20,
-                lastY + 10
-            );
-            doc.text(
-                `Freight Code: ${selectedDetail.FreightCode || "N/A"}`,
-                20,
-                lastY + 20
-            );
-            doc.text(
-                `Created At: ${new Date(
-                    selectedDetail.createdAt
-                ).toLocaleString()}`,
-                120,
-                lastY + 10
-            );
-            doc.text(
-                `Updated At: ${new Date(
-                    selectedDetail.updatedAt
-                ).toLocaleString()}`,
-                120,
-                lastY + 20
-            );
-
-            // Footer
-            doc.setFontSize(10);
-            doc.text(
-                `Goods Receipt ID: ${selectedDetail.GoodsReceiptId}`,
-                20,
-                lastY + 40
-            );
-
-            // Save the PDF
+    
+            // Simpan PDF
             doc.save(`goods-receipt-invoice-${selectedDetail.SKUCode}.pdf`);
         }
     };
+    
+
+        
 
     return (
         <div className="container-fluid mt-4">
