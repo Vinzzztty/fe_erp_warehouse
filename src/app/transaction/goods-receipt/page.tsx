@@ -3,16 +3,25 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
+interface Forwarder {
+    Id: number;
+    Name: string;
+}
+
+interface Warehouse {
+    Id: number;
+    Name: string;
+}
 
 interface GoodsReceipt {
     Code: number;
     Date: string;
-    ForwarderId: number;
+    Forwarder: Forwarder; // Change from ForwarderId to Forwarder object
     LMCode: number;
-    WarehouseId: number;
+    Warehouse: Warehouse; // Change from WarehouseId to Warehouse object
     Note: string | null;
     createdAt: string;
     updatedAt: string;
@@ -34,7 +43,7 @@ interface GoodsReceiptDetail {
     Notes: string;
     createdAt: string;
     updatedAt: string;
-    GoodsReceipt: GoodsReceipt; // Added GoodsReceipt object
+    GoodsReceipt: GoodsReceipt; // Now GoodsReceipt contains Forwarder & Warehouse
 }
 
 export default function GoodsReceiptPage() {
@@ -187,24 +196,30 @@ export default function GoodsReceiptPage() {
     const generatePDF = () => {
         if (selectedDetail) {
             const doc = new jsPDF("landscape", "mm", "a4"); // Landscape orientation
-    
+
             // Title
             doc.setFontSize(18);
             doc.text("Goods Receipt Invoice", 150, 20);
-    
+
             // Goods Receipt Information
             doc.setFontSize(12);
             const gr = selectedDetail.GoodsReceipt;
-    
+
             doc.text(`Goods Receipt Code: ${gr.Code}`, 20, 40);
             doc.text(`Date: ${gr.Date}`, 20, 50);
-            doc.text(`Forwarder ID: ${gr.ForwarderId}`, 20, 60);
-            doc.text(`Warehouse ID: ${gr.WarehouseId}`, 20, 70);
+            doc.text(`Forwarder: ${gr.Forwarder?.Name || "N/A"}`, 20, 60); // Change ForwarderId to Forwarder.Name
+            doc.text(`Warehouse: ${gr.Warehouse?.Name || "N/A"}`, 20, 70); // Change WarehouseId to Warehouse.Name
             doc.text(`Note: ${gr.Note || "N/A"}`, 20, 80);
-    
+
             // Table for Goods Receipt Details using autoTable plugin
             const tableHeaders = [
-                "Product Name", "SKU Code", "Ordered Qty", "Received Qty", "Remaining Qty", "Condition", "Notes"
+                "Product Name",
+                "SKU Code",
+                "Ordered Qty",
+                "Received Qty",
+                "Remaining Qty",
+                "Condition",
+                "Notes",
             ];
             const tableData = [
                 [
@@ -214,70 +229,70 @@ export default function GoodsReceiptPage() {
                     selectedDetail.ReceivedQty,
                     selectedDetail.RemainQty,
                     selectedDetail.Condition,
-                    selectedDetail.Notes
-                ]
+                    selectedDetail.Notes,
+                ],
             ];
-    
-            // Using autoTable to draw the table
-            doc.autoTable({
-                startY: 90, // starting position of the table
-                head: [tableHeaders], // Table headers
-                body: tableData, // Table data
-                theme: "grid", // Table theme
-                margin: { left: 20 }, // Set left margin for table
+
+            // Ensure TypeScript recognizes autoTable
+            (autoTable as any)(doc, {
+                startY: 90,
+                head: [tableHeaders],
+                body: tableData,
+                theme: "grid",
+                margin: { left: 20 },
                 styles: {
-                    fontSize: 10, // Font size for the table
-                    cellPadding: 3, // Padding inside each cell
-                    tableWidth: "wrap", // Auto-adjust table width
+                    fontSize: 10,
+                    cellPadding: 3,
+                    tableWidth: "wrap",
                 },
                 headStyles: {
-                    fontStyle: "bold", // Bold headers
+                    fontStyle: "bold",
                 },
             });
-    
+
+            // To avoid 'lastAutoTable' error, check before accessing
+            const lastY = (doc as any).lastAutoTable?.finalY || 100;
+
             // Additional Info below table
-            const yOffset = doc.lastAutoTable.finalY + 10; // Calculate Y position after table
             doc.text(
-                `Last Mile Tracking: ${selectedDetail.LastMileTracking || "N/A"}`,
+                `Last Mile Tracking: ${
+                    selectedDetail.LastMileTracking || "N/A"
+                }`,
                 20,
-                yOffset
+                lastY + 10
             );
             doc.text(
                 `Freight Code: ${selectedDetail.FreightCode || "N/A"}`,
                 20,
-                yOffset + 10
+                lastY + 20
             );
             doc.text(
                 `Created At: ${new Date(
                     selectedDetail.createdAt
                 ).toLocaleString()}`,
                 120,
-                yOffset
+                lastY + 10
             );
             doc.text(
                 `Updated At: ${new Date(
                     selectedDetail.updatedAt
                 ).toLocaleString()}`,
                 120,
-                yOffset + 10
+                lastY + 20
             );
-    
+
             // Footer
             doc.setFontSize(10);
             doc.text(
                 `Goods Receipt ID: ${selectedDetail.GoodsReceiptId}`,
                 20,
-                yOffset + 30
+                lastY + 40
             );
-    
+
             // Save the PDF
             doc.save(`goods-receipt-invoice-${selectedDetail.SKUCode}.pdf`);
         }
     };
-    
-    
-    
-
 
     return (
         <div className="container-fluid mt-4">
@@ -343,6 +358,7 @@ export default function GoodsReceiptPage() {
                                                 onClick={() =>
                                                     handleDetails(gr.Code)
                                                 }
+                                                aria-label="View details for goods receipt"
                                             >
                                                 <i className="bi bi-search"></i>{" "}
                                                 View Detail
@@ -358,7 +374,7 @@ export default function GoodsReceiptPage() {
 
             {isModalOpen && (
                 <div
-                    className="modal show d-flex align-items-center justify-content-center"
+                    className="modal fade show d-flex align-items-center justify-content-center"
                     style={{
                         display: "block",
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -426,7 +442,8 @@ export default function GoodsReceiptPage() {
                                                         }
                                                     </td>
                                                     <td>
-                                                        {selectedDetail.Notes}
+                                                        {selectedDetail.Notes ||
+                                                            "N/A"}
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -471,9 +488,7 @@ export default function GoodsReceiptPage() {
                                 </Link>
                                 <button
                                     className="btn btn-success"
-                                    onClick={generatePDF
-                                        
-                                    }
+                                    onClick={generatePDF}
                                 >
                                     <i className="bi bi-printer-fill me-2"></i>
                                     Print Invoice
