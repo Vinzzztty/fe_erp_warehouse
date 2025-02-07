@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface ProformaInvoiceDetail {
     Id: number;
@@ -31,6 +33,124 @@ interface ProformaInvoiceDetail {
     updatedAt: string;
     Code?: string;
 }
+
+
+
+const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
+    if (selectedDetails.length > 0) {
+        const doc = new jsPDF("landscape", "mm", "a4");
+
+        // Get first detail for invoice information
+        const firstDetail = selectedDetails[0];
+
+        // Page width for positioning
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const rightAlignX = pageWidth - 20;
+
+        // --- Proforma Invoice Title (Top Right) ---
+        doc.setFontSize(18);
+        doc.text("Proforma Invoice", rightAlignX, 20, { align: "right" });
+
+        doc.setFontSize(12);
+        let yOffset = 40;
+
+        // --- Left Section: Invoice Information ---
+        doc.text(`Invoice Code: ${firstDetail.Code || "N/A"}`, 20, yOffset);
+        doc.text(`Proforma Invoice ID: ${firstDetail.ProformaInvoiceId}`, 20, yOffset + 10);
+        doc.text(`Created At: ${new Date(firstDetail.createdAt).toLocaleString()}`, 20, yOffset + 20);
+        doc.text(`Updated At: ${new Date(firstDetail.updatedAt).toLocaleString()}`, 20, yOffset + 30);
+
+        yOffset += 50;
+
+        // --- Table 1: Ordered Product Detail ---
+        doc.setFontSize(14);
+        doc.text("Ordered Product Detail", 20, yOffset);
+        yOffset += 10;
+
+        const orderedHeaders = [
+            "SKU Code", "Product Name", "Variant", "QTY Ordered", "Unit Price Ordered", 
+            "First Mile", "Carton P", "Carton L", "Carton T", "Carton Qty", 
+            "Price/Carton", "Estimated CBM", "Carton Weight", "Marking Number", 
+            "Credit", "Note", "Total"
+        ];
+
+        const orderedData = selectedDetails.map((detail) => [
+            detail.SKUCode, detail.ProductName, detail.Variant || "N/A", detail.QTYOrdered, 
+            detail.UnitPriceOrdered, detail.FirstMile || "N/A", detail.CartonP, detail.CartonL, 
+            detail.CartonT, detail.CartonQty, detail.PricePerCarton, detail.EstimatedCBMTotal, 
+            detail.CartonWeight || "N/A", detail.MarkingNumber || "N/A", 
+            detail.Credit, detail.Note, detail.Total
+        ]);
+
+        autoTable(doc, {
+            startY: yOffset,
+            head: [orderedHeaders],
+            body: orderedData,
+            theme: "grid",
+            margin: { left: 20 },
+            tableWidth: "auto",
+            styles: {
+                fontSize: 10,
+                cellPadding: 3,
+                lineColor: [0, 0, 0],
+                textColor: [0, 0, 0],
+            },
+            headStyles: {
+                fillColor: [0, 0, 0],
+                textColor: [255, 255, 255],
+                fontStyle: "bold",
+            },
+        });
+
+        // Get the last Y position after the first table
+        const lastY = (doc as any).lastAutoTable?.finalY || yOffset + 10;
+        yOffset = lastY + 20;
+
+        // --- Table 2: Approved Product Detail ---
+        doc.setFontSize(14);
+        doc.text("Approved Product Detail", 20, yOffset);
+        yOffset += 10;
+
+        const approvedHeaders = [
+            "SKU Code", "Product Name", "Variant", "QTY Approved", "Unit Price Approved", 
+            "First Mile", "Carton P", "Carton L", "Carton T", "Carton Qty", 
+            "Price/Carton", "Estimated CBM", "Carton Weight", "Marking Number", 
+            "Credit", "Note", "Total"
+        ];
+
+        const approvedData = selectedDetails.map((detail) => [
+            detail.SKUCode, detail.ProductName, detail.Variant || "N/A", detail.QTYApproved, 
+            detail.UnitPriceApproved, detail.FirstMile || "N/A", detail.CartonP, detail.CartonL, 
+            detail.CartonT, detail.CartonQty, detail.PricePerCarton, detail.EstimatedCBMTotal, 
+            detail.CartonWeight || "N/A", detail.MarkingNumber || "N/A", 
+            detail.Credit, detail.Note, detail.Total
+        ]);
+
+        autoTable(doc, {
+            startY: yOffset,
+            head: [approvedHeaders],
+            body: approvedData,
+            theme: "grid",
+            margin: { left: 20 },
+            tableWidth: "auto",
+            styles: {
+                fontSize: 10,
+                cellPadding: 3,
+                lineColor: [0, 0, 0],
+                textColor: [0, 0, 0],
+            },
+            headStyles: {
+                fillColor: [0, 0, 0],
+                textColor: [255, 255, 255],
+                fontStyle: "bold",
+            },
+        });
+
+        // Save PDF
+        doc.save(`proforma-invoice-${firstDetail.Code || firstDetail.ProformaInvoiceId}.pdf`);
+    }
+};
+
 
 export default function POPage() {
     const [Invoice, setInvoice] = useState([]);
@@ -431,6 +551,10 @@ export default function POPage() {
                                     <i className="bi bi-plus-square me-2"></i>{" "}
                                     Add Detail
                                 </button>
+                                <button className="btn btn-primary" onClick={() => generatePDF([selectedDetail!])}>
+                                              Download PDF
+                                </button>
+
                             </div>
                         </div>
                     </div>
