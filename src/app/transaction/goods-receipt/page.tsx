@@ -3,16 +3,25 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
+interface Forwarder {
+    Id: number;
+    Name: string;
+}
+
+interface Warehouse {
+    Id: number;
+    Name: string;
+}
 
 interface GoodsReceipt {
     Code: number;
     Date: string;
-    ForwarderId: number;
+    Forwarder: Forwarder; // Change from ForwarderId to Forwarder object
     LMCode: number;
-    WarehouseId: number;
+    Warehouse: Warehouse; // Change from WarehouseId to Warehouse object
     Note: string | null;
     createdAt: string;
     updatedAt: string;
@@ -34,13 +43,14 @@ interface GoodsReceiptDetail {
     Notes: string;
     createdAt: string;
     updatedAt: string;
-    GoodsReceipt: GoodsReceipt; // Added GoodsReceipt object
+    GoodsReceipt: GoodsReceipt; // Now GoodsReceipt contains Forwarder & Warehouse
 }
 
 export default function GoodsReceiptPage() {
     const [goodsReceipts, setGoodsReceipts] = useState([]);
-    const [selectedDetail, setSelectedDetail] =
-        useState<GoodsReceiptDetail | null>(null);
+    const [selectedDetails, setSelectedDetails] = useState<
+        GoodsReceiptDetail[]
+    >([]); // Updated to array
     const [loadingGR, setLoadingGR] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [errorGR, setErrorGR] = useState<string | null>(null);
@@ -84,22 +94,24 @@ export default function GoodsReceiptPage() {
 
     const handleDeleteDetail = async (code: string) => {
         const confirmDelete = confirm(
-            "Are you sure you want to delete this GR detail ?"
+            "Are you sure you want to delete this GR detail?"
         );
         if (!confirmDelete) return;
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/goods-receipts/${code}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/goods-receipt-detils/${code}`,
                 {
                     method: "DELETE",
                 }
             );
 
+            const responseData = await response.json();
+            console.log("DELETE Response:", responseData);
+
             if (!response.ok) {
-                const errorData = await response.json();
                 throw new Error(
-                    errorData.message ||
+                    responseData.message ||
                         "Failed to delete goods-receipt detail."
                 );
             }
@@ -107,9 +119,10 @@ export default function GoodsReceiptPage() {
             setGoodsReceipts((prev) =>
                 prev.filter((purchase: any) => purchase.Code !== code)
             );
-            alert("Proforma invoice deleted successfully.");
+            alert("Goods Receipt detail deleted successfully.");
             setIsModalOpen(false);
         } catch (error: any) {
+            console.error("Error deleting:", error);
             alert(error.message || "An unexpected error occurred.");
         }
     };
@@ -149,34 +162,44 @@ export default function GoodsReceiptPage() {
         setLoadingDetail(true);
         setIsModalLoading(true);
         setErrorDetail(null);
+        setGrCode(code);
+
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/goods-receipt-detils/by-goods-receipt/${code}`
             );
-            if (!response.ok) {
-                throw new Error("Failed to fetch goods receipt details.");
-            }
-            const data = await response.json();
-            console.log(data);
 
-            if (
-                data.status.code !== 200 ||
-                !data.data ||
-                data.data.length === 0
-            ) {
-                setSelectedDetail(null);
-                setGrCode(code);
-                throw new Error("No details available for this Goods Receipt.");
-            } else {
-                setSelectedDetail(data.data[0]);
-                setGrCode(code);
+            if (!response.ok) {
+                const errorData = await response.json();
+
+                // Handle 404 case (No details found)
+                if (errorData.status.code === 404) {
+                    setSelectedDetails([]); // Store empty array
+                    setErrorDetail("No details found for this Goods Receipt.");
+                    setIsModalOpen(true);
+                    return;
+                }
+
+                throw new Error(
+                    errorData.status.message ||
+                        "Failed to fetch goods receipt details."
+                );
             }
+
+            const data: { data: GoodsReceiptDetail[] } = await response.json(); // Ensure TypeScript knows it's an array
+
+            if (!data.data || data.data.length === 0) {
+                setSelectedDetails([]); // Empty array
+                setErrorDetail("No details available for this Goods Receipt.");
+            } else {
+                setSelectedDetails(data.data); // Store all details in an array
+            }
+
             setIsModalOpen(true);
         } catch (error: any) {
             setErrorDetail(error.message || "An unexpected error occurred.");
-            setSelectedDetail(null);
+            setSelectedDetails([]); // Ensure empty array on error
             setIsModalOpen(true);
-            setGrCode(code);
         } finally {
             setLoadingDetail(false);
             setIsModalLoading(false);
@@ -185,99 +208,118 @@ export default function GoodsReceiptPage() {
 
     // Function to generate PDF
     const generatePDF = () => {
-        if (selectedDetail) {
-            const doc = new jsPDF("landscape", "mm", "a4"); // Landscape orientation
-    
-            // Title
+        if (selectedDetails.length > 0) {
+            const doc = new jsPDF("landscape", "mm", "a4");
+
+            // Get first detail for general GR information
+            const firstDetail = selectedDetails[0];
+            const gr = firstDetail.GoodsReceipt;
+
+            // Page Width for Positioning
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const rightAlignX = pageWidth - 20; // Align text to the right margin
+            const centerAlignX = pageWidth / 2; // Center position
+
+            // --- Invoice Title (Right-Aligned) ---
             doc.setFontSize(18);
-            doc.text("Goods Receipt Invoice", 150, 20);
-    
-            // Goods Receipt Information
-            doc.setFontSize(12);
-            const gr = selectedDetail.GoodsReceipt;
-    
-            doc.text(`Goods Receipt Code: ${gr.Code}`, 20, 40);
-            doc.text(`Date: ${gr.Date}`, 20, 50);
-            doc.text(`Forwarder ID: ${gr.ForwarderId}`, 20, 60);
-            doc.text(`Warehouse ID: ${gr.WarehouseId}`, 20, 70);
-            doc.text(`Note: ${gr.Note || "N/A"}`, 20, 80);
-    
-            // Table for Goods Receipt Details using autoTable plugin
-            const tableHeaders = [
-                "Product Name", "SKU Code", "Ordered Qty", "Received Qty", "Remaining Qty", "Condition", "Notes"
-            ];
-            const tableData = [
-                [
-                    selectedDetail.ProductName,
-                    selectedDetail.SKUCode,
-                    selectedDetail.OrderedQty,
-                    selectedDetail.ReceivedQty,
-                    selectedDetail.RemainQty,
-                    selectedDetail.Condition,
-                    selectedDetail.Notes
-                ]
-            ];
-    
-            // Using autoTable to draw the table
-            doc.autoTable({
-                startY: 90, // starting position of the table
-                head: [tableHeaders], // Table headers
-                body: tableData, // Table data
-                theme: "grid", // Table theme
-                margin: { left: 20 }, // Set left margin for table
-                styles: {
-                    fontSize: 10, // Font size for the table
-                    cellPadding: 3, // Padding inside each cell
-                    tableWidth: "wrap", // Auto-adjust table width
-                },
-                headStyles: {
-                    fontStyle: "bold", // Bold headers
-                },
+            doc.text("Goods Receipt Invoice", rightAlignX, 20, {
+                align: "right",
             });
-    
-            // Additional Info below table
-            const yOffset = doc.lastAutoTable.finalY + 10; // Calculate Y position after table
+
+            // Set font size for the content
+            doc.setFontSize(12);
+            let yOffset = 40;
+
+            // --- Left Section: Goods Receipt General Information ---
+            doc.text(`Goods Receipt Code: ${gr.Code}`, 20, yOffset);
+            doc.text(`Date: ${gr.Date}`, 20, yOffset + 10);
             doc.text(
-                `Last Mile Tracking: ${selectedDetail.LastMileTracking || "N/A"}`,
+                `Forwarder: ${gr.Forwarder?.Name || "N/A"}`,
                 20,
+                yOffset + 20
+            );
+            doc.text(
+                `Warehouse: ${gr.Warehouse?.Name || "N/A"}`,
+                20,
+                yOffset + 30
+            );
+            doc.text(`Note: ${gr.Note || "N/A"}`, 20, yOffset + 40);
+
+            // --- Right Section: Additional Info ---
+            doc.text(
+                `Last Mile Tracking: ${firstDetail.LastMileTracking || "N/A"}`,
+                centerAlignX,
                 yOffset
             );
             doc.text(
-                `Freight Code: ${selectedDetail.FreightCode || "N/A"}`,
-                20,
+                `Freight Code: ${firstDetail.FreightCode || "N/A"}`,
+                centerAlignX,
                 yOffset + 10
             );
             doc.text(
                 `Created At: ${new Date(
-                    selectedDetail.createdAt
+                    firstDetail.createdAt
                 ).toLocaleString()}`,
-                120,
-                yOffset
+                centerAlignX,
+                yOffset + 20
             );
             doc.text(
                 `Updated At: ${new Date(
-                    selectedDetail.updatedAt
+                    firstDetail.updatedAt
                 ).toLocaleString()}`,
-                120,
-                yOffset + 10
-            );
-    
-            // Footer
-            doc.setFontSize(10);
-            doc.text(
-                `Goods Receipt ID: ${selectedDetail.GoodsReceiptId}`,
-                20,
+                centerAlignX,
                 yOffset + 30
             );
-    
-            // Save the PDF
-            doc.save(`goods-receipt-invoice-${selectedDetail.SKUCode}.pdf`);
+
+            yOffset += 60;
+
+            // --- Table with Multiple GR Details ---
+            const tableHeaders = [
+                "Product Name",
+                "SKU Code",
+                "Ordered Qty",
+                "Received Qty",
+                "Remaining Qty",
+                "Condition",
+                "Notes",
+            ];
+
+            // Mapping multiple details into the table
+            const tableData = selectedDetails.map((detail) => [
+                detail.ProductName,
+                detail.SKUCode,
+                detail.OrderedQty,
+                detail.ReceivedQty,
+                detail.RemainQty,
+                detail.Condition,
+                detail.Notes || "N/A",
+            ]);
+
+            // Generate the table
+            autoTable(doc, {
+                startY: yOffset,
+                head: [tableHeaders],
+                body: tableData,
+                theme: "grid",
+                margin: { left: 20 },
+                tableWidth: "auto",
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 3,
+                    lineColor: [0, 0, 0], // Border tabel hitam
+                    textColor: [0, 0, 0], // Teks dalam tabel tetap hitam
+                },
+                headStyles: {
+                    fillColor: [0, 0, 0], // Header tabel warna hitam
+                    textColor: [255, 255, 255], // Teks header warna putih
+                    fontStyle: "bold",
+                },
+            });
+
+            // Simpan PDF
+            doc.save(`goods-receipt-invoice-${gr.Code}.pdf`);
         }
     };
-    
-    
-    
-
 
     return (
         <div className="container-fluid mt-4">
@@ -343,6 +385,7 @@ export default function GoodsReceiptPage() {
                                                 onClick={() =>
                                                     handleDetails(gr.Code)
                                                 }
+                                                aria-label="View details for goods receipt"
                                             >
                                                 <i className="bi bi-search"></i>{" "}
                                                 View Detail
@@ -358,13 +401,17 @@ export default function GoodsReceiptPage() {
 
             {isModalOpen && (
                 <div
-                    className="modal show d-flex align-items-center justify-content-center"
+                    className="modal fade show d-flex align-items-center justify-content-center"
                     style={{
                         display: "block",
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
                     }}
+                    onClick={() => setIsModalOpen(false)} // Close modal when clicking outside
                 >
-                    <div className="modal-dialog modal-xl">
+                    <div
+                        className="modal-dialog modal-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">
@@ -381,11 +428,12 @@ export default function GoodsReceiptPage() {
                                     <p>Loading details...</p>
                                 ) : errorDetail ? (
                                     <p className="text-danger">{errorDetail}</p>
-                                ) : selectedDetail ? (
+                                ) : selectedDetails.length > 0 ? (
                                     <div className="table-responsive">
                                         <table className="table table-bordered table-striped align-middle text-center">
                                             <thead className="table-dark">
                                                 <tr>
+                                                    <th>No</th>
                                                     <th>Product Name</th>
                                                     <th>SKU Code</th>
                                                     <th>Ordered Qty</th>
@@ -393,91 +441,101 @@ export default function GoodsReceiptPage() {
                                                     <th>Remaining Qty</th>
                                                     <th>Condition</th>
                                                     <th>Notes</th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.ProductName
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.SKUCode}
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.OrderedQty
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.ReceivedQty
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.RemainQty
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.Condition
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.Notes}
-                                                    </td>
-                                                </tr>
+                                                {selectedDetails.map(
+                                                    (detail, index: number) => (
+                                                        <tr key={detail.Id}>
+                                                            <td className="fw-bold">
+                                                                {index + 1}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.ProductName
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {detail.SKUCode}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.OrderedQty
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.ReceivedQty
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.RemainQty
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.Condition
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {detail.Notes ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                <button
+                                                                    className="btn btn-warning btn-sm me-2"
+                                                                    onClick={() =>
+                                                                        router.push(
+                                                                            `/transaction/goods-receipt/editgooddetail?id=${detail.Id}`
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-pencil-square"></i>
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-danger btn-sm"
+                                                                    onClick={() =>
+                                                                        handleDeleteDetail(
+                                                                            detail.Id.toString()
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
                                     <p>
-                                        No detail data available for this Goods
-                                        Receipt.
+                                        No details found for this Goods Receipt.
                                     </p>
                                 )}
                             </div>
                             <div className="modal-footer">
-                                <button
-                                    className="btn btn-warning"
-                                    onClick={() =>
-                                        router.push(
-                                            `/transaction/goods-receipt/editgooddetail?id=${selectedDetail?.Id}`
-                                        )
-                                    }
-                                >
-                                    <i className="bi bi-pencil-square me-2"></i>{" "}
-                                    Edit
-                                </button>
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={() =>
-                                        handleDeleteDetail(
-                                            selectedDetail?.Id?.toString() || ""
-                                        )
-                                    }
-                                >
-                                    <i className="bi bi-trash me-2"></i> Delete
-                                </button>
                                 <Link
-                                    href={`/transaction/goods-receipt/addgooddetail?id=${selectedDetail?.Id}`}
+                                    href={`/transaction/goods-receipt/addgooddetail?id=${grCode}`}
                                 >
                                     <button className="btn btn-primary">
                                         <i className="bi bi-plus-square me-2"></i>{" "}
                                         Add Detail
                                     </button>
                                 </Link>
-                                <button
-                                    className="btn btn-success"
-                                    onClick={generatePDF
-                                        
-                                    }
-                                >
-                                    <i className="bi bi-printer-fill me-2"></i>
-                                    Print Invoice
-                                </button>
+
+                                {selectedDetails.length > 0 && (
+                                    <button
+                                        className="btn btn-success"
+                                        onClick={generatePDF}
+                                    >
+                                        <i className="bi bi-printer-fill me-2"></i>{" "}
+                                        Print Invoice
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
