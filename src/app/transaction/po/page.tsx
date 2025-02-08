@@ -31,11 +31,11 @@ interface PurchaseOrderDetail {
     Code?: string;
 }
 
-
 export default function POPage() {
-    const [POList, setPOList] = useState([]);
-    const [selectedDetail, setSelectedDetail] =
-        useState<PurchaseOrderDetail | null>(null);
+    const [POList, setPOList] = useState<PurchaseOrderDetail[]>([]);
+    const [selectedDetail, setSelectedDetail] = useState<PurchaseOrderDetail[]>(
+        []
+    ); // Now an array
     const [loadingPO, setLoadingPO] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [errorPO, setErrorPO] = useState<string | null>(null);
@@ -136,6 +136,7 @@ export default function POPage() {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-order-details/by-purchase-order/${code}`
             );
+
             if (!response.ok)
                 throw new Error("Failed to fetch Purchase Order details.");
 
@@ -150,136 +151,131 @@ export default function POPage() {
                 );
             }
 
-            setSelectedDetail(data.data[0]);
+            setSelectedDetail(data.data); // Store all details, not just one
             setPoCode(code);
         } catch (error: any) {
             setErrorDetail(error.message);
-            setSelectedDetail(null);
+            setSelectedDetail([]); // Empty array instead of null to avoid undefined issues
             setPoCode(code);
         } finally {
             setLoadingDetail(false);
             setIsModalLoading(false);
             setIsModalOpen(true);
-            setPoCode(code);
         }
     };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-    };
-
     const generatePDF = () => {
-        if (selectedDetail) {
-            // Create a PDF document with a wider page size (e.g., A3 landscape)
+        if (selectedDetail.length > 0) {
             const doc = new jsPDF("landscape", "mm", [250, 550]); // A3 landscape
-    
-            // Page Width for Positioning
             const pageWidth = doc.internal.pageSize.getWidth();
-            const rightAlignX = pageWidth - 20; // Align text to the right margin
-    
-            // --- Invoice Title (Right-Aligned) ---
-            doc.setFontSize(18);
-            doc.text("Purchase Order Detail", rightAlignX, 20, { align: "right" });
-    
-            // Set font size for the content
-            doc.setFontSize(12);
-            let yOffset = 40;
-    
-            // --- Detail Information ---
-            doc.text(`SKU Code: ${selectedDetail.SKUCode}`, 20, yOffset);
-            doc.text(`Product Name: ${selectedDetail.ProductName}`, 20, yOffset + 10);
-            doc.text(`Variant: ${selectedDetail.Variant}`, 20, yOffset + 20);
-            
-            // If you have a product image, you can add it here
-            // Example: doc.addImage(selectedDetail.ProductImage, 'JPEG', 20, yOffset + 30, 40, 40);
-            
-            doc.text(`Credit: ${selectedDetail.Credit}`, 20, yOffset + 30);
-            doc.text(`Note: ${selectedDetail.Note}`, 20, yOffset + 40);
-    
-            yOffset += 60; // Adjust yOffset for the table
-    
+            const centerX = pageWidth / 2;
+            let yOffset = 20;
+
+            // --- Invoice Header ---
+            doc.setFontSize(20);
+            doc.setFont("helvetica", "bold");
+            doc.text("PURCHASE ORDER DETAILS", centerX, yOffset, {
+                align: "center",
+            });
+
             // --- Table with Purchase Order Details ---
+            yOffset += 15;
             const tableHeaders = [
-                "Product Name", 
-                "SKU Code", 
-                "Variant", 
-                "Quantity", 
-                "Unit Price", 
-                "First Mile", 
-                "Carton Dimension (P)", 
-                "Carton Dimension (L)", 
-                "Carton Dimension (T)", 
-                "Carton Qty", 
-                "Price per Carton", 
-                "Estimated CBM Total", 
-                "Carton Weight", 
-                "Marking Number", 
-                "Credit", 
-                "Note"
+                "No",
+                "Product Name",
+                "SKU",
+                "Variant",
+                "Qty",
+                "Unit Price",
+                "Carton P x L x T",
+                "Carton Qty",
+                "Price/Carton",
+                "Est. CBM",
+                "Weight",
+                "Marking No",
+                "Credit",
+                "Note",
             ];
-            
-            const tableData = [[
-                selectedDetail.ProductName,
-                selectedDetail.SKUCode,
-                selectedDetail.Variant,
-                selectedDetail.QTY,
-                `$${selectedDetail.UnitPrice}`,
-                selectedDetail.FirstMile,
-                selectedDetail.CartonP,
-                selectedDetail.CartonL,
-                selectedDetail.CartonT,
-                selectedDetail.CartonQty,
-                `$${selectedDetail.PricePerCarton}`,
-                selectedDetail.EstimatedCBMTotal,
-                selectedDetail.CartonWeight,
-                selectedDetail.MarkingNumber,
-                selectedDetail.Credit,
-                selectedDetail.Note
-            ]];
-    
-            // Generate the table with specified column widths
+
+            const tableData = selectedDetail.map((detail, index) => [
+                index + 1,
+                detail.ProductName,
+                detail.SKUCode,
+                detail.Variant || "-",
+                detail.QTY,
+                `$${Number(detail.UnitPrice || 0).toFixed(2)}`, // Ensures a number
+                `${detail.CartonP} x ${detail.CartonL} x ${detail.CartonT}`,
+                detail.CartonQty,
+                `$${Number(detail.PricePerCarton || 0).toFixed(2)}`, // Ensures a number
+                Number(detail.EstimatedCBMTotal || 0).toFixed(3), // Ensures a number
+                detail.CartonWeight || "-",
+                detail.MarkingNumber || "-",
+                detail.Credit || "-",
+                detail.Note || "-",
+            ]);
+
             autoTable(doc, {
                 startY: yOffset,
                 head: [tableHeaders],
                 body: tableData,
-                theme: "grid",
-                margin: { left: 20 },
-                tableWidth: "auto",
-                columnStyles: {
-                    0: { cellWidth: 60 }, // Product Name
-                    1: { cellWidth: 40 }, // SKU Code
-                    2: { cellWidth: 25 }, // Variant
-                    3: { cellWidth: 25 }, // Quantity
-                    4: { cellWidth: 30 }, // Unit Price
-                    5: { cellWidth: 25 }, // First Mile
-                    6: { cellWidth: 30 }, // Carton Dimension (P)
-                    7: { cellWidth: 30 }, // Carton Dimension (L)
-                    8: { cellWidth: 30 }, // Carton Dimension (T)
-                    9: { cellWidth: 25 }, // Carton Qty
-                    10: { cellWidth: 30 }, // Price per Carton
-                    11: { cellWidth: 30 }, // Estimated CBM Total
-                    12: { cellWidth: 30 }, // Carton Weight
-                    13: { cellWidth: 30 }, // Marking Number
-                    14: { cellWidth: 30 }, // Credit
-                    15: { cellWidth: 30 }  // Note
-                },
-                styles: {
-                    fontSize: 10,
-                    cellPadding: 3,
-                    lineColor: [0, 0, 0],
-                    textColor: [0, 0, 0],
-                },
+                theme: "striped",
+                margin: { left: 20, right: 20 },
+                styles: { fontSize: 10, cellPadding: 3, lineColor: [0, 0, 0] },
                 headStyles: {
                     fillColor: [0, 0, 0],
-     textColor: [255, 255, 255],
+                    textColor: [255, 255, 255],
                     fontStyle: "bold",
                 },
+                alternateRowStyles: { fillColor: [240, 240, 240] }, // Alternating row colors
+                columnStyles: {
+                    0: { cellWidth: 10 }, // No
+                    1: { cellWidth: 50 }, // Product Name
+                    2: { cellWidth: 40 }, // SKU
+                    3: { cellWidth: 25 }, // Variant
+                    4: { cellWidth: 20 }, // Qty
+                    5: { cellWidth: 25 }, // Unit Price
+                    6: { cellWidth: 40 }, // Carton Dimensions
+                    7: { cellWidth: 25 }, // Carton Qty
+                    8: { cellWidth: 30 }, // Price/Carton
+                    9: { cellWidth: 30 }, // Estimated CBM
+                    10: { cellWidth: 25 }, // Weight
+                    11: { cellWidth: 25 }, // Marking No
+                    12: { cellWidth: 25 }, // Credit
+                    13: { cellWidth: 35 }, // Note
+                },
             });
-    
-            // Save PDF
-            doc.save(`purchase-order-detail-${selectedDetail.Id}.pdf`);
+
+            // Fix: Get correct Y position after autoTable
+            yOffset = (doc as any).lastAutoTable.finalY + 10;
+
+            // --- Total Amount Calculation ---
+            let totalAmount = selectedDetail.reduce(
+                (sum, detail) =>
+                    sum +
+                    Number(detail.UnitPrice || 0) * Number(detail.QTY || 0),
+                0
+            );
+
+            // --- Footer Section ---
+            yOffset += 15;
+            doc.setFontSize(10);
+            doc.text(
+                `Total Amount: $${totalAmount.toFixed(2)}`,
+                centerX,
+                yOffset,
+                {
+                    align: "center",
+                }
+            );
+
+            // Save the PDF
+            doc.save(
+                `purchase-order-${new Date().toISOString().split("T")[0]}.pdf`
+            );
+        } else {
+            console.error("No purchase order details available.");
         }
-    }; 
+    };
+
     return (
         <div className="container-fluid mt-4">
             <div className="text-center card shadow-lg p-4 rounded">
@@ -362,10 +358,12 @@ export default function POPage() {
                     }}
                 >
                     <div className="modal-dialog modal-xl">
+                        {" "}
+                        {/* Increased size */}
                         <div className="modal-content">
-                            <div className="modal-header">
+                            <div className="modal-header bg-dark text-white">
                                 <h5 className="modal-title">
-                                    Purchase Order Detail
+                                    Purchase Order Details
                                 </h5>
                                 <button
                                     type="button"
@@ -375,80 +373,154 @@ export default function POPage() {
                             </div>
                             <div className="modal-body">
                                 {isModalLoading ? (
-                                    <p>Loading details...</p>
-                                ) : selectedDetail ? (
+                                    <p className="text-center">
+                                        Loading details...
+                                    </p>
+                                ) : selectedDetail.length > 0 ? (
                                     <div className="table-responsive">
                                         <table className="table table-bordered table-striped align-middle text-center">
-                                    <thead className="table-dark">
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>SKU</th>
-                                            <th>Variant</th>
-                                            <th>Quantity</th>
-                                            <th>Unit Price</th>
-                                            <th>Carton Dimention</th>
-                                            <th>Carton QTY</th>
-                                            <th>Price/Carton</th>
-                                            <th>Note</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>{selectedDetail.ProductName}</td>
-                                            <td>{selectedDetail.SKUCode}</td>
-                                            <td>{selectedDetail.Variant || "-"}</td>
-                                            <td>{selectedDetail.QTY}</td>
-                                            <td>${selectedDetail.UnitPrice}</td>
-                                            <td>{selectedDetail.CartonP} x {selectedDetail.CartonL} x {selectedDetail.CartonT}</td>
-                                            <td>{selectedDetail.CartonQty}</td>
-                                            <td>${selectedDetail.PricePerCarton}</td>
-                                            <td>{selectedDetail.Note}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                            <thead className="table-dark">
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Product</th>
+                                                    <th>SKU</th>
+                                                    <th>Variant</th>
+                                                    <th>Quantity</th>
+                                                    <th>Unit Price</th>
+                                                    <th>
+                                                        Carton Dimension (P x L
+                                                        x T)
+                                                    </th>
+                                                    <th>Carton QTY</th>
+                                                    <th>Price/Carton</th>
+                                                    <th>Estimated CBM</th>
+                                                    <th>Carton Weight</th>
+                                                    <th>Marking Number</th>
+                                                    <th>Credit</th>
+                                                    <th>Note</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {selectedDetail.map(
+                                                    (detail, index: number) => (
+                                                        <tr key={detail.Id}>
+                                                            <td className="fw-bold">
+                                                                {index + 1}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.ProductName
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {detail.SKUCode}
+                                                            </td>
+                                                            <td>
+                                                                {detail.Variant ||
+                                                                    "-"}
+                                                            </td>
+                                                            <td>
+                                                                {detail.QTY}
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {Number(
+                                                                    detail.UnitPrice ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {detail.CartonP}{" "}
+                                                                x{" "}
+                                                                {detail.CartonL}{" "}
+                                                                x{" "}
+                                                                {detail.CartonT}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.CartonQty
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {Number(
+                                                                    detail.PricePerCarton ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {Number(
+                                                                    detail.EstimatedCBMTotal ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {detail.CartonWeight ??
+                                                                    "-"}
+                                                            </td>
+                                                            <td>
+                                                                {detail.MarkingNumber ??
+                                                                    "-"}
+                                                            </td>
+                                                            <td>
+                                                                {detail.Credit ??
+                                                                    "-"}
+                                                            </td>
+                                                            <td>
+                                                                {detail.Note}
+                                                            </td>
+                                                            <td>
+                                                                <button
+                                                                    className="btn btn-primary btn-sm me-2"
+                                                                    onClick={() =>
+                                                                        handleEditDetail(
+                                                                            detail.Id.toString()
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-pencil-square me-1"></i>{" "}
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-danger btn-sm"
+                                                                    onClick={() =>
+                                                                        handleDeleteDetail(
+                                                                            detail.Id.toString()
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-trash me-1"></i>{" "}
+                                                                    Delete
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 ) : (
-                                    <p>No details available.</p>
+                                    <p className="text-center">
+                                        No details available.
+                                    </p>
                                 )}
                             </div>
-                            <div className="modal-footer">
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={() =>
-                                        handleEditDetail(selectedDetail?.Id?.toString() || "")
-                                    }
-                                >
-                                    <i className="bi bi-pencil-square me-2"></i>{" "}
-                                    Edit
-                                </button>
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={() =>
-                                        handleDeleteDetail(
-                                            selectedDetail?.Id?.toString() || ""
-                                        )
-                                    }
-                                >
-                                    <i className="bi bi-trash me-2"></i>Delete
-                                </button>
+                            <div className="modal-footer d-flex justify-content-between">
                                 <button
                                     className="btn btn-success"
-                                    onClick={() => {
-                                        console.log("poCode before adding detail:", poCode);
-                                        handleAddDetail(poCode);
-                                    }}
+                                    onClick={() => handleAddDetail(poCode)}
                                 >
-                                    <i className="bi bi-plus-square me-2"></i> Add Detail
+                                    <i className="bi bi-plus-square me-2"></i>{" "}
+                                    Add Detail
                                 </button>
-                               
                                 <button
                                     className="btn btn-info"
                                     onClick={generatePDF}
                                 >
-                                    <i className="bi bi-file-earmark-pdf me-2"></i> Generate PDF
+                                    <i className="bi bi-file-earmark-pdf me-2"></i>{" "}
+                                    Generate PDF
                                 </button>
-                                
-
                             </div>
                         </div>
                     </div>
