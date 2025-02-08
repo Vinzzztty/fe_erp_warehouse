@@ -6,15 +6,17 @@ import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-interface PurchaseOrderDetail {
+interface ProformaInvoiceDetail {
     Id: number;
-    PurchaseOrderId: number;
+    ProformaInvoiceId: number;
     SKUCode: string;
     ProductName: string;
     Variant: string | null;
     ProductImage: string | null;
-    QTY: string;
-    UnitPrice: string;
+    QTYOrdered: string;
+    QTYApproved: string;
+    UnitPriceOrdered: string;
+    UnitPriceApproved: string;
     FirstMile: string | null;
     CartonP: string;
     CartonL: string;
@@ -24,153 +26,377 @@ interface PurchaseOrderDetail {
     EstimatedCBMTotal: string;
     CartonWeight: string | null;
     MarkingNumber: string | null;
-    Credit: string | null;
+    Credit: string;
     Note: string;
+    Total: string;
     createdAt: string;
     updatedAt: string;
     Code?: string;
 }
 
+
+
+const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
+    if (selectedDetails.length > 0) {
+        const doc = new jsPDF("landscape", "mm", "a4");
+
+        // Get first detail for invoice information
+        const firstDetail = selectedDetails[0];
+
+        // Page width for positioning
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const rightAlignX = pageWidth - 20;
+
+        // --- Proforma Invoice Title (Top Right) ---
+        doc.setFontSize(18);
+        doc.text("Proforma Invoice", rightAlignX, 20, { align: "right" });
+
+        doc.setFontSize(12);
+        let yOffset = 40;
+
+        // --- Left Section: Invoice Information ---
+        doc.text(`Invoice Code: ${firstDetail.Code || "N/A"}`, 20, yOffset);
+        doc.text(`Proforma Invoice ID: ${firstDetail.ProformaInvoiceId}`, 20, yOffset + 10);
+        doc.text(`Created At: ${new Date(firstDetail.createdAt).toLocaleString()}`, 20, yOffset + 20);
+        doc.text(`Updated At: ${new Date(firstDetail.updatedAt).toLocaleString()}`, 20, yOffset + 30);
+
+        yOffset += 50;
+
+        // --- Table 1: Ordered Product Detail ---
+        doc.setFontSize(14);
+        doc.text("Ordered Product Detail", 20, yOffset);
+        yOffset += 10;
+
+        const orderedHeaders = [
+            "SKU Code", "Product Name", "Variant", "QTY Ordered", "Unit Price Ordered", 
+            "First Mile", "Carton P", "Carton L", "Carton T", "Carton Qty", 
+            "Price/Carton", "Estimated CBM", "Carton Weight", "Marking Number", 
+            "Credit", "Note", "Total"
+        ];
+
+        const orderedData = selectedDetails.map((detail) => [
+            detail.SKUCode, detail.ProductName, detail.Variant || "N/A", detail.QTYOrdered, 
+            detail.UnitPriceOrdered, detail.FirstMile || "N/A", detail.CartonP, detail.CartonL, 
+            detail.CartonT, detail.CartonQty, detail.PricePerCarton, detail.EstimatedCBMTotal, 
+            detail.CartonWeight || "N/A", detail.MarkingNumber || "N/A", 
+            detail.Credit, detail.Note, detail.Total
+        ]);
+
+        autoTable(doc, {
+            startY: yOffset,
+            head: [orderedHeaders],
+            body: orderedData,
+            theme: "grid",
+            margin: { left: 20 },
+            tableWidth: "auto",
+            styles: {
+                fontSize: 10,
+                cellPadding: 3,
+                lineColor: [0, 0, 0],
+                textColor: [0, 0, 0],
+            },
+            headStyles: {
+                fillColor: [0, 0, 0],
+                textColor: [255, 255, 255],
+                fontStyle: "bold",
+            },
+        });
+
+        // Get the last Y position after the first table
+        const lastY = (doc as any).lastAutoTable?.finalY || yOffset + 10;
+        yOffset = lastY + 20;
+
+        // --- Table 2: Approved Product Detail ---
+        doc.setFontSize(14);
+        doc.text("Approved Product Detail", 20, yOffset);
+        yOffset += 10;
+
+        const approvedHeaders = [
+            "SKU Code", "Product Name", "Variant", "QTY Approved", "Unit Price Approved", 
+            "First Mile", "Carton P", "Carton L", "Carton T", "Carton Qty", 
+            "Price/Carton", "Estimated CBM", "Carton Weight", "Marking Number", 
+            "Credit", "Note", "Total"
+        ];
+
+        const approvedData = selectedDetails.map((detail) => [
+            detail.SKUCode, detail.ProductName, detail.Variant || "N/A", detail.QTYApproved, 
+            detail.UnitPriceApproved, detail.FirstMile || "N/A", detail.CartonP, detail.CartonL, 
+            detail.CartonT, detail.CartonQty, detail.PricePerCarton, detail.EstimatedCBMTotal, 
+            detail.CartonWeight || "N/A", detail.MarkingNumber || "N/A", 
+            detail.Credit, detail.Note, detail.Total
+        ]);
+
+        autoTable(doc, {
+            startY: yOffset,
+            head: [approvedHeaders],
+            body: approvedData,
+            theme: "grid",
+            margin: { left: 20 },
+            tableWidth: "auto",
+            styles: {
+                fontSize: 10,
+                cellPadding: 3,
+                lineColor: [0, 0, 0],
+                textColor: [0, 0, 0],
+            },
+            headStyles: {
+                fillColor: [0, 0, 0],
+                textColor: [255, 255, 255],
+                fontStyle: "bold",
+            },
+        });
+
+        // Save PDF
+        doc.save(`proforma-invoice-${firstDetail.Code || firstDetail.ProformaInvoiceId}.pdf`);
+    }
+};
+
+
 export default function POPage() {
-    const [POList, setPOList] = useState([]);
-    const [selectedDetail, setSelectedDetail] = useState<PurchaseOrderDetail | null>(null);
-    const [loadingPO, setLoadingPO] = useState(false);
+    const [Invoice, setInvoice] = useState([]);
+    const [selectedDetail, setSelectedDetail] =
+        useState<ProformaInvoiceDetail | null>(null);
+    const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
-    const [errorPO, setErrorPO] = useState<string | null>(null);
+    const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
     const [errorDetail, setErrorDetail] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isModalLoading, setIsModalLoading] = useState(true);
-    const [poCode, setPoCode] = useState<string>("");
-
+    const [isModalLoading, setIsModalLoading] = useState(true); // To handle modal loading state
     const router = useRouter();
+    const [piCode, setPiCode] = useState<string>(""); // Add a state to store piCode
 
     useEffect(() => {
-        const fetchPOs = async () => {
-            setLoadingPO(true);
-            setErrorPO(null);
+        const fetchCompanies = async () => {
+            setLoadingCompanies(true);
+            setErrorCompanies(null);
             try {
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-orders`
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices`
                 );
-                if (!response.ok) throw new Error("Failed to fetch Purchase Orders.");
-
+                if (!response.ok) {
+                    throw new Error("Failed to fetch PI.");
+                }
                 const data = await response.json();
-                if (data.status.code !== 200) throw new Error(data.status.message);
-
-                setPOList(data.data);
+                if (data.status.code !== 200) {
+                    throw new Error(
+                        data.status.message || "Failed to fetch PI."
+                    );
+                }
+                setInvoice(data.data);
+                console.log("Fetched Proforma Invoice:", data.data);
             } catch (error: any) {
-                setErrorPO(error.message);
+                setErrorCompanies(
+                    error.message || "An unexpected error occurred."
+                );
             } finally {
-                setLoadingPO(false);
+                setLoadingCompanies(false);
             }
         };
 
-        fetchPOs();
+        fetchCompanies();
     }, []);
+
+    const handleEdit = (code: string) => {
+        router.push(`/transaction/pi/editpi?id=${code}`);
+    };
+
+    const handleAddDetail = (code: string) => {
+        router.push(`/transaction/pi/adddetailpi?id=${code}`);
+    };
+    const handleEditDetail = (code: string) => {
+        router.push(`/transaction/pi/editpidetail?id=${code}`);
+    };
 
     const handleDetails = async (code: string) => {
         setLoadingDetail(true);
-        setIsModalLoading(true);
+        setIsModalLoading(true); // Set the modal to loading state
         setErrorDetail(null);
-
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/purchase-order-details/by-purchase-order/${code}`
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoice-details/by-proforma-invoice/${code}`
             );
-            if (!response.ok) throw new Error("Failed to fetch Purchase Order details.");
-
-            const data = await response.json();
-            if (data.status.code !== 200 || !data.data || data.data.length === 0) {
-                throw new Error("No details available for this Purchase Order.");
+            if (!response.ok) {
+                throw new Error("Failed to fetch proforma invoice details.");
             }
+            const data = await response.json();
+            console.log("Fetched Details:", data);
 
-            setSelectedDetail(data.data[0]);
-            setPoCode(code);
+            if (
+                data.status.code !== 200 ||
+                !data.data ||
+                data.data.length === 0
+            ) {
+                setSelectedDetail(null); // Set to null when no details are available
+                setSelectedDetail(null); // Set to null when no details are available
+                setPiCode(code); // Store piCode in state
+                throw new Error(
+                    "No details available for this Proforma Invoice."
+                );
+            } else {
+                setSelectedDetail(data.data[0]); // Set the first detail as the selected detail
+                setPiCode(code); // Store piCode in state
+            }
+            setIsModalOpen(true); // Open modal even when there's no data
         } catch (error: any) {
-            setErrorDetail(error.message);
-            setSelectedDetail(null);
-            setPoCode(code);
+            setErrorDetail(error.message || "An unexpected error occurred.");
+            setSelectedDetail(null); // Set to null if there's an error
+            setIsModalOpen(true); // Ensure modal opens on error as well
+            setPiCode(code); // Store piCode in state
         } finally {
             setLoadingDetail(false);
-            setIsModalLoading(false);
-            setIsModalOpen(true);
+            setIsModalLoading(false); // Set the modal to data state
+            setPiCode(code); // Store piCode in state
         }
     };
 
-    const generatePDF = () => {
-        if (selectedDetail) {
-            const doc = new jsPDF("landscape", "mm", "a4");
+    const handleDelete = async (code: string) => {
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this proforma invoice?"
+        );
+        if (!confirmDelete) return;
 
-            // Page Width for Positioning
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const rightAlignX = pageWidth - 20; // Align text to the right margin
-            const centerAlignX = pageWidth / 2; // Center position
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoices/${code}`,
+                {
+                    method: "DELETE",
+                }
+            );
 
-            // --- Invoice Title (Right-Aligned) ---
-            doc.setFontSize(18);
-            doc.text("Purchase Order Detail", rightAlignX, 20, { align: "right" });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.message || "Failed to delete purchase order."
+                );
+            }
 
-            // Set font size for the content
-            doc.setFontSize(12);
-            let yOffset = 40;
-
-            // --- General Information ---
-            doc.text(`Product Name: ${selectedDetail.ProductName}`, 20, yOffset);
-            doc.text(`SKU Code: ${selectedDetail.SKUCode}`, 20, yOffset + 10);
-            doc.text(`Quantity: ${selectedDetail.QTY}`, 20, yOffset + 20);
-            doc.text(`Unit Price: $${selectedDetail.UnitPrice}`, 20, yOffset + 30);
-            doc.text(`Note: ${selectedDetail.Note}`, 20, yOffset + 40);
-
-            yOffset += 60;
-
-            // --- Table with Purchase Order Details ---
-            const tableHeaders = [
-                "Product Name",
-                "SKU Code",
-                "Quantity",
-                "Unit Price",
-                "Note",
-            ];
-
-            const tableData = [
-                [
-                    selectedDetail.ProductName,
-                    selectedDetail.SKUCode,
-                    selectedDetail.QTY,
-                    `$${selectedDetail.UnitPrice}`,
-                    selectedDetail.Note,
-                ],
-            ];
-
-            // Generate the table
-            autoTable(doc, {
-                startY: yOffset,
-                head: [tableHeaders],
-                body: tableData,
-                theme: "grid",
-                margin: { left: 20 },
-                tableWidth: "auto",
-                styles: {
-                    fontSize: 10,
-                    cellPadding: 3,
-                    lineColor: [0, 0, 0],
-                    textColor: [0, 0, 0],
-                },
-                headStyles: {
-                    fillColor: [0, 0, 0],
-                    textColor: [255, 255, 255],
-                    fontStyle: "bold",
-                },
-            });
-
-            // Save PDF
-            doc.save(`purchase-order-detail-${selectedDetail.Id}.pdf`);
+            setInvoice((prev) =>
+                prev.filter((purchase: any) => purchase.Code !== code)
+            );
+            alert("Purchase order deleted successfully.");
+            setIsModalOpen(false);
+        } catch (error: any) {
+            alert(error.message || "An unexpected error occurred.");
         }
+    };
+    const handleDeleteDetail = async (code: string) => {
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this proforma invoice?"
+        );
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoice-details/${code}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.message ||
+                        "Failed to delete proforma invoice detail."
+                );
+            }
+
+            setInvoice((prev) =>
+                prev.filter((purchase: any) => purchase.Code !== code)
+            );
+            alert("Proforma invoice deleted successfully.");
+            setIsModalOpen(false);
+        } catch (error: any) {
+            alert(error.message || "An unexpected error occurred.");
+        }
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
     };
 
     return (
         <div className="container-fluid mt-4">
-            {/* ... other components ... */}
+            <div className="text-center card shadow-lg p-4 rounded">
+                <h1>
+                    <i className="bi bi-building me-2"></i> Proforma Invoice
+                </h1>
+
+                <p>View and manage your orders here.</p>
+                <Link href="/transaction/pi/addpi">
+                    <button className="btn btn-dark">
+                        Go to Proforma Invoice
+                    </button>
+                </Link>
+            </div>
+
+            <div className="card shadow-lg p-4 rounded mt-4">
+                <p className="mb-4 fw-bold">Proforma Invoice</p>
+                {loadingCompanies && <p>Loading PIs...</p>}
+                {errorCompanies && (
+                    <p className="text-danger">{errorCompanies}</p>
+                )}
+                {!loadingCompanies &&
+                    !errorCompanies &&
+                    Invoice.length === 0 && <p>No PIs found.</p>}
+                {!loadingCompanies && !errorCompanies && Invoice.length > 0 && (
+                    <div className="table-responsive">
+                        <table className="table table-striped table-bordered table-hover align-middle text-center">
+                            <thead className="table-dark">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Date</th>
+                                    <th>PO Number</th>
+                                    <th>Supplier Id</th>
+                                    <th>Notes</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Invoice.map((purchase: any, index: number) => (
+                                    <tr key={purchase.Code}>
+                                        <td className="fw-bold">{index + 1}</td>
+                                        <td>{purchase.Date}</td>
+                                        <td>{purchase.PONumber}</td>
+                                        <td>{purchase.Supplier.Name}</td>
+                                        <td>{purchase.Notes || "N/A"}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() =>
+                                                    handleEdit(purchase.Code)
+                                                }
+                                            >
+                                                <i className="bi bi-pencil-square"></i>{" "}
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm me-2"
+                                                onClick={() =>
+                                                    handleDelete(purchase.Code)
+                                                }
+                                            >
+                                                <i className="bi bi-trash"></i>{" "}
+                                                Delete
+                                            </button>
+                                            <button
+                                                className="btn btn-info btn-sm"
+                                                onClick={() =>
+                                                    handleDetails(purchase.Code)
+                                                }
+                                            >
+                                                <i className="bi bi-search"></i>{" "}
+                                                View Detail
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
             {isModalOpen && (
                 <div
                     className="modal show d-flex align-items-center justify-content-center"
@@ -182,7 +408,9 @@ export default function POPage() {
                     <div className="modal-dialog modal-xl">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title">Purchase Order Detail</h5>
+                                <h5 className="modal-title">
+                                    Proforma Invoice Detail
+                                </h5>
                                 <button
                                     type="button"
                                     className="btn-close"
@@ -192,56 +420,141 @@ export default function POPage() {
                             <div className="modal-body">
                                 {isModalLoading ? (
                                     <p>Loading details...</p>
+                                ) : errorDetail ? (
+                                    <p className="text-danger">{errorDetail}</p>
                                 ) : selectedDetail ? (
                                     <div className="table-responsive">
                                         <table className="table table-bordered table-striped align-middle text-center">
-                                            <thead className="table-primary">
+                                            <thead className="table-dark">
                                                 <tr>
-                                                    <th>Product</th>
-                                                    <th>SKU</th>
-                                                    <th>Quantity</th>
-                                                    <th>Unit Price</th>
+                                                    <th>Product Name</th>
+                                                    <th>SKU Code</th>
+                                                    <th>Variant</th>
+                                                    <th>QTY Ordered</th>
+                                                    <th>QTY Approved</th>
+                                                    <th>Unit Price Ordered</th>
+                                                    <th>Unit Price Approved</th>
+                                                    <th>
+                                                        Carton Dimensions (P x L
+                                                        x T)
+                                                    </th>
+                                                    <th>Carton Quantity</th>
+                                                    <th>Price Per Carton</th>
+                                                    <th>Estimated CBM Total</th>
+                                                    <th>Credit</th>
                                                     <th>Note</th>
+                                                    <th>Total</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td>{selectedDetail.ProductName}</td>
-                                                    <td>{selectedDetail.SKUCode}</td>
-                                                    <td>{selectedDetail.QTY}</td>
-                                                    <td>${selectedDetail.UnitPrice}</td>
-                                                    <td>{selectedDetail.Note}</td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.ProductName
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.SKUCode}
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Variant ||
+                                                            "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.QTYOrdered
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.QTYApproved
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.UnitPriceOrdered
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.UnitPriceApproved
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.CartonP}{" "}
+                                                        x{" "}
+                                                        {selectedDetail.CartonL}{" "}
+                                                        x{" "}
+                                                        {selectedDetail.CartonT}
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.CartonQty
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.PricePerCarton
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {
+                                                            selectedDetail.EstimatedCBMTotal
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Credit}
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Note}
+                                                    </td>
+                                                    <td>
+                                                        {selectedDetail.Total}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
-                                    <p>No details available.</p>
+                                    <p>
+                                        No detail data available for this
+                                        Proforma Invoice.
+                                    </p>
                                 )}
                             </div>
                             <div className="modal-footer">
                                 <button
                                     className="btn btn-primary"
-                                    onClick={() => {
-                                        // Edit detail logic
-                                    }}
+                                    onClick={() =>
+                                        router.push(
+                                            `/transaction/proforma-invoice/edit?id=${selectedDetail?.Id}`
+                                        )
+                                    }
                                 >
-                                    <i className="bi bi-pencil-square me-2"></i> Edit
+                                    <i className="bi bi-pencil-square me-2"></i>{" "}
+                                    Edit
                                 </button>
                                 <button
                                     className="btn btn-danger"
-                                    onClick={() => {
-                                        // Delete detail logic
-                                    }}
+                                    onClick={() =>
+                                        handleDeleteDetail(
+                                            selectedDetail?.Id?.toString() || ""
+                                        )
+                                    }
                                 >
-                                    <i className="bi bi-trash me-2"></i> Delete
+                                    <i className="bi bi-trash me-2"></i>Delete
                                 </button>
                                 <button
                                     className="btn btn-success"
-                                    onClick={generatePDF}
+                                    onClick={() => handleAddDetail(piCode)}
                                 >
-                                    <i className="bi bi-file-earmark-pdf me-2"></i> Print PDF
+                                    <i className="bi bi-plus-square me-2"></i>{" "}
+                                    Add Detail
                                 </button>
+                                <button className="btn btn-primary" onClick={() => generatePDF([selectedDetail!])}>
+                                              Download PDF
+                                </button>
+
                             </div>
                         </div>
                     </div>
