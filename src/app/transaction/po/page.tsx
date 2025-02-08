@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface PurchaseOrderDetail {
     Id: number;
@@ -28,6 +30,7 @@ interface PurchaseOrderDetail {
     updatedAt: string;
     Code?: string;
 }
+
 
 export default function POPage() {
     const [POList, setPOList] = useState([]);
@@ -165,6 +168,118 @@ export default function POPage() {
         setIsModalOpen(false);
     };
 
+    const generatePDF = () => {
+        if (selectedDetail) {
+            // Create a PDF document with a wider page size (e.g., A3 landscape)
+            const doc = new jsPDF("landscape", "mm", [250, 550]); // A3 landscape
+    
+            // Page Width for Positioning
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const rightAlignX = pageWidth - 20; // Align text to the right margin
+    
+            // --- Invoice Title (Right-Aligned) ---
+            doc.setFontSize(18);
+            doc.text("Purchase Order Detail", rightAlignX, 20, { align: "right" });
+    
+            // Set font size for the content
+            doc.setFontSize(12);
+            let yOffset = 40;
+    
+            // --- Detail Information ---
+            doc.text(`SKU Code: ${selectedDetail.SKUCode}`, 20, yOffset);
+            doc.text(`Product Name: ${selectedDetail.ProductName}`, 20, yOffset + 10);
+            doc.text(`Variant: ${selectedDetail.Variant}`, 20, yOffset + 20);
+            
+            // If you have a product image, you can add it here
+            // Example: doc.addImage(selectedDetail.ProductImage, 'JPEG', 20, yOffset + 30, 40, 40);
+            
+            doc.text(`Credit: ${selectedDetail.Credit}`, 20, yOffset + 30);
+            doc.text(`Note: ${selectedDetail.Note}`, 20, yOffset + 40);
+    
+            yOffset += 60; // Adjust yOffset for the table
+    
+            // --- Table with Purchase Order Details ---
+            const tableHeaders = [
+                "Product Name", 
+                "SKU Code", 
+                "Variant", 
+                "Quantity", 
+                "Unit Price", 
+                "First Mile", 
+                "Carton Dimension (P)", 
+                "Carton Dimension (L)", 
+                "Carton Dimension (T)", 
+                "Carton Qty", 
+                "Price per Carton", 
+                "Estimated CBM Total", 
+                "Carton Weight", 
+                "Marking Number", 
+                "Credit", 
+                "Note"
+            ];
+            
+            const tableData = [[
+                selectedDetail.ProductName,
+                selectedDetail.SKUCode,
+                selectedDetail.Variant,
+                selectedDetail.QTY,
+                `$${selectedDetail.UnitPrice}`,
+                selectedDetail.FirstMile,
+                selectedDetail.CartonP,
+                selectedDetail.CartonL,
+                selectedDetail.CartonT,
+                selectedDetail.CartonQty,
+                `$${selectedDetail.PricePerCarton}`,
+                selectedDetail.EstimatedCBMTotal,
+                selectedDetail.CartonWeight,
+                selectedDetail.MarkingNumber,
+                selectedDetail.Credit,
+                selectedDetail.Note
+            ]];
+    
+            // Generate the table with specified column widths
+            autoTable(doc, {
+                startY: yOffset,
+                head: [tableHeaders],
+                body: tableData,
+                theme: "grid",
+                margin: { left: 20 },
+                tableWidth: "auto",
+                columnStyles: {
+                    0: { cellWidth: 60 }, // Product Name
+                    1: { cellWidth: 40 }, // SKU Code
+                    2: { cellWidth: 25 }, // Variant
+                    3: { cellWidth: 25 }, // Quantity
+                    4: { cellWidth: 30 }, // Unit Price
+                    5: { cellWidth: 25 }, // First Mile
+                    6: { cellWidth: 30 }, // Carton Dimension (P)
+                    7: { cellWidth: 30 }, // Carton Dimension (L)
+                    8: { cellWidth: 30 }, // Carton Dimension (T)
+                    9: { cellWidth: 25 }, // Carton Qty
+                    10: { cellWidth: 30 }, // Price per Carton
+                    11: { cellWidth: 30 }, // Estimated CBM Total
+                    12: { cellWidth: 30 }, // Carton Weight
+                    13: { cellWidth: 30 }, // Marking Number
+                    14: { cellWidth: 30 }, // Credit
+                    15: { cellWidth: 30 }  // Note
+                },
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 3,
+                    lineColor: [0, 0, 0],
+                    textColor: [0, 0, 0],
+                },
+                headStyles: {
+                    fillColor: [0, 0, 0],
+     textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                },
+            });
+    
+            // Save PDF
+            doc.save(`purchase-order-detail-${selectedDetail.Id}.pdf`);
+        }
+    }; 
     return (
         <div className="container-fluid mt-4">
             <div className="text-center card shadow-lg p-4 rounded">
@@ -271,7 +386,7 @@ export default function POPage() {
                                             <th>Variant</th>
                                             <th>Quantity</th>
                                             <th>Unit Price</th>
-                                            <th>Carton Size</th>
+                                            <th>Carton Dimention</th>
                                             <th>Carton QTY</th>
                                             <th>Price/Carton</th>
                                             <th>Note</th>
@@ -325,6 +440,14 @@ export default function POPage() {
                                 >
                                     <i className="bi bi-plus-square me-2"></i> Add Detail
                                 </button>
+                               
+                                <button
+                                    className="btn btn-info"
+                                    onClick={generatePDF}
+                                >
+                                    <i className="bi bi-file-earmark-pdf me-2"></i> Generate PDF
+                                </button>
+                                
 
                             </div>
                         </div>
