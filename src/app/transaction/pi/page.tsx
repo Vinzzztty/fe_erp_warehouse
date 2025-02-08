@@ -34,52 +34,82 @@ interface ProformaInvoiceDetail {
     Code?: string;
 }
 
-
-
 const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
     if (selectedDetails.length > 0) {
-        const doc = new jsPDF("landscape", "mm", "a4");
-
-        // Get first detail for invoice information
-        const firstDetail = selectedDetails[0];
-
-        // Page width for positioning
+        const doc = new jsPDF("landscape", "mm", "a4"); // A4 Landscape
         const pageWidth = doc.internal.pageSize.getWidth();
-        const rightAlignX = pageWidth - 20;
+        let yOffset = 20;
 
-        // --- Proforma Invoice Title (Top Right) ---
+        // --- Header Section ---
+        doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
-        doc.text("Proforma Invoice", rightAlignX, 20, { align: "right" });
+        doc.text("PROFORMA INVOICE", pageWidth / 2, yOffset, {
+            align: "center",
+        });
 
         doc.setFontSize(12);
-        let yOffset = 40;
-
-        // --- Left Section: Invoice Information ---
-        doc.text(`Invoice Code: ${firstDetail.Code || "N/A"}`, 20, yOffset);
-        doc.text(`Proforma Invoice ID: ${firstDetail.ProformaInvoiceId}`, 20, yOffset + 10);
-        doc.text(`Created At: ${new Date(firstDetail.createdAt).toLocaleString()}`, 20, yOffset + 20);
-        doc.text(`Updated At: ${new Date(firstDetail.updatedAt).toLocaleString()}`, 20, yOffset + 30);
-
-        yOffset += 50;
-
-        // --- Table 1: Ordered Product Detail ---
-        doc.setFontSize(14);
-        doc.text("Ordered Product Detail", 20, yOffset);
         yOffset += 10;
+        doc.text("Company: XYZ Corporation", 20, yOffset);
+        doc.text(
+            `Proforma Invoice ID: ${selectedDetails[0].ProformaInvoiceId}`,
+            20,
+            yOffset + 6
+        );
+        doc.text(
+            `Updated At: ${new Date(
+                selectedDetails[0].updatedAt
+            ).toLocaleString()}`,
+            20,
+            yOffset + 12
+        );
+        yOffset += 20;
+
+        // --- Table: Ordered Product Details ---
+        doc.setFontSize(10);
+        doc.text("Ordered Product Details", 20, yOffset);
+        yOffset += 5;
 
         const orderedHeaders = [
-            "SKU Code", "Product Name", "Variant", "QTY Ordered", "Unit Price Ordered", 
-            "First Mile", "Carton P", "Carton L", "Carton T", "Carton Qty", 
-            "Price/Carton", "Estimated CBM", "Carton Weight", "Marking Number", 
-            "Credit", "Note", "Total"
+            "SKU",
+            "Product Name",
+            "Variant",
+            "First Mile",
+            "QTY Ordered",
+            "Unit Price",
+            "Carton P x L x T",
+            "Carton Qty",
+            "Price/Carton",
+            "Estimated CBM",
+            "Carton Weight",
+            "Marking No",
+            "Credit",
+            "Note",
+            "Total",
         ];
 
         const orderedData = selectedDetails.map((detail) => [
-            detail.SKUCode, detail.ProductName, detail.Variant || "N/A", detail.QTYOrdered, 
-            detail.UnitPriceOrdered, detail.FirstMile || "N/A", detail.CartonP, detail.CartonL, 
-            detail.CartonT, detail.CartonQty, detail.PricePerCarton, detail.EstimatedCBMTotal, 
-            detail.CartonWeight || "N/A", detail.MarkingNumber || "N/A", 
-            detail.Credit, detail.Note, detail.Total
+            detail.SKUCode,
+            detail.ProductName,
+            detail.Variant || "N/A",
+            `$${Number(detail.FirstMile || 0).toFixed(2)}`,
+            detail.QTYOrdered,
+            `$${Number(detail.UnitPriceOrdered || 0).toFixed(2)}`,
+            `${detail.CartonP} x ${detail.CartonL} x ${detail.CartonT}`,
+            detail.CartonQty,
+            `$${Number(detail.PricePerCarton || 0).toFixed(2)}`,
+            Number(
+                ((parseFloat(detail.CartonP) || 0) *
+                    (parseFloat(detail.CartonL) || 0) *
+                    (parseFloat(detail.CartonT) || 0) *
+                    (parseFloat(detail.CartonQty) || 0)) /
+                    1000000
+            ).toFixed(3), // CBM Calculation Fixed
+
+            detail.CartonWeight || "-",
+            detail.MarkingNumber || "-",
+            detail.Credit || "-",
+            detail.Note || "-",
+            `$${Number(detail.Total || 0).toFixed(2)}`,
         ]);
 
         autoTable(doc, {
@@ -87,14 +117,8 @@ const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
             head: [orderedHeaders],
             body: orderedData,
             theme: "grid",
-            margin: { left: 20 },
-            tableWidth: "auto",
-            styles: {
-                fontSize: 10,
-                cellPadding: 3,
-                lineColor: [0, 0, 0],
-                textColor: [0, 0, 0],
-            },
+            margin: { left: 10, right: 10 },
+            styles: { fontSize: 7, cellPadding: 3 },
             headStyles: {
                 fillColor: [0, 0, 0],
                 textColor: [255, 255, 255],
@@ -102,28 +126,45 @@ const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
             },
         });
 
-        // Get the last Y position after the first table
-        const lastY = (doc as any).lastAutoTable?.finalY || yOffset + 10;
-        yOffset = lastY + 20;
+        yOffset = (doc as any).lastAutoTable.finalY + 10;
 
-        // --- Table 2: Approved Product Detail ---
-        doc.setFontSize(14);
-        doc.text("Approved Product Detail", 20, yOffset);
-        yOffset += 10;
+        // --- Table: Approved Product Details ---
+        doc.setFontSize(10);
+        doc.text("Approved Product Details", 20, yOffset);
+        yOffset += 5;
 
         const approvedHeaders = [
-            "SKU Code", "Product Name", "Variant", "QTY Approved", "Unit Price Approved", 
-            "First Mile", "Carton P", "Carton L", "Carton T", "Carton Qty", 
-            "Price/Carton", "Estimated CBM", "Carton Weight", "Marking Number", 
-            "Credit", "Note", "Total"
+            "SKU",
+            "Product Name",
+            "Variant",
+            "QTY Approved",
+            "Unit Price",
+            "Carton P x L x T",
+            "Carton Qty",
+            "Price/Carton",
+            "Estimated CBM",
+            "Carton Weight",
+            "Marking No",
+            "Credit",
+            "Note",
+            "Total",
         ];
 
         const approvedData = selectedDetails.map((detail) => [
-            detail.SKUCode, detail.ProductName, detail.Variant || "N/A", detail.QTYApproved, 
-            detail.UnitPriceApproved, detail.FirstMile || "N/A", detail.CartonP, detail.CartonL, 
-            detail.CartonT, detail.CartonQty, detail.PricePerCarton, detail.EstimatedCBMTotal, 
-            detail.CartonWeight || "N/A", detail.MarkingNumber || "N/A", 
-            detail.Credit, detail.Note, detail.Total
+            detail.SKUCode,
+            detail.ProductName,
+            detail.Variant || "N/A",
+            detail.QTYApproved,
+            `$${Number(detail.UnitPriceApproved || 0).toFixed(2)}`,
+            `${detail.CartonP} x ${detail.CartonL} x ${detail.CartonT}`,
+            detail.CartonQty,
+            `$${Number(detail.PricePerCarton || 0).toFixed(2)}`,
+            Number(detail.EstimatedCBMTotal || 0).toFixed(3),
+            detail.CartonWeight || "-",
+            detail.MarkingNumber || "-",
+            detail.Credit || "-",
+            detail.Note || "-",
+            `$${Number(detail.Total || 0).toFixed(2)}`,
         ]);
 
         autoTable(doc, {
@@ -131,14 +172,8 @@ const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
             head: [approvedHeaders],
             body: approvedData,
             theme: "grid",
-            margin: { left: 20 },
-            tableWidth: "auto",
-            styles: {
-                fontSize: 10,
-                cellPadding: 3,
-                lineColor: [0, 0, 0],
-                textColor: [0, 0, 0],
-            },
+            margin: { left: 10, right: 10 },
+            styles: { fontSize: 7, cellPadding: 3 },
             headStyles: {
                 fillColor: [0, 0, 0],
                 textColor: [255, 255, 255],
@@ -146,16 +181,53 @@ const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
             },
         });
 
+        yOffset = (doc as any).lastAutoTable.finalY + 20;
+
+        // --- Total Calculation ---
+        let totalAmount = selectedDetails.reduce(
+            (sum, detail) => sum + Number(detail.Total || 0),
+            0
+        );
+        let totalFirstMile = selectedDetails.reduce(
+            (sum, detail) => sum + Number(detail.FirstMile || 0),
+            0
+        );
+
+        // --- Total Amount Section ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(
+            `Total Amount: $${totalAmount.toFixed(2)}`,
+            pageWidth - 100,
+            yOffset
+        );
+        yOffset += 6;
+        doc.text(
+            `Total First Mile Cost: $${totalFirstMile.toFixed(2)}`,
+            pageWidth - 100,
+            yOffset
+        );
+
+        // --- Footer ---
+        yOffset += 15;
+        doc.setFontSize(10);
+        doc.text("Thank you for your business!", pageWidth / 2, yOffset, {
+            align: "center",
+        });
+
         // Save PDF
-        doc.save(`proforma-invoice-${firstDetail.Code || firstDetail.ProformaInvoiceId}.pdf`);
+        doc.save(
+            `proforma-invoice-${
+                selectedDetails[0].Code || selectedDetails[0].ProformaInvoiceId
+            }.pdf`
+        );
     }
 };
 
-
-export default function POPage() {
+export default function PIPage() {
     const [Invoice, setInvoice] = useState([]);
-    const [selectedDetail, setSelectedDetail] =
-        useState<ProformaInvoiceDetail | null>(null);
+    const [selectedDetail, setSelectedDetail] = useState<any[]>([]); // Array instead of single object
+
     const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
@@ -209,43 +281,46 @@ export default function POPage() {
 
     const handleDetails = async (code: string) => {
         setLoadingDetail(true);
-        setIsModalLoading(true); // Set the modal to loading state
+        setIsModalLoading(true);
         setErrorDetail(null);
+
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/proforma-invoice-details/by-proforma-invoice/${code}`
             );
+
             if (!response.ok) {
                 throw new Error("Failed to fetch proforma invoice details.");
             }
+
             const data = await response.json();
             console.log("Fetched Details:", data);
 
             if (
-                data.status.code !== 200 ||
                 !data.data ||
-                data.data.length === 0
+                data.data.length === 0 ||
+                data.status.code !== 200
             ) {
-                setSelectedDetail(null); // Set to null when no details are available
-                setSelectedDetail(null); // Set to null when no details are available
-                setPiCode(code); // Store piCode in state
+                setSelectedDetail([]); // Store an empty array instead of null
+                setPiCode(code);
                 throw new Error(
                     "No details available for this Proforma Invoice."
                 );
             } else {
-                setSelectedDetail(data.data[0]); // Set the first detail as the selected detail
-                setPiCode(code); // Store piCode in state
+                setSelectedDetail(data.data); // Store all details as an array
+                setPiCode(code);
             }
-            setIsModalOpen(true); // Open modal even when there's no data
+
+            setIsModalOpen(true);
         } catch (error: any) {
             setErrorDetail(error.message || "An unexpected error occurred.");
-            setSelectedDetail(null); // Set to null if there's an error
-            setIsModalOpen(true); // Ensure modal opens on error as well
-            setPiCode(code); // Store piCode in state
+            setSelectedDetail([]); // Ensure it's an empty array instead of null
+            setIsModalOpen(true);
+            setPiCode(code);
         } finally {
             setLoadingDetail(false);
-            setIsModalLoading(false); // Set the modal to data state
-            setPiCode(code); // Store piCode in state
+            setIsModalLoading(false);
+            setPiCode(code);
         }
     };
 
@@ -266,14 +341,14 @@ export default function POPage() {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(
-                    errorData.message || "Failed to delete purchase order."
+                    errorData.message || "Failed to delete proforma invoice."
                 );
             }
 
             setInvoice((prev) =>
                 prev.filter((purchase: any) => purchase.Code !== code)
             );
-            alert("Purchase order deleted successfully.");
+            alert("Proforma invoice deleted successfully.");
             setIsModalOpen(false);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
@@ -407,9 +482,9 @@ export default function POPage() {
                 >
                     <div className="modal-dialog modal-xl">
                         <div className="modal-content">
-                            <div className="modal-header">
+                            <div className="modal-header bg-dark text-white">
                                 <h5 className="modal-title">
-                                    Proforma Invoice Detail
+                                    Proforma Invoice Details
                                 </h5>
                                 <button
                                     type="button"
@@ -422,14 +497,16 @@ export default function POPage() {
                                     <p>Loading details...</p>
                                 ) : errorDetail ? (
                                     <p className="text-danger">{errorDetail}</p>
-                                ) : selectedDetail ? (
+                                ) : selectedDetail.length > 0 ? (
                                     <div className="table-responsive">
                                         <table className="table table-bordered table-striped align-middle text-center">
                                             <thead className="table-dark">
                                                 <tr>
+                                                    <th>No</th>
                                                     <th>Product Name</th>
                                                     <th>SKU Code</th>
                                                     <th>Variant</th>
+                                                    <th>FirstMile</th>
                                                     <th>QTY Ordered</th>
                                                     <th>QTY Approved</th>
                                                     <th>Unit Price Ordered</th>
@@ -444,117 +521,160 @@ export default function POPage() {
                                                     <th>Credit</th>
                                                     <th>Note</th>
                                                     <th>Total</th>
+                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.ProductName
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.SKUCode}
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.Variant ||
-                                                            "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.QTYOrdered
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.QTYApproved
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.UnitPriceOrdered
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.UnitPriceApproved
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.CartonP}{" "}
-                                                        x{" "}
-                                                        {selectedDetail.CartonL}{" "}
-                                                        x{" "}
-                                                        {selectedDetail.CartonT}
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.CartonQty
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.PricePerCarton
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {
-                                                            selectedDetail.EstimatedCBMTotal
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.Credit}
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.Note}
-                                                    </td>
-                                                    <td>
-                                                        {selectedDetail.Total}
-                                                    </td>
-                                                </tr>
+                                                {selectedDetail.map(
+                                                    (detail, index) => (
+                                                        <tr key={detail.Id}>
+                                                            <td className="fw-bold">
+                                                                {index + 1}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.ProductName
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {detail.SKUCode}
+                                                            </td>
+                                                            <td>
+                                                                {detail.Variant ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {detail.FirstMile ||
+                                                                    "N/A"}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.QTYOrdered
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.QTYApproved
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {Number(
+                                                                    detail.UnitPriceOrdered ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {Number(
+                                                                    detail.UnitPriceApproved ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {detail.CartonP}{" "}
+                                                                x{" "}
+                                                                {detail.CartonL}{" "}
+                                                                x{" "}
+                                                                {detail.CartonT}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.CartonQty
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {Number(
+                                                                    detail.PricePerCarton ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {Number(
+                                                                    detail.CartonP *
+                                                                        detail.CartonL *
+                                                                        detail.CartonT ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {detail.Credit ||
+                                                                    "-"}
+                                                            </td>
+                                                            <td>
+                                                                {detail.Note ||
+                                                                    "-"}
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {Number(
+                                                                    detail.Total ||
+                                                                        0
+                                                                ).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                <button
+                                                                    className="btn btn-primary btn-sm me-2"
+                                                                    onClick={() =>
+                                                                        router.push(
+                                                                            `/transaction/proforma-invoice/edit?id=${detail.Id}`
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-pencil-square me-1"></i>{" "}
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-danger btn-sm"
+                                                                    onClick={() =>
+                                                                        handleDeleteDetail(
+                                                                            detail.Id.toString()
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-trash me-1"></i>{" "}
+                                                                    Delete
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
-                                    <p>
-                                        No detail data available for this
-                                        Proforma Invoice.
+                                    <p className="text-center text-warning">
+                                        No details available for this Proforma
+                                        Invoice.
                                     </p>
                                 )}
                             </div>
-                            <div className="modal-footer">
+                            <div className="modal-footer d-flex justify-content-between">
+                                <div>
+                                    <button
+                                        className="btn btn-success me-2"
+                                        onClick={() => handleAddDetail(piCode)}
+                                    >
+                                        <i className="bi bi-plus-square me-2"></i>{" "}
+                                        Add Detail
+                                    </button>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() =>
+                                            generatePDF(selectedDetail)
+                                        }
+                                    >
+                                        <i className="bi bi-file-earmark-pdf me-2"></i>{" "}
+                                        Download PDF
+                                    </button>
+                                </div>
                                 <button
-                                    className="btn btn-primary"
-                                    onClick={() =>
-                                        router.push(
-                                            `/transaction/proforma-invoice/edit?id=${selectedDetail?.Id}`
-                                        )
-                                    }
+                                    className="btn btn-secondary"
+                                    onClick={() => setIsModalOpen(false)}
                                 >
-                                    <i className="bi bi-pencil-square me-2"></i>{" "}
-                                    Edit
+                                    <i className="bi bi-x-lg me-2"></i> Close
                                 </button>
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={() =>
-                                        handleDeleteDetail(
-                                            selectedDetail?.Id?.toString() || ""
-                                        )
-                                    }
-                                >
-                                    <i className="bi bi-trash me-2"></i>Delete
-                                </button>
-                                <button
-                                    className="btn btn-success"
-                                    onClick={() => handleAddDetail(piCode)}
-                                >
-                                    <i className="bi bi-plus-square me-2"></i>{" "}
-                                    Add Detail
-                                </button>
-                                <button className="btn btn-primary" onClick={() => generatePDF([selectedDetail!])}>
-                                              Download PDF
-                                </button>
-
                             </div>
                         </div>
                     </div>

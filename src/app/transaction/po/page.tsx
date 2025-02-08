@@ -276,6 +276,17 @@ export default function POPage() {
         }
     };
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setIsModalOpen(false);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
     return (
         <div className="container-fluid mt-4">
             <div className="text-center card shadow-lg p-4 rounded">
@@ -507,19 +518,27 @@ export default function POPage() {
                                 )}
                             </div>
                             <div className="modal-footer d-flex justify-content-between">
+                                <div>
+                                    <button
+                                        className="btn btn-success me-2"
+                                        onClick={() => handleAddDetail(poCode)}
+                                    >
+                                        <i className="bi bi-plus-square me-2"></i>{" "}
+                                        Add Detail
+                                    </button>
+                                    <button
+                                        className="btn btn-info"
+                                        onClick={generatePDF}
+                                    >
+                                        <i className="bi bi-file-earmark-pdf me-2"></i>{" "}
+                                        Generate PDF
+                                    </button>
+                                </div>
                                 <button
-                                    className="btn btn-success"
-                                    onClick={() => handleAddDetail(poCode)}
+                                    className="btn btn-secondary"
+                                    onClick={() => setIsModalOpen(false)}
                                 >
-                                    <i className="bi bi-plus-square me-2"></i>{" "}
-                                    Add Detail
-                                </button>
-                                <button
-                                    className="btn btn-info"
-                                    onClick={generatePDF}
-                                >
-                                    <i className="bi bi-file-earmark-pdf me-2"></i>{" "}
-                                    Generate PDF
+                                    <i className="bi bi-x-lg me-2"></i> Close
                                 </button>
                             </div>
                         </div>
