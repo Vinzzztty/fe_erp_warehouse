@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Forwarder {
     Code: number;
@@ -192,8 +194,77 @@ export default function Lastmile() {
     };
 
     const handlePrintDetail = () => {
-        // Implement print functionality here
-        alert("Print functionality not implemented yet.");
+        if (selectedDetail.length > 0) {
+            const doc = new jsPDF("landscape", "mm", "a4");
+
+            // Page width for positioning
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const rightAlignX = pageWidth - 20;
+
+            // --- Last Mile Title (Top Right) ---
+            doc.setFontSize(18);
+            doc.text("Last Mile Details", rightAlignX, 20, { align: "right" });
+
+            doc.setFontSize(12);
+            let yOffset = 40;
+
+            // --- Table with Last Mile Details ---
+            doc.setFontSize(14);
+            doc.text("Last Mile Detail", 20, yOffset);
+            yOffset += 10;
+
+            const headers = [
+                "No",
+                "Tracking Code",
+                "Freight Code",
+                "Warehouse Address",
+                "Courier",
+                "Shipping Cost",
+                "Additional Cost",
+                "Subtotal",
+                "Total",
+                "Created At",
+                "Updated At",
+            ];
+
+            const tableData = selectedDetail.map((detail, index) => [
+                index + 1,
+                detail.LastMileTracking,
+                detail.FreightCode,
+                detail.WarehouseAddress,
+                detail.Courier,
+                detail.ShippingCost,
+                detail.AdditionalCost,
+                detail.Subtotal,
+                detail.Total,
+                new Date(detail.createdAt).toLocaleString(),
+                new Date(detail.updatedAt).toLocaleString(),
+            ]);
+
+            autoTable(doc, {
+                startY: yOffset,
+                head: [headers],
+                body: tableData,
+                theme: "grid",
+                margin: { left: 20 },
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 3,
+                    lineColor: [0, 0, 0],
+                    textColor: [0, 0, 0],
+                },
+                headStyles: {
+                    fillColor: [0, 0, 0],
+                    textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                },
+            });
+
+            // Save PDF
+            doc.save(`last-mile-details-${lmCode}.pdf`);
+        } else {
+            console.error("No last mile details available.");
+        }
     };
 
     return (
