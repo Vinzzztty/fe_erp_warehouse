@@ -311,7 +311,9 @@ export default function Lastmile() {
                                             <button
                                                 className="btn btn-warning btn-sm me-2"
                                                 onClick={() =>
-                                                    handleEdit(purchase.Code.toString())
+                                                    handleEdit(
+                                                        purchase.Code.toString()
+                                                    )
                                                 }
                                             >
                                                 <i className="bi bi-pencil-square"></i>{" "}
@@ -320,7 +322,9 @@ export default function Lastmile() {
                                             <button
                                                 className="btn btn-danger btn-sm me-2"
                                                 onClick={() =>
-                                                    handleDelete(purchase.Code.toString())
+                                                    handleDelete(
+                                                        purchase.Code.toString()
+                                                    )
                                                 }
                                             >
                                                 <i className="bi bi-trash"></i>{" "}
@@ -329,7 +333,9 @@ export default function Lastmile() {
                                             <button
                                                 className="btn btn-info btn-sm"
                                                 onClick={() =>
-                                                    handleDetails(purchase.Code.toString())
+                                                    handleDetails(
+                                                        purchase.Code.toString()
+                                                    )
                                                 }
                                             >
                                                 <i className="bi bi-search"></i>{" "}
@@ -352,10 +358,14 @@ export default function Lastmile() {
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
                     }}
                 >
-                    <div className="modal-dialog modal-xl"> {/* Ubah ukuran modal menjadi ekstra besar */}
+                    <div className="modal-dialog modal-xl">
+                        {" "}
+                        {/* Ubah ukuran modal menjadi ekstra besar */}
                         <div className="modal-content">
                             <div className="modal-header bg-dark text-white">
-                                <h5 className="modal-title">Last Mile Details</h5>
+                                <h5 className="modal-title">
+                                    Last Mile Details
+                                </h5>
                                 <button
                                     type="button"
                                     className="btn-close"
@@ -379,44 +389,99 @@ export default function Lastmile() {
                                                     <th>Total</th>
                                                     <th>Created At</th>
                                                     <th>Updated At</th>
-                                                    <th>Action</th> {/* Kolom Aksi */}
+                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {selectedDetail.map((detail, index) => (
-                                                    <tr key={detail.Id}>
-                                                        <td className="fw-bold">{index + 1}</td>
-                                                        <td>{detail.LastMileTracking}</td>
-                                                        <td>{detail.FreightCode}</td>
-                                                        <td>{detail.WarehouseAddress}</td>
-                                                        <td>{detail.Courier}</td>
-                                                        <td>${detail.ShippingCost}</td>
-                                                        <td>${detail.AdditionalCost}</td>
-                                                        <td>${detail.Subtotal}</td>
-                                                        <td>${detail.Total}</td>
-                                                        <td>{new Date(detail.createdAt).toLocaleString()}</td>
-                                                        <td>{new Date(detail.updatedAt).toLocaleString()}</td>
-                                                        <td>
-                                                            <button
-                                                                className="btn btn-primary btn-sm me-2"
-                                                                onClick={() => handleEditDetail(detail.Id)}
-                                                            >
-                                                                <i className="bi bi-pencil-square me-1"></i> Edit
-                                                            </button>
-                                                            <button
-                                                                className="btn btn-danger btn-sm"
-                                                                onClick={() => handleDeleteDetail(detail.Id)}
-                                                            >
-                                                                <i className="bi bi-trash me-1"></i> Delete
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                {selectedDetail.map(
+                                                    (detail, index) => (
+                                                        <tr key={detail.Id}>
+                                                            <td className="fw-bold">
+                                                                {index + 1}
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.LastMileTracking
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.FreightCode
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {
+                                                                    detail.WarehouseAddress
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                {detail.Courier}
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {
+                                                                    detail.ShippingCost
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {
+                                                                    detail.AdditionalCost
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                $
+                                                                {
+                                                                    detail.Subtotal
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                ${detail.Total}
+                                                            </td>
+                                                            <td>
+                                                                {new Date(
+                                                                    detail.createdAt
+                                                                ).toLocaleString()}
+                                                            </td>
+                                                            <td>
+                                                                {new Date(
+                                                                    detail.updatedAt
+                                                                ).toLocaleString()}
+                                                            </td>
+                                                            <td>
+                                                                <button
+                                                                    className="btn btn-primary btn-sm me-2"
+                                                                    onClick={() =>
+                                                                        handleEditDetail(
+                                                                            detail.Id
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-pencil-square me-1"></i>{" "}
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-danger btn-sm"
+                                                                    onClick={() =>
+                                                                        handleDeleteDetail(
+                                                                            detail.Id
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-trash me-1"></i>{" "}
+                                                                    Delete
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
-                                    <p>No details available for this Last Mile.</p>
+                                    <p>
+                                        No details available for this Last Mile.
+                                    </p>
                                 )}
                             </div>
                             <div className="modal-footer">
@@ -424,13 +489,15 @@ export default function Lastmile() {
                                     className="btn btn-success me-2"
                                     onClick={() => handleAddDetail(lmCode)} // Panggil handleAddDetail
                                 >
-                                    <i className="bi bi-plus-square me-2"></i> Add Detail
+                                    <i className="bi bi-plus-square me-2"></i>{" "}
+                                    Add Detail
                                 </button>
                                 <button
                                     className="btn btn-info"
                                     onClick={handlePrintDetail}
                                 >
-                                    <i className="bi bi-printer me-2"></i> Print Detail
+                                    <i className="bi bi-printer me-2"></i> Print
+                                    Detail
                                 </button>
                                 <button
                                     className="btn btn-secondary"
