@@ -158,9 +158,8 @@ export default function POPage() {
         router.push(`/transaction/pi-payment/addpipaymentdetails?id=${piPaymentId}`);
     };
 
-    const handleEditDetail = (detail: PiPaymentDetail) => {
-        setCurrentDetail(detail);
-        setIsDetailModalOpen(true);
+    const handleEditDetail = (detail: number) => {
+        router.push(`/transaction/pi-payment/editpipaymentdetails?id=${detail}`);
     };
 
     const handleDeleteDetail = async (detailId: number) => {
@@ -433,7 +432,7 @@ export default function POPage() {
                                                         <td>
                                                             <button
                                                                 className="btn btn-primary btn-sm me-2"
-                                                                onClick={() => handleEditDetail(detail)}
+                                                                onClick={() => handleEditDetail(detail.Id)}
                                                             >
                                                                 <i className="bi bi-pencil-square me-1"></i> Edit
                                                             </button>
