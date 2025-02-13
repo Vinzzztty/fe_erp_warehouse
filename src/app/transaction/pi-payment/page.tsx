@@ -42,32 +42,25 @@ interface PiPayment {
 interface PiPaymentDetail {
     Id: number;
     PiPaymentId: number;
-    SKUCode: string;
-    ProductName: string;
-    Variant: string | null;
-    QTYOrdered: string;
-    QTYApproved: string;
-    UnitPriceOrdered: string;
-    UnitPriceApproved: string;
-    CartonP: string;
-    CartonL: string;
-    CartonT: string;
-    CartonQty: string;
-    PricePerCarton: string;
-    EstimatedCBMTotal: string;
-    Credit: string | null;
-    Note: string;
-    Total: string;
-    createdAt: string;
-    updatedAt: string;
+    PICode: number; // Updated to match new data structure
+    Rate: string; // Updated to match new data structure
+    ProductPriceRupiah: string; // Updated to match new data structure
+    FirstMileCostRupiah: string; // Updated to match new data structure
+    PaymentRupiah: string; // Updated to match new data structure
+    TotalPaymentRupiah: string; // Added to display total payment
+    createdAt: string; // Added to display creation date
+    updatedAt: string
 }
 
 export default function POPage() {
     const [Invoice, setInvoice] = useState<PiPayment[]>([]);
     const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [errorCompanies, setErrorCompanies] = useState<string | null>(null);
-    const [selectedDetail, setSelectedDetail] = useState<PiPaymentDetail[]>([]); // Now an array
+    const [selectedDetail, setSelectedDetail] = useState<PiPaymentDetail[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [currentDetail, setCurrentDetail] = useState<PiPaymentDetail | null>(null);
+    const [piCode, setPiCode] = useState<string>("");
     const router = useRouter();
 
     useEffect(() => {
@@ -118,7 +111,6 @@ export default function POPage() {
                 throw new Error(errorData.message || "Failed to delete proforma invoice.");
             }
 
-            // Update state to remove deleted item
             setInvoice((prev) => prev.filter((purchase: any) => purchase.Code !== id));
             alert("Proforma invoice deleted successfully.");
         } catch (error: any) {
@@ -142,11 +134,81 @@ export default function POPage() {
             if (data.status.code !== 200) {
                 throw new Error(data.status.message || "No details found.");
             }
-
-            setSelectedDetail(data.data); // Store all details, not just one
+            
+            setPiCode(id);
+            setSelectedDetail(data.data);
             setIsModalOpen(true);
         } catch (error: any) {
             console.error("Error fetching proforma invoice details:", error);
+            setIsModalOpen(true);
+            setPiCode(id);
+        }
+    };
+
+    const handleAddDetail = async (piPaymentId: string) => {
+        // Redirect to add detail page
+        router.push(`/transaction/pi-payment/addpipaymentdetails?id=${piPaymentId}`);
+    };
+
+    const handleEditDetail = (detail: PiPaymentDetail) => {
+        setCurrentDetail(detail);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleDeleteDetail = async (detailId: number) => {
+        const confirmDelete = confirm("Are you sure you want to delete this detail?");
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payment-details/${detailId}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to delete detail.");
+            }
+
+            alert("Detail deleted successfully.");
+            // Optionally, refresh the details or update the state
+            setSelectedDetail((prev) => prev.filter(detail => detail.Id !== detailId));
+        } catch (error: any) {
+            alert(error.message || "An unexpected error occurred.");
+        }
+    };
+
+    const handleUpdateDetail = async () => {
+        if (!currentDetail) return;
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payment-details/${currentDetail.Id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(currentDetail),
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to update detail.");
+            }
+
+            alert("Detail updated successfully.");
+            setIsDetailModalOpen(false);
+            // Refresh the details or update the state
+            const updatedDetails = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/pi-payment-details/by-pi-payment/${currentDetail.PiPaymentId}`
+            );
+            const data = await updatedDetails.json();
+            setSelectedDetail(data.data);
+        } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
     };
@@ -169,38 +231,24 @@ export default function POPage() {
             // --- Table with Proforma Invoice Payment Details ---
             const headers = [
                 "No",
-                "SKU Code",
-                "Product Name",
-                "Variant",
-                "QTY Ordered",
-                "QTY Approved",
-                "Unit Price Ordered",
-                "Unit Price Approved",
-                "Carton Dimensions (P x L x T)",
-                "Carton Qty",
-                "Price Per Carton",
-                "Estimated CBM Total",
-                "Credit",
-                "Note",
-                "Total",
+                "PICode",
+                "Rate",
+                "Product Price (Rupiah)",
+                "First Mile Cost (Rupiah)",
+                "Payment (Rupiah)",
+                "Total Payment (Rupiah)",
+             
             ];
 
             const tableData = selectedDetail.map((detail, index) => [
                 index + 1,
-                detail.SKUCode,
-                detail.ProductName,
-                detail.Variant || "N/A",
-                detail.QTYOrdered,
-                detail.QTYApproved,
-                detail.UnitPriceOrdered,
-                detail.UnitPriceApproved,
-                `${detail.CartonP} x ${detail.CartonL} x ${detail.CartonT}`,
-                detail.CartonQty,
-                detail.PricePerCarton,
-                detail.EstimatedCBMTotal,
-                detail.Credit || "N/A",
-                detail.Note,
-                detail.Total,
+                detail.PICode,
+                detail.Rate,
+                detail.ProductPriceRupiah || "N/A",
+                detail.FirstMileCostRupiah,
+                detail.PaymentRupiah,
+                detail.TotalPaymentRupiah,
+                
             ]);
 
             autoTable(doc, {
@@ -290,7 +338,7 @@ export default function POPage() {
                                                 <i className="bi bi-pencil-square"></i> Edit
                                             </button>
                                             <button
-                                                className="btn btn-danger btn-sm"
+                                                className="btn btn-danger btn-sm me-2"
                                                 onClick={() => handleDelete(purchase.Code)}
                                             >
                                                 <i className="bi bi-trash"></i> Delete
@@ -335,20 +383,14 @@ export default function POPage() {
                                             <thead className="table-dark">
                                                 <tr>
                                                     <th>No</th>
-                                                    <th>SKU Code</th>
-                                                    <th>Product Name</th>
-                                                    <th>Variant</th>
-                                                    <th>QTY Ordered</th>
-                                                    <th>QTY Approved</th>
-                                                    <th>Unit Price Ordered</th>
-                                                    <th>Unit Price Approved</th>
-                                                    <th>Carton Dimensions (P x L x T)</th>
-                                                    <th>Carton Qty</th>
-                                                    <th>Price Per Carton</th>
-                                                    <th>Estimated CBM Total</th>
-                                                    <th>Credit</th>
-                                                    <th>Note</th>
-                                                    <th>Total</th>
+                                                    <th>PICode</th>
+                                                    <th>Rate</th>
+                                                    <th>Product Price (Rupiah)</th>
+                                                    <th>First Mile Cost (Rupiah)</th>
+                                                    <th>Payment (Rupiah)</th>
+                                                    <th>Total Payment (Rupiah)</th>
+                                                    <th>Created At</th>
+                                                    <th>Updated At</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
@@ -356,24 +398,18 @@ export default function POPage() {
                                                 {selectedDetail.map((detail, index) => (
                                                     <tr key={detail.Id}>
                                                         <td className="fw-bold">{index + 1}</td>
-                                                        <td>{detail.SKUCode}</td>
-                                                        <td>{detail.ProductName}</td>
-                                                        <td>{detail.Variant || "N/A"}</td>
-                                                        <td>{detail.QTYOrdered}</td>
-                                                        <td>{detail.QTYApproved}</td>
-                                                        <td>${detail.UnitPriceOrdered}</td>
-                                                        <td>${detail.UnitPriceApproved}</td>
-                                                        <td>{detail.CartonP} x {detail.CartonL} x {detail.CartonT}</td>
-                                                        <td>{detail.CartonQty}</td>
-                                                        <td>${detail.PricePerCarton}</td>
-                                                        <td>{detail.EstimatedCBMTotal}</td>
-                                                        <td>{detail.Credit || "N/A"}</td>
-                                                        <td>{detail.Note}</td>
-                                                        <td>${detail.Total}</td>
+                                                        <td>{detail.PICode}</td>
+                                                        <td>{detail.Rate}</td>
+                                                        <td>{detail.ProductPriceRupiah}</td>
+                                                        <td>{detail.FirstMileCostRupiah}</td>
+                                                        <td>{detail.PaymentRupiah}</td>
+                                                        <td>{detail.TotalPaymentRupiah}</td>
+                                                        <td>{new Date(detail.createdAt).toLocaleString()}</td>
+                                                        <td>{new Date(detail.updatedAt).toLocaleString()}</td>
                                                         <td>
                                                             <button
                                                                 className="btn btn-primary btn-sm me-2"
-                                                                onClick={() => handleEditDetail(detail.Id)}
+                                                                onClick={() => handleEditDetail(detail)}
                                                             >
                                                                 <i className="bi bi-pencil-square me-1"></i> Edit
                                                             </button>
@@ -396,7 +432,7 @@ export default function POPage() {
                             <div className="modal-footer">
                                 <button
                                     className="btn btn-success me-2"
-                                    onClick={() => handleAddDetail(selectedDetail[0]?.PiPaymentId.toString() || "")}
+                                    onClick={() => handleAddDetail(piCode)}
                                 >
                                     <i className="bi bi-plus-square me-2"></i> Add Detail
                                 </button>
@@ -417,6 +453,8 @@ export default function POPage() {
                     </div>
                 </div>
             )}
+
+            
         </div>
     );
 }
