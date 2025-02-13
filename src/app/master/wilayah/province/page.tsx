@@ -27,7 +27,11 @@ export default function ProvincePage() {
                     throw new Error("Failed to fetch countries.");
                 }
                 const data = await response.json();
-                setCountries(data.data);
+                setCountries(
+                    data.data.filter(
+                        (country: any) => country.Status === "Active"
+                    )
+                );
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
@@ -96,7 +100,7 @@ export default function ProvincePage() {
                 {/* Name Field */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Province Name
+                        Province Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -123,7 +127,8 @@ export default function ProvincePage() {
                         required
                     >
                         <option value="" disabled>
-                            Select a country
+                            Select a country{" "}
+                            <span style={{ color: "red" }}>*</span>
                         </option>
                         {countries.map((country: any) => (
                             <option key={country.Code} value={country.Code}>
@@ -136,7 +141,7 @@ export default function ProvincePage() {
                 {/* Status Field */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

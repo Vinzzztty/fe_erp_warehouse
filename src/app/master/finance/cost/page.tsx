@@ -69,7 +69,7 @@ export default function CostPage() {
                 {/* Name Field */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Cost Name
+                        Cost Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -85,7 +85,7 @@ export default function CostPage() {
                 {/* Percentage Field */}
                 <div className="mb-3">
                     <label htmlFor="Percentage" className="form-label">
-                        Percentage (%)
+                        Percentage (%) <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="number"
@@ -103,7 +103,7 @@ export default function CostPage() {
                 {/* Note Field */}
                 <div className="mb-3">
                     <label htmlFor="Note" className="form-label">
-                        Note
+                        Notes
                     </label>
                     <textarea
                         id="Note"
@@ -117,7 +117,7 @@ export default function CostPage() {
                 {/* Status Field */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

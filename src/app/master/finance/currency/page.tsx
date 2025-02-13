@@ -68,7 +68,7 @@ export default function CurrencyPage() {
                 {/* Code Field */}
                 <div className="mb-3">
                     <label htmlFor="Code" className="form-label">
-                        Currency Code
+                        Currency Code <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -84,7 +84,7 @@ export default function CurrencyPage() {
                 {/* Name Field */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Currency Name
+                        Currency Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -114,7 +114,7 @@ export default function CurrencyPage() {
                 {/* Status Field */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

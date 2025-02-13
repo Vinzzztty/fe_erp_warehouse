@@ -91,7 +91,7 @@ export default function EditCompanyPage() {
                 {/* Name Field */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Company Name
+                        Company Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -122,7 +122,7 @@ export default function EditCompanyPage() {
                 {/* Status Field */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

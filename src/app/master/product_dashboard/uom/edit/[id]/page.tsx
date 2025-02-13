@@ -96,7 +96,7 @@ export default function EditUomPage() {
                 {/* Code */}
                 <div className="mb-3">
                     <label htmlFor="Code" className="form-label">
-                        Code
+                        Code <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -112,7 +112,7 @@ export default function EditUomPage() {
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Name
+                        Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -142,7 +142,7 @@ export default function EditUomPage() {
                 {/* Status */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"
