@@ -13,6 +13,10 @@ export default function WilayahPage() {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
+        string | null
+    >(null);
+
     // Fetch data for cities, provinces, and countries
     useEffect(() => {
         const fetchData = async () => {
@@ -41,9 +45,21 @@ export default function WilayahPage() {
                         countriesRes.json(),
                     ]);
 
-                setCities(citiesData?.data || []);
-                setProvinces(provincesData?.data || []);
-                setCountries(countriesData?.data || []);
+                setCities(
+                    (citiesData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setProvinces(
+                    (provincesData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setCountries(
+                    (countriesData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
@@ -82,6 +98,12 @@ export default function WilayahPage() {
             if (endpoint === "cities") setCities(await fetchData());
             if (endpoint === "provinces") setProvinces(await fetchData());
             if (endpoint === "countries") setCountries(await fetchData());
+
+            // Show success message
+            setDeleteSuccessMessage("Item deleted successfully!");
+
+            // Hide the message after 3 seconds
+            setTimeout(() => setDeleteSuccessMessage(null), 3000);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
@@ -96,6 +118,11 @@ export default function WilayahPage() {
                 <p>View and manage your geographical settings here.</p>
                 {errorMessage && (
                     <div className="alert alert-danger">{errorMessage}</div>
+                )}
+                {deleteSuccessMessage && (
+                    <div className="alert alert-success text-center">
+                        {deleteSuccessMessage}
+                    </div>
                 )}
             </div>
 
@@ -115,7 +142,7 @@ export default function WilayahPage() {
                             </p>
                             <Link href="/master/wilayah/city">
                                 <button className="btn btn-dark">
-                                    Go to City
+                                    Add City
                                 </button>
                             </Link>
                         </div>
@@ -136,7 +163,7 @@ export default function WilayahPage() {
                             </p>
                             <Link href="/master/wilayah/province">
                                 <button className="btn btn-dark">
-                                    Go to Province
+                                    Add Province
                                 </button>
                             </Link>
                         </div>
@@ -157,7 +184,7 @@ export default function WilayahPage() {
                             </p>
                             <Link href="/master/wilayah/country">
                                 <button className="btn btn-dark">
-                                    Go to Country
+                                    Add Country
                                 </button>
                             </Link>
                         </div>

@@ -13,6 +13,9 @@ export default function BusinessPage() {
     const [forwarders, setForwarders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
+        string | null
+    >(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -53,10 +56,26 @@ export default function BusinessPage() {
                     forwardersRes.json(),
                 ]);
 
-                setCompanies(companiesData?.data || []);
-                setStores(storesData?.data || []);
-                setSuppliers(suppliersData?.data || []);
-                setForwarders(forwardersData?.data || []);
+                setCompanies(
+                    (companiesData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setStores(
+                    (storesData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setSuppliers(
+                    (suppliersData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setForwarders(
+                    (forwardersData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
@@ -95,6 +114,12 @@ export default function BusinessPage() {
             if (endpoint === "stores") setStores(await fetchData());
             if (endpoint === "suppliers") setSuppliers(await fetchData());
             if (endpoint === "forwarders") setForwarders(await fetchData());
+
+            // Show success message
+            setDeleteSuccessMessage("Item deleted successfully!");
+
+            // Hide the message after 3 seconds
+            setTimeout(() => setDeleteSuccessMessage(null), 3000);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
@@ -109,6 +134,11 @@ export default function BusinessPage() {
                 <p>View and manage your business-related data here.</p>
                 {errorMessage && (
                     <div className="alert alert-danger">{errorMessage}</div>
+                )}
+                {deleteSuccessMessage && (
+                    <div className="alert alert-success text-center">
+                        {deleteSuccessMessage}
+                    </div>
                 )}
             </div>
 
@@ -245,8 +275,8 @@ export default function BusinessPage() {
                                                             <button
                                                                 className="btn btn-danger btn-sm"
                                                                 onClick={() =>
-                                                                    console.log(
-                                                                        "Delete",
+                                                                    handleDelete(
+                                                                        "companies",
                                                                         company.Code
                                                                     )
                                                                 }

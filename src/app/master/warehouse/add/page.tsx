@@ -67,7 +67,7 @@ export default function AddWarehousePage() {
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Warehouse Name
+                        Warehouse Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -83,7 +83,7 @@ export default function AddWarehousePage() {
                 {/* Address */}
                 <div className="mb-3">
                     <label htmlFor="Address" className="form-label">
-                        Address
+                        Address <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -113,7 +113,7 @@ export default function AddWarehousePage() {
                 {/* Status */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

@@ -71,7 +71,7 @@ export default function ChannelPage() {
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Channel Name
+                        Channel Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -101,7 +101,7 @@ export default function ChannelPage() {
                 {/* Category */}
                 <div className="mb-3">
                     <label htmlFor="Category" className="form-label">
-                        Category
+                        Category <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Category"
@@ -133,7 +133,7 @@ export default function ChannelPage() {
                 {/* Status */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

@@ -8,158 +8,122 @@ export default function FinancePage() {
     const router = useRouter();
 
     // States for each entity
-    const [banks, setBanks] = useState([]);
-    const [currencies, setCurrencies] = useState([]);
-    const [ppnSettings, setPpnSettings] = useState([]);
-    const [costs, setCosts] = useState([]);
+    const [banks, setBanks] = useState<any[]>([]);
+    const [currencies, setCurrencies] = useState<any[]>([]);
+    const [ppnSettings, setPpnSettings] = useState<any[]>([]);
+    const [costs, setCosts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Loading states
-    const [loadingBanks, setLoadingBanks] = useState(false);
-    const [loadingCurrencies, setLoadingCurrencies] = useState(false);
-    const [loadingPpnSettings, setLoadingPpnSettings] = useState(false);
-    const [loadingCosts, setLoadingCosts] = useState(false);
+    const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
+        string | null
+    >(null);
 
-    // Error states
-    const [errorBanks, setErrorBanks] = useState<string | null>(null);
-    const [errorCurrencies, setErrorCurrencies] = useState<string | null>(null);
-    const [errorPpnSettings, setErrorPpnSettings] = useState<string | null>(
-        null
-    );
-    const [errorCosts, setErrorCosts] = useState<string | null>(null);
+    // Fetch data for banks, currencies, ppn-settings, and costs
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [banksRes, currenciesRes, ppnRes, costsRes] =
+                    await Promise.all([
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/banks`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/currencies`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/ppn-settings`
+                        ),
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/costs`
+                        ),
+                    ]);
 
-    // Fetch data
-    const fetchData = async (
-        endpoint: string,
-        setState: any,
-        setLoading: any,
-        setError: any
-    ) => {
-        setLoading(true);
-        setError(null);
+                if (
+                    !banksRes.ok ||
+                    !currenciesRes.ok ||
+                    !ppnRes.ok ||
+                    !costsRes.ok
+                ) {
+                    throw new Error("Failed to fetch data.");
+                }
+
+                const [banksData, currenciesData, ppnData, costsData] =
+                    await Promise.all([
+                        banksRes.json(),
+                        currenciesRes.json(),
+                        ppnRes.json(),
+                        costsRes.json(),
+                    ]);
+
+                setBanks(
+                    (banksData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setCurrencies(
+                    (currenciesData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setPpnSettings(
+                    (ppnData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setCosts(
+                    (costsData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+            } catch (error: any) {
+                setErrorMessage(
+                    error.message || "An unexpected error occurred."
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    // Delete an item
+    const handleDelete = async (endpoint: string, id: number) => {
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`
-            );
-            if (!response.ok) throw new Error("Failed to fetch data.");
-            const data = await response.json();
-            setState(data.data);
-        } catch (error: any) {
-            setError(error.message || "An unexpected error occurred.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Delete data
-    const deleteItem = async (
-        endpoint: string,
-        id: any,
-        updateState: () => void
-    ) => {
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}/${id}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}/${id}`,
                 {
                     method: "DELETE",
                 }
             );
-            if (!response.ok) throw new Error("Failed to delete item.");
-            updateState(); // Refresh data
+
+            if (!response.ok) {
+                throw new Error("Failed to delete item.");
+            }
+
+            const fetchData = async () => {
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
+                );
+                const data = await res.json();
+                return data?.data || [];
+            };
+
+            if (endpoint === "banks") setBanks(await fetchData());
+            if (endpoint === "currencies") setCurrencies(await fetchData());
+            if (endpoint === "ppn-settings") setPpnSettings(await fetchData());
+            if (endpoint === "costs") setCosts(await fetchData());
+
+            // Show success message
+            setDeleteSuccessMessage("Item deleted successfully!");
+
+            // Hide the message after 3 seconds
+            setTimeout(() => setDeleteSuccessMessage(null), 3000);
         } catch (error: any) {
-            alert(error.message || "Failed to delete item.");
+            alert(error.message || "An unexpected error occurred.");
         }
     };
-
-    // Fetch data on component mount
-    useEffect(() => {
-        fetchData("/master/banks", setBanks, setLoadingBanks, setErrorBanks);
-        fetchData(
-            "/master/currencies",
-            setCurrencies,
-            setLoadingCurrencies,
-            setErrorCurrencies
-        );
-        fetchData(
-            "/master/ppn-settings",
-            setPpnSettings,
-            setLoadingPpnSettings,
-            setErrorPpnSettings
-        );
-        fetchData("/master/costs", setCosts, setLoadingCosts, setErrorCosts);
-    }, []);
-
-    // Reusable table renderer
-    const renderTable = (
-        data: any[],
-        loading: boolean,
-        error: string | null,
-        entity: string,
-        fields: { key: string; label: string }[],
-        updateState: () => void
-    ) => (
-        <div className="card shadow-lg p-4 rounded mt-4">
-            <p className="mb-4 fw-bold">{entity}</p>
-            {loading && <p>Loading {entity.toLowerCase()}...</p>}
-            {error && <p className="text-danger">{error}</p>}
-            {!loading && data.length > 0 && (
-                <div className="table-responsive">
-                    <table className="table table-striped table-bordered table-hover align-middle text-center">
-                        <thead className="table-dark">
-                            <tr>
-                                {fields.map((field, index) => (
-                                    <th key={index}>{field.label}</th>
-                                ))}
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.map((item, idx) => (
-                                <tr key={idx}>
-                                    {fields.map((field, index) => (
-                                        <td key={index}>
-                                            {item[field.key] || "N/A"}
-                                        </td>
-                                    ))}
-                                    <td>
-                                        <button
-                                            className="btn btn-warning btn-sm me-2"
-                                            onClick={() => {
-                                                const entityPath = entity
-                                                    .toLowerCase()
-                                                    .replace(/\s+/g, "-") // Convert spaces to dashes
-                                                    .replace(/_/g, "-"); // Ensure underscores are also replaced with dashes
-                                                const itemId =
-                                                    item[fields[0].key]; // Retrieve the ID field dynamically
-                                                router.push(
-                                                    `/master/finance/${entityPath}/edit/${itemId}`
-                                                );
-                                            }}
-                                        >
-                                            <i className="bi bi-pencil-square"></i>{" "}
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="btn btn-danger btn-sm"
-                                            onClick={() =>
-                                                deleteItem(
-                                                    `/master/${entity.toLowerCase()}s`,
-                                                    item[fields[0].key],
-                                                    updateState
-                                                )
-                                            }
-                                        >
-                                            <i className="bi bi-trash"></i>{" "}
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </div>
-    );
 
     return (
         <div className="container-fluid mt-4">
@@ -167,54 +131,57 @@ export default function FinancePage() {
                 <h1>
                     <i className="bi bi-cash-stack me-2"></i> Finance
                 </h1>
-                <p>View and manage your finance-related data here</p>
+                <p>View and manage your finance-related data here.</p>
+                {errorMessage && (
+                    <div className="alert alert-danger">{errorMessage}</div>
+                )}
+                {deleteSuccessMessage && (
+                    <div className="alert alert-success text-center">
+                        {deleteSuccessMessage}
+                    </div>
+                )}
             </div>
 
-            {/* Cards for Quick Navigation */}
+            {/* Cards */}
             <div className="row mt-4">
                 {[
                     {
                         title: "Bank",
                         icon: "bi-bank",
-                        description: "Manage your bank details and accounts.",
                         link: "/master/finance/bank",
                     },
                     {
                         title: "Currency",
                         icon: "bi-currency-exchange",
-                        description: "Manage currency and exchange rates.",
                         link: "/master/finance/currency",
                     },
                     {
                         title: "PPN Setting",
                         icon: "bi-file-text",
-                        description: "Configure your PPN settings.",
                         link: "/master/finance/ppn-setting",
                     },
                     {
                         title: "Cost",
                         icon: "bi-wallet",
-                        description: "Manage costs and financial records.",
                         link: "/master/finance/cost",
                     },
-                ].map((card, idx) => (
+                ].map((item, idx) => (
                     <div className="col-md-3" key={idx}>
                         <div className="card text-center shadow-sm">
                             <div className="card-body">
                                 <i
-                                    className={`bi ${card.icon}`}
+                                    className={`bi ${item.icon}`}
                                     style={{
                                         fontSize: "2rem",
                                         color: "#6c757d",
                                     }}
                                 ></i>
                                 <h5 className="card-title mt-3">
-                                    {card.title}
+                                    {item.title}
                                 </h5>
-                                <p className="card-text">{card.description}</p>
-                                <Link href={card.link}>
+                                <Link href={item.link}>
                                     <button className="btn btn-dark">
-                                        Go to {card.title}
+                                        Add {item.title}
                                     </button>
                                 </Link>
                             </div>
@@ -222,87 +189,315 @@ export default function FinancePage() {
                     </div>
                 ))}
             </div>
-
             {/* Tables */}
-            {renderTable(
-                banks,
-                loadingBanks,
-                errorBanks,
-                "Bank",
-                [
-                    { key: "Code", label: "Code" },
-                    { key: "Name", label: "Name" },
-                    { key: "Notes", label: "Notes" },
-                    { key: "Status", label: "Status" },
-                ],
-                () =>
-                    fetchData(
-                        "/master/banks",
-                        setBanks,
-                        setLoadingBanks,
-                        setErrorBanks
-                    )
-            )}
+            {loading ? (
+                <p className="text-center mt-5">Loading data...</p>
+            ) : (
+                <>
+                    {/* Banks Table */}
+                    <div className="card shadow-lg p-4 rounded mt-4">
+                        <p className="mb-4 fw-bold">Banks</p>
+                        <div className="table-responsive">
+                            <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Name</th>
+                                        <th>Notes</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {banks.length > 0 ? (
+                                        banks.map(
+                                            (item: any, index: number) => (
+                                                <tr key={index}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{item.Name}</td>
+                                                    <td>
+                                                        {item.Notes || "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        <span
+                                                            className={`badge ${
+                                                                item.Status ===
+                                                                "Active"
+                                                                    ? "bg-success"
+                                                                    : "bg-secondary"
+                                                            }`}
+                                                        >
+                                                            {item.Status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn btn-warning btn-sm me-2"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/master/finance/bank/edit/${item.Code}`
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil-square"></i>{" "}
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    "banks",
+                                                                    item.Code
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3}>
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-            {renderTable(
-                currencies,
-                loadingCurrencies,
-                errorCurrencies,
-                "Currency",
-                [
-                    { key: "Code", label: "Code" },
-                    { key: "Name", label: "Name" },
-                    { key: "Notes", label: "Notes" },
-                    { key: "Status", label: "Status" },
-                ],
-                () =>
-                    fetchData(
-                        "/master/currencies",
-                        setCurrencies,
-                        setLoadingCurrencies,
-                        setErrorCurrencies
-                    )
-            )}
+                    {/* Currencies Table */}
+                    <div className="card shadow-lg p-4 rounded mt-4">
+                        <p className="mb-4 fw-bold">Currencies</p>
+                        <div className="table-responsive">
+                            <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Name</th>
+                                        <th>Notes</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {currencies.length > 0 ? (
+                                        currencies.map(
+                                            (item: any, index: number) => (
+                                                <tr key={index}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{item.Name}</td>
+                                                    <td>
+                                                        {item.Notes || "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        <span
+                                                            className={`badge ${
+                                                                item.Status ===
+                                                                "Active"
+                                                                    ? "bg-success"
+                                                                    : "bg-secondary"
+                                                            }`}
+                                                        >
+                                                            {item.Status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn btn-warning btn-sm me-2"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/master/finance/currency/edit/${item.Code}`
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil-square"></i>{" "}
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    "currencies",
+                                                                    item.Code
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3}>
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-            {renderTable(
-                ppnSettings,
-                loadingPpnSettings,
-                errorPpnSettings,
-                "PPN-Setting",
-                [
-                    { key: "id", label: "id" },
-                    { key: "Name", label: "Name" },
-                    { key: "Rate", label: "Rate (%)" },
-                    { key: "Status", label: "Status" },
-                ],
-                () =>
-                    fetchData(
-                        "/master/ppn-setting",
-                        setPpnSettings,
-                        setLoadingPpnSettings,
-                        setErrorPpnSettings
-                    )
-            )}
+                    {/* PPN Settings Table */}
+                    <div className="card shadow-lg p-4 rounded mt-4">
+                        <p className="mb-4 fw-bold">PPN Settings</p>
+                        <div className="table-responsive">
+                            <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Name</th>
+                                        <th>Rate</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {ppnSettings.length > 0 ? (
+                                        ppnSettings.map(
+                                            (item: any, index: number) => (
+                                                <tr key={index}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{item.Name}</td>
+                                                    <td>{item.Rate}</td>
+                                                    <td>
+                                                        <span
+                                                            className={`badge ${
+                                                                item.Status ===
+                                                                "Active"
+                                                                    ? "bg-success"
+                                                                    : "bg-secondary"
+                                                            }`}
+                                                        >
+                                                            {item.Status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn btn-warning btn-sm me-2"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/master/finance/ppn-setting/edit/${item.Code}`
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil-square"></i>{" "}
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    "ppn-settings",
+                                                                    item.Code
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3}>
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-            {renderTable(
-                costs,
-                loadingCosts,
-                errorCosts,
-                "Cost",
-                [
-                    { key: "Code", label: "Code" },
-                    { key: "Name", label: "Name" },
-                    { key: "Percentage", label: "Percentage" },
-                    { key: "Note", label: "Note" },
-                    { key: "Status", label: "Status" },
-                ],
-                () =>
-                    fetchData(
-                        "/master/costs",
-                        setCosts,
-                        setLoadingCosts,
-                        setErrorCosts
-                    )
+                    {/* Costs Table */}
+                    <div className="card shadow-lg p-4 rounded mt-4">
+                        <p className="mb-4 fw-bold">Costs</p>
+                        <div className="table-responsive">
+                            <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Name</th>
+                                        <th>Percentage</th>
+                                        <th>Notes</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {costs.length > 0 ? (
+                                        costs.map(
+                                            (item: any, index: number) => (
+                                                <tr key={index}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{item.Name}</td>
+                                                    <td>{item.Percentage}</td>
+                                                    <td>
+                                                        {item.Notes || "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        <span
+                                                            className={`badge ${
+                                                                item.Status ===
+                                                                "Active"
+                                                                    ? "bg-success"
+                                                                    : "bg-secondary"
+                                                            }`}
+                                                        >
+                                                            {item.Status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn btn-warning btn-sm me-2"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/master/finance/cost/edit/${item.Code}`
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil-square"></i>{" "}
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    "costs",
+                                                                    item.Code
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3}>
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );

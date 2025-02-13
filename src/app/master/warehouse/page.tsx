@@ -10,6 +10,9 @@ export default function WarehousePage() {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
+        string | null
+    >(null);
     // Fetch warehouses
     useEffect(() => {
         const fetchWarehouses = async () => {
@@ -21,7 +24,11 @@ export default function WarehousePage() {
                     throw new Error("Failed to fetch warehouses.");
                 }
                 const data = await response.json();
-                setWarehouses(data.data);
+                setWarehouses(
+                    data.data.sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
@@ -51,6 +58,12 @@ export default function WarehousePage() {
             setWarehouses((prev) =>
                 prev.filter((warehouse: any) => warehouse.Code !== id)
             );
+
+            // Show success message
+            setDeleteSuccessMessage("Item deleted successfully!");
+
+            // Hide the message after 3 seconds
+            setTimeout(() => setDeleteSuccessMessage(null), 3000);
         } catch (error: any) {
             alert(error.message || "Failed to delete warehouse.");
         }
@@ -73,6 +86,11 @@ export default function WarehousePage() {
                 <p>Manage your warehouses below.</p>
                 {errorMessage && (
                     <div className="alert alert-danger">{errorMessage}</div>
+                )}
+                {deleteSuccessMessage && (
+                    <div className="alert alert-success text-center">
+                        {deleteSuccessMessage}
+                    </div>
                 )}
                 {/* Add Warehouse Button */}
                 <div className="mb-4">

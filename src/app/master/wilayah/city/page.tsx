@@ -29,7 +29,11 @@ export default function CityPage() {
                     throw new Error("Failed to fetch provinces.");
                 }
                 const data = await response.json();
-                setProvinces(data.data);
+                setProvinces(
+                    data.data.filter(
+                        (province: any) => province.Status === "Active"
+                    )
+                );
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
@@ -46,7 +50,11 @@ export default function CityPage() {
                     throw new Error("Failed to fetch countries.");
                 }
                 const data = await response.json();
-                setCountries(data.data);
+                setCountries(
+                    data.data.filter(
+                        (Country: any) => Country.Status === "Active"
+                    )
+                );
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
@@ -116,7 +124,7 @@ export default function CityPage() {
                 {/* Name Field */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        City Name
+                        City Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -132,7 +140,7 @@ export default function CityPage() {
                 {/* Country Dropdown */}
                 <div className="mb-3">
                     <label htmlFor="CountryId" className="form-label">
-                        Country
+                        Country <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="CountryId"
@@ -156,7 +164,7 @@ export default function CityPage() {
                 {/* Province Dropdown */}
                 <div className="mb-3">
                     <label htmlFor="ProvinceId" className="form-label">
-                        Province
+                        Province <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="ProvinceId"
@@ -180,7 +188,7 @@ export default function CityPage() {
                 {/* Status Field */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

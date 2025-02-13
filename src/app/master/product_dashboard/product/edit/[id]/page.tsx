@@ -34,6 +34,7 @@ export default function EditProductPage() {
         Height: "",
         Weight: "",
         Keyword: "",
+        Content: "",
         Parameter: "",
     });
 
@@ -69,7 +70,11 @@ export default function EditProductPage() {
                         if (!response.ok)
                             throw new Error("Failed to fetch dropdown data");
                         const data = await response.json();
-                        setter(data.data);
+                        setter(
+                            data.data.filter(
+                                (item: any) => item.Status === "Active"
+                            )
+                        );
                     })
                 );
             } catch (error: any) {
@@ -95,6 +100,7 @@ export default function EditProductPage() {
                     StoreName: product.StoreName || "",
                     Channel: product.Channel || "",
                     Notes: product.Notes || "",
+                    Content: product.Content || "",
                     Status: product.Status || "Non-Active",
                     Length: product.Length ?? 0,
                     Width: product.Width ?? 0, // Set default to 0 if null or undefined
@@ -191,314 +197,355 @@ export default function EditProductPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Edit Product</h1>
-
-            {/* Error Message */}
-            {errorMessage && (
-                <div className="alert alert-danger">{errorMessage}</div>
-            )}
-
-            {/* Edit Product Form */}
-            <form onSubmit={handleSubmit} className="mt-4">
-                <div className="mb-3">
-                    <label htmlFor="Name" className="form-label">
-                        Product Name
-                    </label>
-                    <input
-                        type="text"
-                        id="Name"
-                        name="Name"
-                        className="form-control"
-                        value={formData.Name}
-                        onChange={handleChange}
-                        required
-                    />
+            <div className="card shadow-sm">
+                <div className="card-header bg-dark text-white">
+                    <h4 className="mb-0">Edit Product</h4>
                 </div>
-
-                <div className="mb-3">
-                    <label htmlFor="CodeName" className="form-label">
-                        Code Name
-                    </label>
-                    <input
-                        type="text"
-                        id="CodeName"
-                        name="CodeName"
-                        className="form-control"
-                        value={formData.CodeName}
-                        onChange={handleChange}
-                        readOnly
-                    />
-                </div>
-
-                {/* SKU Code */}
-                <div className="mb-3">
-                    <label htmlFor="SKUCode" className="form-label">
-                        SKU Code
-                    </label>
-                    <input
-                        type="text"
-                        id="SKUCode"
-                        name="SKUCode"
-                        className="form-control"
-                        value={formData.SKUCode}
-                        onChange={handleChange}
-                        readOnly
-                    />
-                </div>
-
-                {/* Company Name */}
-                <div className="mb-3">
-                    <label htmlFor="CompanyCode" className="form-label">
-                        Company
-                    </label>
-                    <select
-                        id="CompanyCode"
-                        name="CompanyCode"
-                        className="form-select"
-                        value={formData.CompanyCode}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="" disabled>
-                            Select a company
-                        </option>
-                        {companies.map((company: any) => (
-                            <option key={company.Code} value={company.Code}>
-                                {company.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Category Code */}
-                <div className="mb-3">
-                    <label htmlFor="CategoryCode" className="form-label">
-                        Category
-                    </label>
-                    <select
-                        id="CategoryCode"
-                        name="CategoryCode"
-                        className="form-select"
-                        value={formData.CategoryCode}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="" disabled>
-                            Select a category
-                        </option>
-                        {categories.map((category: any) => (
-                            <option key={category.Code} value={category.Code}>
-                                {category.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Variant ID */}
-                <div className="mb-3">
-                    <label htmlFor="VariantId" className="form-label">
-                        Variant
-                    </label>
-                    <select
-                        id="VariantId"
-                        name="VariantId"
-                        className="form-select"
-                        value={formData.VariantId}
-                        onChange={handleChange}
-                    >
-                        <option value="" disabled>
-                            Select a variant
-                        </option>
-                        {variants.map((variant: any) => (
-                            <option key={variant.Code} value={variant.Code}>
-                                {variant.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* UoM */}
-                <div className="mb-3">
-                    <label htmlFor="UoM" className="form-label">
-                        Unit of Measure (UoM)
-                    </label>
-                    <select
-                        id="UoM"
-                        name="UoM"
-                        className="form-select"
-                        value={formData.UoM}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="" disabled>
-                            Select a UoM
-                        </option>
-                        {uoms.map((uom: any) => (
-                            <option key={uom.Code} value={uom.Code}>
-                                {uom.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Store Name */}
-                <div className="mb-3">
-                    <label htmlFor="StoreName" className="form-label">
-                        Store Name
-                    </label>
-                    <select
-                        id="StoreName"
-                        name="StoreName"
-                        className="form-select"
-                        value={formData.StoreName}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="" disabled>
-                            Select a store
-                        </option>
-                        {stores.map((store: any) => (
-                            <option key={store.Code} value={store.Code}>
-                                {store.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Channel */}
-                <div className="mb-3">
-                    <label htmlFor="Channel" className="form-label">
-                        Channel
-                    </label>
-                    <select
-                        id="Channel"
-                        name="Channel"
-                        className="form-select"
-                        value={formData.Channel}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="" disabled>
-                            Select a Channel
-                        </option>
-                        {channels.map((channel: any) => (
-                            <option key={channel.Code} value={channel.Code}>
-                                {channel.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Notes */}
-                <div className="mb-3">
-                    <label htmlFor="Notes" className="form-label">
-                        Notes
-                    </label>
-                    <textarea
-                        id="Notes"
-                        name="Notes"
-                        className="form-control"
-                        value={formData.Notes}
-                        onChange={handleChange}
-                    ></textarea>
-                </div>
-
-                {/* Status */}
-                <div className="mb-3">
-                    <label htmlFor="Status" className="form-label">
-                        Status
-                    </label>
-                    <select
-                        id="Status"
-                        name="Status"
-                        className="form-select"
-                        value={formData.Status}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="Active">Active</option>
-                        <option value="Non-Active">Non-Active</option>
-                    </select>
-                </div>
-
-                {/* Weight */}
-                <div className="mb-3">
-                    <label htmlFor="Weight" className="form-label">
-                        Weight
-                    </label>
-                    <input
-                        type="number"
-                        id="Weight"
-                        name="Weight"
-                        className="form-control"
-                        value={formData.Weight || ""}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Keyword */}
-                <div className="mb-3">
-                    <label htmlFor="Keyword" className="form-label">
-                        Keyword
-                    </label>
-                    <input
-                        type="text"
-                        id="Keyword"
-                        name="Keyword"
-                        className="form-control"
-                        value={formData.Keyword}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Parameter */}
-                <div className="mb-3">
-                    <label htmlFor="Parameter" className="form-label">
-                        Parameter
-                    </label>
-                    <input
-                        type="number"
-                        id="Parameter"
-                        name="Parameter"
-                        className="form-control"
-                        value={formData.Parameter || 0}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Add other fields similar to above, prefilled with formData values */}
-
-                <div className="mb-3">
-                    <label htmlFor="ImageURL" className="form-label">
-                        Product Image
-                    </label>
-                    <input
-                        type="file"
-                        id="ImageURL"
-                        name="ImageURL"
-                        className="form-control"
-                        onChange={handleFileChange}
-                        accept="image/*"
-                    />
-                    {imagePreview && (
-                        <div className="mt-3">
-                            <img
-                                src={imagePreview}
-                                alt="Image Preview"
-                                style={{ maxWidth: "200px" }}
-                            />
-                        </div>
+                <div className="card-body">
+                    {/* Error Message */}
+                    {errorMessage && (
+                        <div className="alert alert-danger">{errorMessage}</div>
                     )}
-                </div>
+                    <table
+                        className="table table-bordered"
+                        style={{ width: "100%", tableLayout: "fixed" }}
+                    >
+                        <tbody>
+                            {/* Form Fields */}
+                            <tr>
+                                <td>
+                                    Company Code{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="CompanyCode"
+                                        value={formData.CompanyCode}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a company
+                                        </option>
+                                        {companies.map((company: any) => (
+                                            <option
+                                                key={company.Code}
+                                                value={company.Code}
+                                            >
+                                                {company.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td
+                                    rowSpan={6}
+                                    colSpan={2}
+                                    className="text-center align-middle"
+                                >
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary mt-2 mb-2"
+                                        onClick={() => {
+                                            const words =
+                                                formData.Name.trim().split(" ");
+                                            const firstThreeWords = words
+                                                .slice(0, 3)
+                                                .join("-");
+                                            const randomString = Math.random()
+                                                .toString(36)
+                                                .substring(2, 6)
+                                                .toUpperCase();
+                                            const codeName = `${firstThreeWords}-${randomString}`;
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                CodeName: codeName,
+                                            }));
+                                        }}
+                                    >
+                                        Generate Code Name
+                                    </button>
+                                    <div className="border p-3">
+                                        <p>
+                                            <strong>GAMBAR PRODUK</strong>
+                                        </p>
+                                        {imagePreview && (
+                                            <div className="mt-3">
+                                                <p>Preview:</p>
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Image Preview"
+                                                    style={{
+                                                        maxWidth: "200px",
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Channel{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <select
+                                        id="Channel"
+                                        name="Channel"
+                                        className="form-select"
+                                        value={formData.Channel}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="" disabled>
+                                            Select a Channel
+                                        </option>
+                                        {channels.map((channel: any) => (
+                                            <option
+                                                key={channel.Code}
+                                                value={channel.Code}
+                                            >
+                                                {channel.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Category Code{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="CategoryCode"
+                                        value={formData.CategoryCode}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a category
+                                        </option>
+                                        {categories.map((category: any) => (
+                                            <option
+                                                key={category.Code}
+                                                value={category.Code}
+                                            >
+                                                {category.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Variant{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="VariantId"
+                                        value={formData.VariantId}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a variant
+                                        </option>
+                                        {variants.map((variant: any) => (
+                                            <option
+                                                key={variant.Code}
+                                                value={variant.Code}
+                                            >
+                                                {variant.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr></tr>
+                            <tr>
+                                <td>
+                                    Name <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        name="Name"
+                                        value={formData.Name}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Code Name{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        name="CodeName"
+                                        value={formData.CodeName}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </td>
+                            </tr>
 
-                <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                >
-                    {loading ? "Updating..." : "Update Product"}
-                </button>
-            </form>
+                            {/* UoM */}
+                            <tr>
+                                <td>
+                                    UoM <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="UoM"
+                                        value={formData.UoM}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a unit of measure
+                                        </option>
+                                        {uoms.map((uom: any) => (
+                                            <option
+                                                key={uom.Code}
+                                                value={uom.Code}
+                                            >
+                                                {uom.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+
+                            {/* Store */}
+                            <tr>
+                                <td>
+                                    StoreName{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    <select
+                                        id="StoreName"
+                                        name="StoreName"
+                                        className="form-select"
+                                        value={formData.StoreName}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="" disabled>
+                                            Select a store
+                                        </option>
+                                        {stores.map((store: any) => (
+                                            <option
+                                                key={store.Code}
+                                                value={store.Code}
+                                            >
+                                                {store.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+
+                            {/* Image Upload */}
+                            <tr>
+                                <td>
+                                    <label
+                                        htmlFor="ImageURL"
+                                        className="form-label"
+                                    >
+                                        Product Image
+                                    </label>
+                                </td>
+                                <td>
+                                    <input
+                                        type="file"
+                                        id="ImageURL"
+                                        name="ImageURL"
+                                        className="form-control"
+                                        onChange={handleFileChange}
+                                        accept="image/*"
+                                    />
+                                </td>
+                            </tr>
+
+                            {/* Notes */}
+                            <tr>
+                                <td>Contents</td>
+                                <td colSpan={3}>
+                                    <textarea
+                                        id="Content"
+                                        name="Content"
+                                        className="form-control"
+                                        value={formData.Content}
+                                        onChange={handleChange}
+                                    />
+                                </td>
+                            </tr>
+
+                            {/* Notes */}
+                            <tr>
+                                <td>Notes</td>
+                                <td colSpan={3}>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                            </tr>
+
+                            {/* Status */}
+                            <tr>
+                                <td>
+                                    Status{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td colSpan={3}>
+                                    <select
+                                        className="form-select"
+                                        name="Status"
+                                        value={formData.Status}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Non-Active">
+                                            Non-Active
+                                        </option>
+                                    </select>
+                                </td>
+                            </tr>
+                            {/* Submit Button */}
+                            <tr>
+                                <td colSpan={4} className="text-center">
+                                    <button
+                                        type="button"
+                                        className="btn btn-dark"
+                                        disabled={loading}
+                                        onClick={handleSubmit} // Manually trigger submit function
+                                    >
+                                        {loading
+                                            ? "Submitting..."
+                                            : "Update Product"}
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }
