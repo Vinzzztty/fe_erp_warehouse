@@ -75,7 +75,7 @@ export default function EditVariantPage() {
                 );
             }
 
-            router.push("/master/variant_dashboard");
+            router.push("/master/product_dashboard");
         } catch (error: any) {
             console.error("Error updating variant:", error);
             setErrorMessage(error.message || "An unexpected error occurred.");
@@ -96,7 +96,7 @@ export default function EditVariantPage() {
                 {/* Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Variant Name
+                        Variant Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -126,7 +126,7 @@ export default function EditVariantPage() {
                 {/* Status */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

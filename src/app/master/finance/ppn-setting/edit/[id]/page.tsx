@@ -84,7 +84,7 @@ export default function EditPpnSettingPage() {
                     {/* Name Field */}
                     <div className="mb-3">
                         <label htmlFor="Name" className="form-label">
-                            Name
+                            Name <span style={{ color: "red" }}>*</span>
                         </label>
                         <input
                             type="text"
@@ -100,7 +100,7 @@ export default function EditPpnSettingPage() {
                     {/* Rate Field */}
                     <div className="mb-3">
                         <label htmlFor="Rate" className="form-label">
-                            Rate (%)
+                            Rate (%) <span style={{ color: "red" }}>*</span>
                         </label>
                         <input
                             type="number"
@@ -117,7 +117,7 @@ export default function EditPpnSettingPage() {
                     {/* Status Field */}
                     <div className="mb-3">
                         <label htmlFor="Status" className="form-label">
-                            Status
+                            Status <span style={{ color: "red" }}>*</span>
                         </label>
                         <select
                             id="Status"

@@ -38,6 +38,10 @@ export default function DashboardProductPage() {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
+        string | null
+    >(null);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -89,11 +93,31 @@ export default function DashboardProductPage() {
                     variantsRes.json(),
                 ]);
 
-                setProducts(productsData?.data || []);
-                setCategories(categoriesData?.data || []);
-                setChannels(channelsData?.data || []);
-                setUoms(uomsData?.data || []);
-                setVariants(variantsData?.data || []);
+                setProducts(
+                    (productsData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setCategories(
+                    (categoriesData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setChannels(
+                    (channelsData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setUoms(
+                    (uomsData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
+                setVariants(
+                    (variantsData?.data || []).sort((a: any, b: any) =>
+                        a.Status.localeCompare(b.Status)
+                    )
+                );
             } catch (error: any) {
                 setErrorMessage(
                     error.message || "An unexpected error occurred."
@@ -133,6 +157,12 @@ export default function DashboardProductPage() {
             if (endpoint === "channels") setChannels(await fetchData());
             if (endpoint === "uoms") setUoms(await fetchData());
             if (endpoint === "variants") setVariants(await fetchData());
+
+            // Show success message
+            setDeleteSuccessMessage("Item deleted successfully!");
+
+            // Hide the message after 3 seconds
+            setTimeout(() => setDeleteSuccessMessage(null), 3000);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }
@@ -145,6 +175,11 @@ export default function DashboardProductPage() {
                 <p>View and manage your product-related settings here</p>
                 {errorMessage && (
                     <div className="alert alert-danger">{errorMessage}</div>
+                )}
+                {deleteSuccessMessage && (
+                    <div className="alert alert-success text-center">
+                        {deleteSuccessMessage}
+                    </div>
                 )}
             </div>
 
@@ -168,7 +203,7 @@ export default function DashboardProductPage() {
                                 </p>
                                 <Link href="/master/product_dashboard/product">
                                     <button className="btn btn-dark">
-                                        Go to Product
+                                        Add Product
                                     </button>
                                 </Link>
                             </div>
@@ -193,7 +228,7 @@ export default function DashboardProductPage() {
                                 </p>
                                 <Link href="/master/product_dashboard/category">
                                     <button className="btn btn-dark">
-                                        Go to Category
+                                        Add Category
                                     </button>
                                 </Link>
                             </div>
@@ -217,7 +252,7 @@ export default function DashboardProductPage() {
                                 </p>
                                 <Link href="/master/product_dashboard/channel">
                                     <button className="btn btn-dark">
-                                        Go to Channel
+                                        Add Channel
                                     </button>
                                 </Link>
                             </div>
@@ -241,7 +276,7 @@ export default function DashboardProductPage() {
                                 </p>
                                 <Link href="/master/product_dashboard/uom">
                                     <button className="btn btn-dark">
-                                        Go to UOM
+                                        Add UOM
                                     </button>
                                 </Link>
                             </div>
@@ -265,7 +300,7 @@ export default function DashboardProductPage() {
                                 </p>
                                 <Link href="/master/product_dashboard/variant">
                                     <button className="btn btn-dark">
-                                        Go to Variant
+                                        Add Variant
                                     </button>
                                 </Link>
                             </div>

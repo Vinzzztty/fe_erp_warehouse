@@ -165,7 +165,7 @@ export default function EditSupplierPage() {
                 {/* Name Field */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Supplier Name
+                        Supplier Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -196,7 +196,7 @@ export default function EditSupplierPage() {
                 {/* City Field */}
                 <div className="mb-3">
                     <label htmlFor="CityId" className="form-label">
-                        City
+                        City <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="CityId"
@@ -286,7 +286,7 @@ export default function EditSupplierPage() {
 
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

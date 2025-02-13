@@ -86,7 +86,7 @@ export default function EditBankPage() {
                     {/* Name Field */}
                     <div className="mb-3">
                         <label htmlFor="Name" className="form-label">
-                            Bank Name
+                            Bank Name <span style={{ color: "red" }}>*</span>
                         </label>
                         <input
                             type="text"
@@ -116,7 +116,7 @@ export default function EditBankPage() {
                     {/* Status Field */}
                     <div className="mb-3">
                         <label htmlFor="Status" className="form-label">
-                            Status
+                            Status <span style={{ color: "red" }}>*</span>
                         </label>
                         <select
                             id="Status"

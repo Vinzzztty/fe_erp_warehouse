@@ -117,7 +117,7 @@ export default function EditForwarderPage() {
                 {/* Name Field */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Forwarder Name
+                        Forwarder Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -148,7 +148,7 @@ export default function EditForwarderPage() {
                 {/* Country Field */}
                 <div className="mb-3">
                     <label htmlFor="CountryId" className="form-label">
-                        Country
+                        Country <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="CountryId"
@@ -228,7 +228,7 @@ export default function EditForwarderPage() {
                 {/* Status Field */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

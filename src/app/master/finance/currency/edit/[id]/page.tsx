@@ -68,7 +68,7 @@ export default function EditCurrencyPage() {
                 }
             );
             if (!response.ok) throw new Error("Failed to update currency.");
-            router.push("/master/finance/currency"); // Redirect after success
+            router.push("/master/finance"); // Redirect after success
         } catch (error: any) {
             setError(error.message || "An unexpected error occurred.");
         } finally {
@@ -85,7 +85,8 @@ export default function EditCurrencyPage() {
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label htmlFor="Name" className="form-label">
-                            Currency Name
+                            Currency Name{" "}
+                            <span style={{ color: "red" }}>*</span>
                         </label>
                         <input
                             type="text"
@@ -113,7 +114,7 @@ export default function EditCurrencyPage() {
 
                     <div className="mb-3">
                         <label htmlFor="Status" className="form-label">
-                            Status
+                            Status <span style={{ color: "red" }}>*</span>
                         </label>
                         <select
                             id="Status"

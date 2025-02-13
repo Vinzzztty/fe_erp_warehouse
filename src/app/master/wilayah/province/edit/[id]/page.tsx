@@ -92,7 +92,7 @@ export default function EditProvincePage() {
                 {/* Province Name */}
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Province Name
+                        Province Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
@@ -108,7 +108,7 @@ export default function EditProvincePage() {
                 {/* Country Dropdown */}
                 <div className="mb-3">
                     <label htmlFor="CountryId" className="form-label">
-                        Country
+                        Country <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="CountryId"
@@ -132,7 +132,7 @@ export default function EditProvincePage() {
                 {/* Status Dropdown */}
                 <div className="mb-3">
                     <label htmlFor="Status" className="form-label">
-                        Status
+                        Status <span style={{ color: "red" }}>*</span>
                     </label>
                     <select
                         id="Status"

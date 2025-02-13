@@ -79,7 +79,7 @@ export default function EditCountryPage() {
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                     <label htmlFor="Name" className="form-label">
-                        Country Name
+                        Country Name <span style={{ color: "red" }}>*</span>
                     </label>
                     <input
                         type="text"
