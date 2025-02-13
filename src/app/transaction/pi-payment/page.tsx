@@ -45,11 +45,19 @@ interface PiPaymentDetail {
     PICode: number; // Updated to match new data structure
     Rate: string; // Updated to match new data structure
     ProductPriceRupiah: string; // Updated to match new data structure
+    ProductPriceRMB: string; // Added to match new data structure
     FirstMileCostRupiah: string; // Updated to match new data structure
+    FirstMileRMB: string; // Added to match new data structure
+    SubtotalToBePaidRupiah: string; // Added to match new data structure
+    SubtotalToBePaidRMB: string; // Added to match new data structure
     PaymentRupiah: string; // Updated to match new data structure
-    TotalPaymentRupiah: string; // Added to display total payment
+    PaymentRMB: string | null; // Added to match new data structure
+    RemainingPaymentRupiah: string; // Added to match new data structure
+    RemainingPaymentRMB: string | null; // Added to match new data structure
+    TotalPaymentRupiah: string; // Added to match new data structure
+    TotalPaymentRMB: string; // Added to match new data structure
     createdAt: string; // Added to display creation date
-    updatedAt: string
+    updatedAt: string; // Added to display update date
 }
 
 export default function POPage() {
@@ -382,16 +390,24 @@ export default function POPage() {
                                         <table className="table table-bordered table-striped align-middle text-center">
                                             <thead className="table-dark">
                                                 <tr>
-                                                    <th>No</th>
-                                                    <th>PICode</th>
-                                                    <th>Rate</th>
-                                                    <th>Product Price (Rupiah)</th>
-                                                    <th>First Mile Cost (Rupiah)</th>
-                                                    <th>Payment (Rupiah)</th>
-                                                    <th>Total Payment (Rupiah)</th>
-                                                    <th>Created At</th>
-                                                    <th>Updated At</th>
-                                                    <th>Action</th>
+                                                <th>No</th>
+                                                <th>PICode</th>
+                                                <th>Rate</th>
+                                                <th>Product Price (Rupiah)</th>
+                                                <th>Product Price (RMB)</th>
+                                                <th>First Mile Cost (Rupiah)</th>
+                                                <th>First Mile Cost (RMB)</th>
+                                                <th>Subtotal To Be Paid (Rupiah)</th>
+                                                <th>Subtotal To Be Paid (RMB)</th>
+                                                <th>Payment (Rupiah)</th>
+                                                <th>Payment (RMB)</th>
+                                                <th>Remaining Payment (Rupiah)</th>
+                                                <th>Remaining Payment (RMB)</th>
+                                                <th>Total Payment (Rupiah)</th>
+                                                <th>Total Payment (RMB)</th>
+                                                <th>Created At</th>
+                                                <th>Updated At</th>
+                                                <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -401,9 +417,17 @@ export default function POPage() {
                                                         <td>{detail.PICode}</td>
                                                         <td>{detail.Rate}</td>
                                                         <td>{detail.ProductPriceRupiah}</td>
+                                                        <td>{detail.ProductPriceRMB}</td>
                                                         <td>{detail.FirstMileCostRupiah}</td>
+                                                        <td>{detail.FirstMileRMB}</td>
+                                                        <td>{detail.SubtotalToBePaidRupiah}</td>
+                                                        <td>{detail.SubtotalToBePaidRMB}</td>
                                                         <td>{detail.PaymentRupiah}</td>
+                                                        <td>{detail.PaymentRMB}</td>
+                                                        <td>{detail.RemainingPaymentRupiah}</td>
+                                                        <td>{detail.RemainingPaymentRMB}</td>
                                                         <td>{detail.TotalPaymentRupiah}</td>
+                                                        <td>{detail.TotalPaymentRMB}</td>
                                                         <td>{new Date(detail.createdAt).toLocaleString()}</td>
                                                         <td>{new Date(detail.updatedAt).toLocaleString()}</td>
                                                         <td>
