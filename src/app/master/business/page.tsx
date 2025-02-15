@@ -188,7 +188,7 @@ export default function BusinessPage() {
                                 </p>
                                 <Link href={item.link}>
                                     <button className="btn btn-dark shadow">
-                                        Go to {item.title}
+                                        Add {item.title}
                                     </button>
                                 </Link>
                             </div>
@@ -202,99 +202,6 @@ export default function BusinessPage() {
                 <p className="text-center mt-5">Loading data.....</p>
             ) : (
                 <>
-                    {/* Comapanies Table */}
-                    <div className="card shadow-lg p-4 rounded mt-4">
-                        <p className="mb-4 fw-bold">Company</p>
-                        {errorMessage && (
-                            <div className="alert alert-danger">
-                                {errorMessage}
-                            </div>
-                        )}
-
-                        {loading ? (
-                            <p className="text-center mt-5">
-                                Loading company data...
-                            </p>
-                        ) : (
-                            <div className="table-responsive">
-                                <table className="table table-striped table-bordered table-hover align-middle text-center">
-                                    <thead className="table-dark">
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Name</th>
-                                            <th>Notes</th>
-                                            <th>Status</th>
-                                            <th>Created At</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {companies.map(
-                                            (company: any, index: number) => (
-                                                <tr
-                                                    key={company.Code}
-                                                    className="bg-white shadow-sm"
-                                                >
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{company.Name}</td>
-                                                    <td>
-                                                        {company.Notes || "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                company.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {company.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        {new Date(
-                                                            company.createdAt
-                                                        ).toLocaleString()}
-                                                    </td>
-                                                    <td>
-                                                        <div className="d-flex justify-content-center gap-2">
-                                                            <button
-                                                                className="btn btn-warning btn-sm me-2"
-                                                                onClick={() =>
-                                                                    router.push(
-                                                                        `/master/business/company/edit/${company.Code}`
-                                                                    )
-                                                                }
-                                                            >
-                                                                <i className="bi bi-pencil-square"></i>{" "}
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                className="btn btn-danger btn-sm"
-                                                                onClick={() =>
-                                                                    handleDelete(
-                                                                        "companies",
-                                                                        company.Code
-                                                                    )
-                                                                }
-                                                            >
-                                                                <i className="bi bi-trash"></i>{" "}
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Supplier</p>
 
@@ -473,6 +380,99 @@ export default function BusinessPage() {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+
+                    {/* Comapanies Table */}
+                    <div className="card shadow-lg p-4 rounded mt-4">
+                        <p className="mb-4 fw-bold">Company</p>
+                        {errorMessage && (
+                            <div className="alert alert-danger">
+                                {errorMessage}
+                            </div>
+                        )}
+
+                        {loading ? (
+                            <p className="text-center mt-5">
+                                Loading company data...
+                            </p>
+                        ) : (
+                            <div className="table-responsive">
+                                <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                    <thead className="table-dark">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Name</th>
+                                            <th>Notes</th>
+                                            <th>Status</th>
+                                            <th>Created At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {companies.map(
+                                            (company: any, index: number) => (
+                                                <tr
+                                                    key={company.Code}
+                                                    className="bg-white shadow-sm"
+                                                >
+                                                    <td className="fw-bold">
+                                                        {index + 1}
+                                                    </td>
+                                                    <td>{company.Name}</td>
+                                                    <td>
+                                                        {company.Notes || "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        <span
+                                                            className={`badge ${
+                                                                company.Status ===
+                                                                "Active"
+                                                                    ? "bg-success"
+                                                                    : "bg-secondary"
+                                                            }`}
+                                                        >
+                                                            {company.Status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {new Date(
+                                                            company.createdAt
+                                                        ).toLocaleString()}
+                                                    </td>
+                                                    <td>
+                                                        <div className="d-flex justify-content-center gap-2">
+                                                            <button
+                                                                className="btn btn-warning btn-sm me-2"
+                                                                onClick={() =>
+                                                                    router.push(
+                                                                        `/master/business/company/edit/${company.Code}`
+                                                                    )
+                                                                }
+                                                            >
+                                                                <i className="bi bi-pencil-square"></i>{" "}
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-danger btn-sm"
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        "companies",
+                                                                        company.Code
+                                                                    )
+                                                                }
+                                                            >
+                                                                <i className="bi bi-trash"></i>{" "}
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
 
                     <div className="card shadow-lg p-4 rounded mt-4">

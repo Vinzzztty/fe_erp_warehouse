@@ -457,7 +457,7 @@ export default function ProductPage() {
         <div className="container mt-4">
             <div className="card shadow-sm">
                 <div className="card-header bg-dark text-white">
-                    <h4 className="mb-0">Add Purchase Order Detail</h4>
+                    <h4 className="mb-0">Add Product</h4>
                 </div>
                 <div className="card-body">
                     <table
