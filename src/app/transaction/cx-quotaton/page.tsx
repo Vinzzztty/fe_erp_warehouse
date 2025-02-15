@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface CxQuotation {
     Code: number;
@@ -122,6 +124,33 @@ export default function CXQuotations() {
             setSelectedDetail(null); // Set to null to indicate no details
         } finally {
             setIsModalOpen(true); // Open the modal regardless of the result
+        }
+    };
+
+    const handleAddDetail = () => {
+        // Redirect to the add detail page
+        if (selectedDetail) {
+            router.push(`/transaction/cx-quotation/add-detail?id=${selectedDetail.CxQuotationId}`);
+        }
+    };
+
+    const handlePrintDetail = () => {
+        if (selectedDetail) {
+            const doc = new jsPDF("portrait", "mm", "a4");
+            doc.setFontSize(18);
+            doc.text("CX Quotation Detail", 14, 22);
+            doc.setFontSize(12);
+            doc.text(`Product Name: ${selectedDetail.ProductName}`, 14, 40);
+            doc.text(`Quantity: ${selectedDetail.QTY}`, 14, 50);
+            doc.text(`Carton Dimensions: ${selectedDetail.CartonP} x ${selectedDetail.CartonL} x ${selectedDetail.CartonT}`, 14, 60);
+            doc.text(`Cross Border Fee: ${selectedDetail.CrossBorderFee}`, 14, 70);
+            doc.text(`Import Duties: ${selectedDetail.ImportDuties}`, 14, 80);
+            doc.text(`Discount and Fees: ${selectedDetail.DiscountAndFees}`, 14, 90);
+            doc.text(`CX Cost: ${selectedDetail.CXCost}`, 14, 100);
+            doc.text(`Total CX Cost: ${selectedDetail.TotalCXCost}`, 14, 110);
+            doc.save(`cx-quotation-detail-${selectedDetail.Id}.pdf`);
+        } else {
+            alert("No detail available to print.");
         }
     };
 
@@ -287,6 +316,18 @@ export default function CXQuotations() {
                                     onClick={() => setIsModalOpen(false)}
                                 >
                                     Close
+                                </button>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleAddDetail}
+                                >
+                                    Add Detail
+                                </button>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={handlePrintDetail}
+                                >
+                                    Print Detail (PDF)
                                 </button>
                             </div>
                         </div>
