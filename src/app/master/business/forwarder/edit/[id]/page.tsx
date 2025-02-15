@@ -13,11 +13,37 @@ async function fetchData(endpoint: string) {
     return response.json();
 }
 
+// Define the type for Country and Bank objects
+interface Country {
+    Code: number;
+    Name: string;
+}
+
+interface Bank {
+    Code: number;
+    Name: string;
+}
+
 export default function EditForwarderPage() {
     const { id } = useParams();
     const router = useRouter();
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        Name: string;
+        Notes: string;
+        CountryId: string | number;
+        AddressIndonesia: string;
+        CoordinateIndonesia: string;
+        Department: string;
+        ContactMethod: string;
+        Description: string;
+        BankId: string | number;
+        AccountNumber: string;
+        Website: string;
+        Wechat: string;
+        ShippingMark: string;
+        Status: string;
+    }>({
         Name: "",
         Notes: "",
         CountryId: "",
@@ -33,21 +59,35 @@ export default function EditForwarderPage() {
         ShippingMark: "",
         Status: "Active",
     });
-    const [countries, setCountries] = useState([]);
-    const [banks, setBanks] = useState([]);
+    const [countries, setCountries] = useState<Country[]>([]);
+    const [banks, setBanks] = useState<Bank[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchForwarderData = async () => {
+            setLoading(true); // ✅ Start Loading
+            setError(null); // Clear previous errors
             try {
                 const { data: forwarder } = await fetchData(
                     `/master/forwarders/${id}`
                 );
-                const { data: countries } = await fetchData(
-                    `/master/countries`
-                );
-                const { data: banks } = await fetchData(`/master/banks`);
+
+                const countryResponse = await fetchData(`/master/countries`);
+                const bankResponse = await fetchData(`/master/banks`);
+
+                // Ensure countryResponse and bankResponse exist before filtering
+                const activeCountries = countryResponse?.data
+                    ? countryResponse.data.filter(
+                          (country: any) => country.Status === "Active"
+                      )
+                    : [];
+
+                const activeBanks = bankResponse?.data
+                    ? bankResponse.data.filter(
+                          (bank: any) => bank.Status === "Active"
+                      )
+                    : [];
 
                 setFormData({
                     Name: forwarder.Name || "",
@@ -65,10 +105,12 @@ export default function EditForwarderPage() {
                     ShippingMark: forwarder.ShippingMark || "",
                     Status: forwarder.Status || "Active",
                 });
-                setCountries(countries);
-                setBanks(banks);
+                setCountries(activeCountries);
+                setBanks(activeBanks);
             } catch (error: any) {
                 setError(error.message || "Failed to load forwarder data.");
+            } finally {
+                setLoading(false); // ✅ Stop Loading
             }
         };
 
@@ -111,147 +153,354 @@ export default function EditForwarderPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Edit Forwarder</h1>
-            {error && <div className="alert alert-danger">{error}</div>}
-            <form onSubmit={handleSubmit}>
-                {/* Name Field */}
-                <div className="mb-3">
-                    <label htmlFor="Name" className="form-label">
-                        Forwarder Name <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <input
-                        type="text"
-                        id="Name"
-                        name="Name"
-                        className="form-control"
-                        value={formData.Name}
-                        onChange={handleChange}
-                        required
-                    />
+            <div className="card shadow-sm">
+                <div className="card-header bg-dark text-white text-center">
+                    {" "}
+                    <h4>Edit Forwarder</h4>
                 </div>
+                <div className="card-body">
+                    {loading ? (
+                        <div className="text-center my-4">
+                            <div
+                                className="spinner-border text-primary"
+                                role="status"
+                            >
+                                <span className="visually-hidden">
+                                    Loading...
+                                </span>
+                            </div>
+                            <p>Fetching Forwarders data...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="alert alert-danger text-center">
+                            {error}
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="mt-4">
+                            {/* Name Field */}
+                            <table
+                                className="table table-bordered"
+                                style={{ width: "100%", tableLayout: "fixed" }}
+                            >
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                Forwarder Name{" "}
+                                                <span style={{ color: "red" }}>
+                                                    *
+                                                </span>
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                id="Name"
+                                                name="Name"
+                                                className="form-control"
+                                                value={formData.Name}
+                                                onChange={handleChange}
+                                                required
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Notes</strong>
+                                        </td>
+                                        <td>
+                                            <textarea
+                                                id="Notes"
+                                                name="Notes"
+                                                className="form-control"
+                                                value={formData.Notes}
+                                                onChange={handleChange}
+                                                rows={3}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                Status{" "}
+                                                <span style={{ color: "red" }}>
+                                                    *
+                                                </span>
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <select
+                                                id="Status"
+                                                name="Status"
+                                                className="form-select"
+                                                value={formData.Status}
+                                                onChange={handleChange}
+                                                required
+                                            >
+                                                <option value="Active">
+                                                    Active
+                                                </option>
+                                                <option value="Non-Active">
+                                                    Non-Active
+                                                </option>
+                                            </select>
+                                        </td>
+                                    </tr>
 
-                {/* Notes Field */}
-                <div className="mb-3">
-                    <label htmlFor="Notes" className="form-label">
-                        Notes
-                    </label>
-                    <textarea
-                        id="Notes"
-                        name="Notes"
-                        className="form-control"
-                        value={formData.Notes}
-                        onChange={handleChange}
-                        rows={4}
-                    />
+                                    {/* Warehouse Section */}
+                                    <tr>
+                                        <td
+                                            colSpan={2}
+                                            className="fw-bold text-center bg-light"
+                                        >
+                                            Warehouse Location
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            colSpan={1}
+                                            className="fw-bold table text-center bg-light"
+                                        >
+                                            Address{" "}
+                                        </td>
+                                        <td
+                                            colSpan={1}
+                                            className="fw-bold table text-center bg-light"
+                                        >
+                                            PIC{" "}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                Country{" "}
+                                                <span style={{ color: "red" }}>
+                                                    *
+                                                </span>
+                                            </strong>
+                                            <select
+                                                id="CountryId"
+                                                name="CountryId"
+                                                className="form-select"
+                                                value={formData.CountryId}
+                                                onChange={handleChange}
+                                                required
+                                            >
+                                                <option value="">
+                                                    Select a Country
+                                                </option>
+                                                {countries.map((country) => (
+                                                    <option
+                                                        key={country.Code}
+                                                        value={country.Code}
+                                                    >
+                                                        {country.Name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <strong>Name PIC</strong>
+                                            <input
+                                                type="text"
+                                                id="Description"
+                                                name="Description"
+                                                className="form-control"
+                                                value={formData.Description}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                Address in Indonesia
+                                            </strong>
+                                            <input
+                                                type="text"
+                                                id="AddressIndonesia"
+                                                name="AddressIndonesia"
+                                                className="form-control"
+                                                value={
+                                                    formData.AddressIndonesia
+                                                }
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                        <td>
+                                            <strong>Department</strong>
+                                            <input
+                                                type="text"
+                                                id="Department"
+                                                name="Department"
+                                                className="form-control"
+                                                value={formData.Department}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                Coordinate in Indonesia
+                                            </strong>
+                                            <input
+                                                type="text"
+                                                id="CoordinateIndonesia"
+                                                name="CoordinateIndonesia"
+                                                className="form-control"
+                                                value={
+                                                    formData.CoordinateIndonesia
+                                                }
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                        <td>
+                                            <strong>Contact Method</strong>
+                                            <select
+                                                id="ContactMethod"
+                                                name="ContactMethod"
+                                                className="form-select"
+                                                value={formData.ContactMethod}
+                                                onChange={handleChange}
+                                            >
+                                                <option value="Email">
+                                                    Email
+                                                </option>
+                                                <option value="Telephone">
+                                                    Telephone
+                                                </option>
+                                                <option value="WA">WA</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+
+                                    {/* BANK */}
+                                    <tr>
+                                        <td
+                                            colSpan={2}
+                                            className="fw-bold text-center bg-light"
+                                        >
+                                            Bank
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                Name Bank{" "}
+                                                <span style={{ color: "red" }}>
+                                                    *
+                                                </span>
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <select
+                                                id="BankId"
+                                                name="BankId"
+                                                className="form-select"
+                                                value={formData.BankId}
+                                                onChange={handleChange}
+                                            >
+                                                <option value="">
+                                                    Select a Bank
+                                                </option>
+                                                {banks.map((bank) => (
+                                                    <option
+                                                        key={bank.Code}
+                                                        value={bank.Code}
+                                                    >
+                                                        {bank.Name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Account Number</strong>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                id="AccountNumber"
+                                                name="AccountNumber"
+                                                className="form-control"
+                                                value={formData.AccountNumber}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            colSpan={2}
+                                            className="fw-bold text-center bg-light"
+                                        >
+                                            Additional Information
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Website</strong>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                id="Website"
+                                                name="Website"
+                                                className="form-control"
+                                                value={formData.Website}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Wechat</strong>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                id="Wechat"
+                                                name="Wechat"
+                                                className="form-control"
+                                                value={formData.Wechat}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Shipping Mark</strong>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                id="ShippingMark"
+                                                name="ShippingMark"
+                                                className="form-control"
+                                                value={formData.ShippingMark}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            {/* Submit Button */}
+                            <div className="text-center">
+                                <button
+                                    type="submit"
+                                    className="btn btn-dark"
+                                    disabled={loading}
+                                >
+                                    {loading
+                                        ? "Submitting..."
+                                        : "Submit Edit Forwarder"}
+                                </button>
+                            </div>
+                        </form>
+                    )}
                 </div>
-
-                {/* Country Field */}
-                <div className="mb-3">
-                    <label htmlFor="CountryId" className="form-label">
-                        Country <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <select
-                        id="CountryId"
-                        name="CountryId"
-                        className="form-select"
-                        value={formData.CountryId}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="" disabled>
-                            Select a country
-                        </option>
-                        {countries.map((country: any) => (
-                            <option key={country.Code} value={country.Code}>
-                                {country.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* AddressIndonesia Field */}
-                <div className="mb-3">
-                    <label htmlFor="AddressIndonesia" className="form-label">
-                        Address in Indonesia
-                    </label>
-                    <input
-                        type="text"
-                        id="AddressIndonesia"
-                        name="AddressIndonesia"
-                        className="form-control"
-                        value={formData.AddressIndonesia}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* ContactMethod Field */}
-                <div className="mb-3">
-                    <label htmlFor="ContactMethod" className="form-label">
-                        Contact Method
-                    </label>
-                    <select
-                        id="ContactMethod"
-                        name="ContactMethod"
-                        className="form-select"
-                        value={formData.ContactMethod}
-                        onChange={handleChange}
-                    >
-                        <option value="Email">Email</option>
-                        <option value="Telephone">Telephone</option>
-                        <option value="WA">WA</option>
-                    </select>
-                </div>
-
-                {/* Bank Field */}
-                <div className="mb-3">
-                    <label htmlFor="BankId" className="form-label">
-                        Bank
-                    </label>
-                    <select
-                        id="BankId"
-                        name="BankId"
-                        className="form-select"
-                        value={formData.BankId}
-                        onChange={handleChange}
-                    >
-                        <option value="" disabled>
-                            Select a bank
-                        </option>
-                        {banks.map((bank: any) => (
-                            <option key={bank.Code} value={bank.Code}>
-                                {bank.Name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Status Field */}
-                <div className="mb-3">
-                    <label htmlFor="Status" className="form-label">
-                        Status <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <select
-                        id="Status"
-                        name="Status"
-                        className="form-select"
-                        value={formData.Status}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="Active">Active</option>
-                        <option value="Non-Active">Non-Active</option>
-                    </select>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                >
-                    {loading ? "Saving..." : "Save Changes"}
-                </button>
-            </form>
+            </div>
         </div>
     );
 }

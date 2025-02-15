@@ -3,12 +3,24 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Define the type for a City object
 interface City {
     Code: number;
     Name: string;
     ProvinceId: number | null;
     CountryId: number | null;
+    Province?: {
+        // Add Province object (optional)
+        Code: number;
+        Name: string;
+        CountryId: number;
+        Status: string;
+    };
+    Country?: {
+        // Add Country object (optional)
+        Code: number;
+        Name: string;
+        Status: string;
+    };
 }
 
 interface Bank {
@@ -25,7 +37,9 @@ export default function AddSupplierPage() {
         Address: string;
         CityId: string;
         ProvinceId: string | number; // Allow string or number
+        ProvinceName: string;
         CountryId: string | number; // Allow string or number
+        CountryName: string;
         PostalCode: string;
         Notes: string;
         Status: string;
@@ -42,7 +56,9 @@ export default function AddSupplierPage() {
         Address: "",
         CityId: "",
         ProvinceId: "",
+        ProvinceName: "", // Store Province Name for display
         CountryId: "",
+        CountryName: "", // Store Country Name for display
         PostalCode: "",
         Notes: "",
         Status: "Active",
@@ -111,17 +127,24 @@ export default function AddSupplierPage() {
             [name]: value,
         }));
 
-        // Autofill ProvinceId and CountryId when CityId changes
+        // When CityId changes, update ProvinceId, ProvinceName, CountryId, and CountryName
         if (name === "CityId") {
             const selectedCity = cities.find(
                 (city) => city.Code === parseInt(value, 10)
             );
+
             if (selectedCity) {
                 setFormData((prev) => ({
                     ...prev,
                     CityId: value,
-                    ProvinceId: selectedCity.ProvinceId || "",
-                    CountryId: selectedCity.CountryId || "",
+                    ProvinceId: selectedCity.ProvinceId || "", // Keep Province ID for backend
+                    ProvinceName: selectedCity.Province
+                        ? selectedCity.Province.Name
+                        : "", // Display Province Name
+                    CountryId: selectedCity.CountryId || "", // Keep Country ID for backend
+                    CountryName: selectedCity.Country
+                        ? selectedCity.Country.Name
+                        : "", // Display Country Name
                 }));
             }
         }
@@ -416,282 +439,402 @@ export default function AddSupplierPage() {
 
     return (
         <div className="container mt-4">
-            <h1>Add New Supplier</h1>
-            <p>
-                Fill in the details below to add a new supplier to the system.
-            </p>
+            <div className="card shadow-sm">
+                <div className="card-header bg-dark text-white text-center">
+                    <h4>Add New Supplier</h4>
+                    <p>
+                        Fill in the details below to add a new supplier to the
+                        system.
+                    </p>
+                </div>
+                <div className="card-body">
+                    {/* Error Message */}
+                    {errorMessage && (
+                        <div className="alert alert-danger">{errorMessage}</div>
+                    )}
 
-            {/* Error Message */}
-            {errorMessage && (
-                <div className="alert alert-danger">{errorMessage}</div>
-            )}
+                    {/* Supplier Details */}
+                    <table className="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>
+                                        Supplier Name{" "}
+                                        <span className="text-danger">*</span>
+                                    </strong>
+                                </td>
+                                <td colSpan={3}>
+                                    <div className="input-group w-100">
+                                        <input
+                                            type="text"
+                                            id="Name"
+                                            name="Name"
+                                            className="form-control"
+                                            value={formData.Name}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </td>
+                            </tr>
 
-            {/* Supplier Details */}
-            <table className="table table-bordered">
-                <tbody>
-                    {/* Location Section */}
-                    <tr>
-                        <td colSpan={2} className="fw-bold">
-                            Location
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Address <span style={{ color: "red" }}>*</span>
-                        </td>
-                        <td>
-                            <input
-                                type="text"
-                                name="Address"
-                                className="form-control"
-                                value={formData.Address}
-                                onChange={handleChange}
-                                required
-                            />
-                        </td>
-                        <td>Postal Code:</td>
-                        <td>
-                            <input
-                                type="text"
-                                name="PostalCode"
-                                className="form-control"
-                                value={formData.PostalCode}
-                                onChange={handleChange}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            City <span style={{ color: "red" }}>*</span>
-                        </td>
-                        <td>
-                            <select
-                                name="CityId"
-                                className="form-select"
-                                value={formData.CityId}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Select a City</option>
-                                {cities.map((city: any) => (
-                                    <option key={city.Code} value={city.Code}>
-                                        {city.Name}
-                                    </option>
-                                ))}
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Province:</td>
-                        <td>
-                            <input
-                                type="text"
-                                name="Province"
-                                className="form-control bg-light"
-                                value={formData.ProvinceId}
-                                readOnly
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Country:</td>
-                        <td>
-                            <input
-                                type="text"
-                                name="Country"
-                                className="form-control bg-light"
-                                value={formData.CountryId}
-                                readOnly
-                            />
-                        </td>
-                    </tr>
+                            {/* Location Section */}
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="fw-bold text-center bg-light"
+                                >
+                                    Location
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>
+                                        Address{" "}
+                                        <span className="text-danger">*</span>
+                                    </strong>
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="Address"
+                                        className="form-control"
+                                        value={formData.Address}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </td>
+                                <td className="align-middle w-25">
+                                    <strong>Postal Code:</strong>
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="PostalCode"
+                                        className="form-control"
+                                        value={formData.PostalCode}
+                                        onChange={handleChange}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>
+                                        City{" "}
+                                        <span className="text-danger">*</span>
+                                    </strong>
+                                </td>
+                                <td>
+                                    <select
+                                        name="CityId"
+                                        className="form-select"
+                                        value={formData.CityId}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">Select a City</option>
+                                        {cities.map((city: any) => (
+                                            <option
+                                                key={city.Code}
+                                                value={city.Code}
+                                            >
+                                                {city.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                                {/* Corrected rowSpan Usage */}
+                                <td rowSpan={2} className="align-middle w-25">
+                                    <strong>Notes:</strong>
+                                </td>
+                                <td rowSpan={2}>
+                                    <textarea
+                                        name="Notes"
+                                        className="form-control"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                        style={{ height: "100%" }}
+                                    ></textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>Province:</strong>
+                                </td>
+                                <td>
+                                    {/* Hidden input for storing Province ID */}
+                                    <input
+                                        type="hidden"
+                                        name="ProvinceId"
+                                        value={formData.ProvinceId}
+                                    />
+                                    {/* Display Province Name */}
+                                    <input
+                                        type="text"
+                                        name="ProvinceName"
+                                        className="form-control bg-light"
+                                        value={formData.ProvinceName}
+                                        readOnly
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>Country:</strong>
+                                </td>
+                                <td>
+                                    {/* Hidden input for storing Country ID */}
+                                    <input
+                                        type="hidden"
+                                        name="CountryId"
+                                        value={formData.CountryId}
+                                    />
+                                    {/* Display Country Name */}
+                                    <input
+                                        type="text"
+                                        name="CountryName"
+                                        className="form-control bg-light"
+                                        value={formData.CountryName}
+                                        readOnly
+                                    />
+                                </td>
+                                <td className="align-middle w-25">
+                                    <strong>Status:</strong>
+                                </td>
+                                <td>
+                                    <select
+                                        name="Status"
+                                        className="form-select"
+                                        value={formData.Status}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Non-Active">
+                                            Non-Active
+                                        </option>
+                                    </select>
+                                </td>
+                            </tr>
 
-                    <tr>
-                        <td>Notes</td>
-                        <td colSpan={3}>
-                            <textarea
-                                name="Notes"
-                                className="form-control"
-                                value={formData.Notes}
-                                onChange={handleChange}
-                            ></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Status</td>
-                        <td>
-                            <select
-                                name="Status"
-                                className="form-select"
-                                value={formData.Status}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="Active">Active</option>
-                                <option value="Non-Active">Non-Active</option>
-                            </select>
-                        </td>
-                    </tr>
+                            {/* PIC Section */}
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="fw-bold text-center bg-light"
+                                >
+                                    PIC
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Name</td>
+                                <td>Department</td>
+                                <td>Contact Method</td>
+                                <td>Description</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="Description"
+                                        className="form-control"
+                                        value={formData.Description}
+                                        onChange={handleChange}
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="Department"
+                                        className="form-control"
+                                        value={formData.Department}
+                                        onChange={handleChange}
+                                    />
+                                </td>
+                                <td>
+                                    <select
+                                        name="ContactMethod"
+                                        className="form-select"
+                                        value={formData.ContactMethod}
+                                        onChange={handleChange}
+                                    >
+                                        {["Email", "Telephone", "WA"].map(
+                                            (method) => (
+                                                <option
+                                                    key={method}
+                                                    value={method}
+                                                >
+                                                    {method}
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                    />
+                                </td>
+                            </tr>
 
-                    {/* PIC Section */}
-                    <tr>
-                        <td colSpan={4} className="fw-bold">
-                            Tab-Grid
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colSpan={4} className="fw-bold">
-                            PIC <span style={{ color: "red" }}>*</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Name</td>
-                        <td>Department</td>
-                        <td>Contact Method</td>
-                        <td>Description</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <input
-                                type="text"
-                                name="Name"
-                                className="form-control"
-                                value={formData.Name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </td>
-                        <td>
-                            <input
-                                type="text"
-                                name="Department"
-                                className="form-control"
-                                value={formData.Department}
-                                onChange={handleChange}
-                            />
-                        </td>
-                        <td>
-                            <select
-                                name="ContactMethod"
-                                className="form-select"
-                                value={formData.ContactMethod}
-                                onChange={handleChange}
-                            >
-                                <option value="Email">Email</option>
-                                <option value="Telephone">Telephone</option>
-                                <option value="WA">WA</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input
-                                type="text"
-                                name="Description"
-                                className="form-control"
-                                value={formData.Description}
-                                onChange={handleChange}
-                            />
-                        </td>
-                    </tr>
+                            {/* Bank Section */}
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="fw-bold text-center bg-light"
+                                >
+                                    Bank Details{" "}
+                                    <span className="text-danger">*</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>
+                                        Bank Name{" "}
+                                        <span className="text-danger">*</span>
+                                    </strong>
+                                </td>
+                                <td colSpan={3}>
+                                    <div className="input-group w-100">
+                                        <span className="input-group-text">
+                                            <i className="bi bi-bank"></i>
+                                        </span>
+                                        <select
+                                            id="BankId"
+                                            name="BankId"
+                                            className="form-select"
+                                            value={formData.BankId}
+                                            onChange={handleChange}
+                                            required
+                                        >
+                                            <option value="">
+                                                Select a Bank
+                                            </option>
+                                            {banks.map((bank) => (
+                                                <option
+                                                    key={bank.Code}
+                                                    value={bank.Code}
+                                                >
+                                                    {bank.Name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>
+                                        Account Number{" "}
+                                        <span className="text-danger">*</span>
+                                    </strong>
+                                </td>
+                                <td colSpan={3}>
+                                    <div className="input-group w-100">
+                                        <span className="input-group-text">
+                                            <i className="bi bi-credit-card"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            id="AccountNumber"
+                                            name="AccountNumber"
+                                            className="form-control"
+                                            value={formData.AccountNumber}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </td>
+                            </tr>
 
-                    {/* Bank Section */}
-                    <tr>
-                        <td colSpan={4} className="fw-bold">
-                            Bank
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Name</td>
-                        <td>Account Number</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <select
-                                name="BankId"
-                                className="form-select"
-                                value={formData.BankId}
-                                onChange={handleChange}
-                            >
-                                <option value="">Select a Bank</option>
-                                {banks.map((bank: any) => (
-                                    <option key={bank.Code} value={bank.Code}>
-                                        {bank.Name}
-                                    </option>
-                                ))}
-                            </select>
-                        </td>
-                        <td>
-                            <input
-                                type="text"
-                                name="AccountNumber"
-                                className="form-control"
-                                value={formData.AccountNumber}
-                                onChange={handleChange}
-                            />
-                        </td>
-                    </tr>
+                            {/* Additional Info Section */}
+                            {/* Additional Info Section */}
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="fw-bold text-center bg-light"
+                                >
+                                    Additional Info
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>Website</strong>
+                                </td>
+                                <td colSpan={3}>
+                                    <div className="input-group w-100">
+                                        <span className="input-group-text">
+                                            <i className="bi bi-globe"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="Website"
+                                            className="form-control"
+                                            value={formData.Website}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>Wechat</strong>
+                                </td>
+                                <td colSpan={3}>
+                                    <div className="input-group w-100">
+                                        <span className="input-group-text">
+                                            <i className="bi bi-chat-dots"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="Wechat"
+                                            className="form-control"
+                                            value={formData.Wechat}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="align-middle w-25">
+                                    <strong>Shipping Mark</strong>
+                                </td>
+                                <td colSpan={3}>
+                                    <div className="input-group w-100">
+                                        <span className="input-group-text">
+                                            <i className="bi bi-box-seam"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="ShippingMark"
+                                            className="form-control"
+                                            value={formData.ShippingMark}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </td>
+                            </tr>
 
-                    {/* Additional Info Section */}
-                    <tr>
-                        <td colSpan={4} className="fw-bold">
-                            Additional Info
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Name</td>
-                        <td>Detail</td>
-                    </tr>
-                    <tr>
-                        <td>Website</td>
-                        <td>
-                            <input
-                                type="text"
-                                name="Website"
-                                className="form-control"
-                                value={formData.Website}
-                                onChange={handleChange}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Wechat</td>
-                        <td>
-                            <input
-                                type="text"
-                                name="Wechat"
-                                className="form-control"
-                                value={formData.Wechat}
-                                onChange={handleChange}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Shipping Mark</td>
-                        <td>
-                            <input
-                                type="text"
-                                name="ShippingMark"
-                                className="form-control"
-                                value={formData.ShippingMark}
-                                onChange={handleChange}
-                            />
-                        </td>
-                    </tr>
-
-                    {/* Submit Button */}
-                    <tr>
-                        <td colSpan={4} className="text-center">
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={loading}
-                                onClick={handleSubmit} // Manually trigger submit function
-                            >
-                                {loading ? "Submitting..." : "Add Supplier"}
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                            {/* Submit Button */}
+                            <tr>
+                                <td colSpan={4} className="text-center">
+                                    <button
+                                        type="submit"
+                                        className="btn btn-dark"
+                                        disabled={loading}
+                                        onClick={handleSubmit} // Manually trigger submit function
+                                    >
+                                        {loading
+                                            ? "Submitting..."
+                                            : "Add Supplier"}
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }
