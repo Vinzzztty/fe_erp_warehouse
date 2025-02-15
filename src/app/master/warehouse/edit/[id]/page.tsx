@@ -89,6 +89,13 @@ export default function EditWarehousePage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/warehouse")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Edit Warehouse</h1>
             {errorMessage && (
                 <div className="alert alert-danger">{errorMessage}</div>
@@ -160,7 +167,7 @@ export default function EditWarehousePage() {
 
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Saving..." : "Save Changes"}

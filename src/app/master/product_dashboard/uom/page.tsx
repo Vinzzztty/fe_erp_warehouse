@@ -57,6 +57,13 @@ export default function UoMPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/product_dashboard")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Manage Units of Measure (UoM)</h1>
             <p>Add new UoMs to your system.</p>
 
@@ -134,7 +141,7 @@ export default function UoMPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add UoM"}

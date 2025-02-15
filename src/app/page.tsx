@@ -81,23 +81,33 @@ export default function Home() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchTotals = async () => {
-            try {
-                const [mastersData, transactionsData] = await Promise.all([
-                    fetchData("/home/total-masters"),
-                    fetchData("/home/total-transactions"),
-                ]);
+        setLoading(true);
 
-                setMasters(mastersData?.data || {});
-                setTransactions(transactionsData?.data || {});
+        const fetchMasters = async () => {
+            try {
+                const data = await fetchData("/home/total-masters");
+                setMasters(data?.data || {});
             } catch (error: any) {
-                setError(error.message || "Failed to fetch data.");
-            } finally {
-                setLoading(false);
+                setError((prev) =>
+                    prev ? prev + "\n" + error.message : error.message
+                );
             }
         };
 
-        fetchTotals();
+        const fetchTransactions = async () => {
+            try {
+                const data = await fetchData("/home/total-transactions");
+                setTransactions(data?.data || {});
+            } catch (error: any) {
+                setError((prev) =>
+                    prev ? prev + "\n" + error.message : error.message
+                );
+            }
+        };
+
+        fetchMasters();
+        fetchTransactions();
+        setLoading(false);
     }, []);
 
     if (loading) {
@@ -114,6 +124,69 @@ export default function Home() {
             <p className="text-center">
                 Kelola inventaris dan pesanan Anda dengan lebih efisien!
             </p>
+
+            <div className="container my-5">
+                {/* Transactions Section */}
+                <div className="text-center mb-4">
+                    <hr className="my-3" />
+                    <h1 className="fw-bold text-dark">
+                        <i className="bi bi-cash me-2 text-secondary"></i>{" "}
+                        Transactions
+                    </h1>
+                    <hr className="my-3" />
+                </div>
+
+                <div className="row">
+                    <Card
+                        title="Total Purchase Orders"
+                        description="Jumlah pesanan pembelian yang dibuat."
+                        total={transactions?.purchaseOrder ?? 0}
+                        iconClass="bi bi-cart"
+                    />
+                    <Card
+                        title="Total Proforma Invoices"
+                        description="Jumlah faktur proforma yang diterbitkan."
+                        total={transactions?.proformaInvoice ?? 0}
+                        iconClass="bi bi-receipt"
+                    />
+                    <Card
+                        title="Total PI Payments"
+                        description="Jumlah pembayaran faktur proforma."
+                        total={transactions?.piPayment ?? 0}
+                        iconClass="bi bi-cash"
+                    />
+                </div>
+
+                <div className="row mt-4">
+                    <Card
+                        title="Total Customer Quotations"
+                        description="Jumlah penawaran harga kepada pelanggan."
+                        total={transactions?.cxQuotation ?? 0}
+                        iconClass="bi bi-clipboard"
+                    />
+                    <Card
+                        title="Total Customer Invoices"
+                        description="Jumlah faktur pelanggan yang dibuat."
+                        total={transactions?.cxInvoice ?? 0}
+                        iconClass="bi bi-file-earmark-text"
+                    />
+                    <Card
+                        title="Total Last Mile Deliveries"
+                        description="Jumlah pengiriman last-mile yang diproses."
+                        total={transactions?.lastMile ?? 0}
+                        iconClass="bi bi-truck-flatbed"
+                    />
+                </div>
+
+                <div className="row mt-4">
+                    <Card
+                        title="Total Goods Receipts"
+                        description="Jumlah barang yang telah diterima."
+                        total={transactions?.goodsReceipt ?? 0}
+                        iconClass="bi bi-box-seam"
+                    />
+                </div>
+            </div>
 
             <div className="container my-5">
                 {/* Master Data Section */}
@@ -207,69 +280,6 @@ export default function Home() {
                         description="Jumlah kota dalam sistem."
                         total={masters?.city ?? 0}
                         iconClass="bi bi-geo-alt"
-                    />
-                </div>
-            </div>
-
-            <div className="container my-5">
-                {/* Transactions Section */}
-                <div className="text-center mb-4">
-                    <hr className="my-3" />
-                    <h1 className="fw-bold text-dark">
-                        <i className="bi bi-cash me-2 text-secondary"></i>{" "}
-                        Transactions
-                    </h1>
-                    <hr className="my-3" />
-                </div>
-
-                <div className="row">
-                    <Card
-                        title="Total Purchase Orders"
-                        description="Jumlah pesanan pembelian yang dibuat."
-                        total={transactions?.purchaseOrder ?? 0}
-                        iconClass="bi bi-cart"
-                    />
-                    <Card
-                        title="Total Proforma Invoices"
-                        description="Jumlah faktur proforma yang diterbitkan."
-                        total={transactions?.proformaInvoice ?? 0}
-                        iconClass="bi bi-receipt"
-                    />
-                    <Card
-                        title="Total PI Payments"
-                        description="Jumlah pembayaran faktur proforma."
-                        total={transactions?.piPayment ?? 0}
-                        iconClass="bi bi-cash"
-                    />
-                </div>
-
-                <div className="row mt-4">
-                    <Card
-                        title="Total Customer Quotations"
-                        description="Jumlah penawaran harga kepada pelanggan."
-                        total={transactions?.cxQuotation ?? 0}
-                        iconClass="bi bi-clipboard"
-                    />
-                    <Card
-                        title="Total Customer Invoices"
-                        description="Jumlah faktur pelanggan yang dibuat."
-                        total={transactions?.cxInvoice ?? 0}
-                        iconClass="bi bi-file-earmark-text"
-                    />
-                    <Card
-                        title="Total Last Mile Deliveries"
-                        description="Jumlah pengiriman last-mile yang diproses."
-                        total={transactions?.lastMile ?? 0}
-                        iconClass="bi bi-truck-flatbed"
-                    />
-                </div>
-
-                <div className="row mt-4">
-                    <Card
-                        title="Total Goods Receipts"
-                        description="Jumlah barang yang telah diterima."
-                        total={transactions?.goodsReceipt ?? 0}
-                        iconClass="bi bi-box-seam"
                     />
                 </div>
             </div>

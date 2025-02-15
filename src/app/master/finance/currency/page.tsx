@@ -63,6 +63,13 @@ export default function CurrencyPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/finance")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Add New Currency</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 {/* Code Field */}
@@ -132,7 +139,7 @@ export default function CurrencyPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add Currency"}

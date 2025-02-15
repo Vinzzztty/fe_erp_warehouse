@@ -58,6 +58,13 @@ export default function AddStorePage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/business")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Add New Store</h1>
             <p>Fill in the details below to add a new store to the system.</p>
 

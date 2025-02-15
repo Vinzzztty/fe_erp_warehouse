@@ -455,6 +455,13 @@ export default function ProductPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/product_dashboard")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <div className="card shadow-sm">
                 <div className="card-header bg-dark text-white">
                     <h4 className="mb-0">Add Product</h4>

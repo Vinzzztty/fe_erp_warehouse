@@ -197,9 +197,9 @@ export default function WilayahPage() {
                 <p className="text-center mt-5">Loading data...</p>
             ) : (
                 <>
-                    {/* Countries Table */}
+                    {/* Cities Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
-                        <p className="mb-4 fw-bold">Countries</p>
+                        <p className="mb-4 fw-bold">Cities</p>
                         {errorMessage && (
                             <div className="alert alert-danger">
                                 {errorMessage}
@@ -211,58 +211,78 @@ export default function WilayahPage() {
                                     <tr>
                                         <th>No</th>
                                         <th>Name</th>
+                                        <th>Province</th>
+                                        <th>Country</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {countries.length > 0 ? (
-                                        countries.map((country: any) => (
-                                            <tr key={country.Code}>
-                                                <td>{country.Code}</td>
-                                                <td>{country.Name}</td>
-                                                <td>
-                                                    <span
-                                                        className={`badge ${
-                                                            country.Status ===
-                                                            "Active"
-                                                                ? "bg-success"
-                                                                : "bg-secondary"
-                                                        }`}
-                                                    >
-                                                        {country.Status}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        className="btn btn-warning btn-sm me-2"
-                                                        onClick={() =>
-                                                            router.push(
-                                                                `/master/wilayah/country/edit/${country.Code}`
-                                                            )
-                                                        }
-                                                    >
-                                                        <i className="bi bi-pencil-square"></i>{" "}
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-danger btn-sm"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                "countries",
-                                                                country.Code
-                                                            )
-                                                        }
-                                                    >
-                                                        <i className="bi bi-trash"></i>{" "}
-                                                        Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
+                                    {cities.length > 0 ? (
+                                        cities.map(
+                                            (city: any, index: number) => (
+                                                <tr key={city.Code}>
+                                                    <td className="fw-bold">
+                                                        {index + 1}
+                                                    </td>
+                                                    <td>{city.Name}</td>
+                                                    <td>
+                                                        {provinces.find(
+                                                            (p: any) =>
+                                                                p.Code ===
+                                                                city.ProvinceId
+                                                        )?.Name || "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        {countries.find(
+                                                            (c: any) =>
+                                                                c.Code ===
+                                                                city.CountryId
+                                                        )?.Name || "N/A"}
+                                                    </td>
+                                                    <td>
+                                                        <span
+                                                            className={`badge ${
+                                                                city.Status ===
+                                                                "Active"
+                                                                    ? "bg-success"
+                                                                    : "bg-secondary"
+                                                            }`}
+                                                        >
+                                                            {city.Status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            className="btn btn-warning btn-sm me-2"
+                                                            onClick={() =>
+                                                                router.push(
+                                                                    `/master/wilayah/city/edit/${city.Code}`
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-pencil-square"></i>{" "}
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    "cities",
+                                                                    city.Code
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )
                                     ) : (
                                         <tr>
-                                            <td colSpan={4}>
+                                            <td colSpan={6}>
                                                 No data available
                                             </td>
                                         </tr>
@@ -359,9 +379,9 @@ export default function WilayahPage() {
                         </div>
                     </div>
 
-                    {/* Cities Table */}
+                    {/* Countries Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
-                        <p className="mb-4 fw-bold">Cities</p>
+                        <p className="mb-4 fw-bold">Countries</p>
                         {errorMessage && (
                             <div className="alert alert-danger">
                                 {errorMessage}
@@ -373,78 +393,58 @@ export default function WilayahPage() {
                                     <tr>
                                         <th>No</th>
                                         <th>Name</th>
-                                        <th>Province</th>
-                                        <th>Country</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cities.length > 0 ? (
-                                        cities.map(
-                                            (city: any, index: number) => (
-                                                <tr key={city.Code}>
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{city.Name}</td>
-                                                    <td>
-                                                        {provinces.find(
-                                                            (p: any) =>
-                                                                p.Code ===
-                                                                city.ProvinceId
-                                                        )?.Name || "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        {countries.find(
-                                                            (c: any) =>
-                                                                c.Code ===
-                                                                city.CountryId
-                                                        )?.Name || "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                city.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {city.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn btn-warning btn-sm me-2"
-                                                            onClick={() =>
-                                                                router.push(
-                                                                    `/master/wilayah/city/edit/${city.Code}`
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-pencil-square"></i>{" "}
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    "cities",
-                                                                    city.Code
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-trash"></i>{" "}
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
+                                    {countries.length > 0 ? (
+                                        countries.map((country: any) => (
+                                            <tr key={country.Code}>
+                                                <td>{country.Code}</td>
+                                                <td>{country.Name}</td>
+                                                <td>
+                                                    <span
+                                                        className={`badge ${
+                                                            country.Status ===
+                                                            "Active"
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
+                                                    >
+                                                        {country.Status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-warning btn-sm me-2"
+                                                        onClick={() =>
+                                                            router.push(
+                                                                `/master/wilayah/country/edit/${country.Code}`
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-pencil-square"></i>{" "}
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                "countries",
+                                                                country.Code
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-trash"></i>{" "}
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={6}>
+                                            <td colSpan={4}>
                                                 No data available
                                             </td>
                                         </tr>

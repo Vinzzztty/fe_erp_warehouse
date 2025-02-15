@@ -59,6 +59,13 @@ export default function AddWarehousePage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/warehouse")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Add New Warehouse</h1>
             {errorMessage && (
                 <div className="alert alert-danger">{errorMessage}</div>
@@ -130,7 +137,7 @@ export default function AddWarehousePage() {
 
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add Warehouse"}

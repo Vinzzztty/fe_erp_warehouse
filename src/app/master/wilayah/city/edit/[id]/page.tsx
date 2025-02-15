@@ -89,6 +89,13 @@ export default function EditCityPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/wilayah")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Edit City</h1>
             {error && <div className="alert alert-danger">{error}</div>}
             <form onSubmit={handleSubmit}>
@@ -168,7 +175,7 @@ export default function EditCityPage() {
                 </div>
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Saving..." : "Save Changes"}

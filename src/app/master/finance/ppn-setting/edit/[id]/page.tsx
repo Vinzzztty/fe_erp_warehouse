@@ -76,6 +76,13 @@ export default function EditPpnSettingPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/finance")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Edit PPN Setting</h1>
             {loading && <p>Loading...</p>}
             {error && <p className="text-danger">{error}</p>}
@@ -133,7 +140,7 @@ export default function EditPpnSettingPage() {
 
                     <button
                         type="submit"
-                        className="btn btn-primary"
+                        className="btn btn-dark"
                         disabled={loading}
                     >
                         {loading ? "Saving..." : "Save Changes"}

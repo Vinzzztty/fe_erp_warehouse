@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
+
+// Type Definitions
+interface Country {
+    Code: string;
+    Name: string;
+}
+
+interface Province {
+    Name: string;
+    CountryId: string;
+    Status: string;
+}
 
 async function fetchData(endpoint: string) {
     const response = await fetch(
@@ -17,39 +29,43 @@ export default function EditProvincePage() {
     const { id } = useParams();
     const router = useRouter();
 
-    const [formData, setFormData] = useState({
+    // State Management
+    const [formData, setFormData] = useState<Province>({
         Name: "",
         CountryId: "",
         Status: "Active",
     });
-    const [countries, setCountries] = useState([]);
+    const [countries, setCountries] = useState<Country[]>([]);
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchProvinceData = async () => {
+        const fetchProvinceAndCountries = async () => {
             try {
-                // Fetch province data by ID
-                const { data: province } = await fetchData(
-                    `/master/provinces/${id}`
-                );
-                // Fetch all countries for the dropdown
-                const { data: countries } = await fetchData(
-                    `/master/countries`
+                // Fetch province and countries concurrently
+                const [provinceResponse, countriesResponse] = await Promise.all(
+                    [
+                        fetchData(`/master/provinces/${id}`),
+                        fetchData(`/master/countries`),
+                    ]
                 );
 
+                // Update states
                 setFormData({
-                    Name: province.Name || "",
-                    CountryId: province.CountryId || "",
-                    Status: province.Status || "Active",
+                    Name: provinceResponse.data.Name || "",
+                    CountryId: provinceResponse.data.CountryId || "",
+                    Status: provinceResponse.data.Status || "Active",
                 });
-                setCountries(countries);
+                setCountries(countriesResponse.data);
             } catch (error: any) {
                 setError(error.message || "Failed to load province data.");
+            } finally {
+                setFetching(false);
             }
         };
 
-        fetchProvinceData();
+        fetchProvinceAndCountries();
     }, [id]);
 
     const handleChange = (
@@ -73,9 +89,11 @@ export default function EditProvincePage() {
                     body: JSON.stringify(formData),
                 }
             );
+
             if (!response.ok) {
                 throw new Error("Failed to update province.");
             }
+
             router.push("/master/wilayah");
         } catch (error: any) {
             setError(error.message || "Failed to update province.");
@@ -84,78 +102,100 @@ export default function EditProvincePage() {
         }
     };
 
+    // Memoized countries to prevent unnecessary re-renders
+    const countryOptions = useMemo(() => {
+        return countries.map((country) => (
+            <option key={country.Code} value={country.Code}>
+                {country.Name}
+            </option>
+        ));
+    }, [countries]);
+
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/wilayah")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
+
             <h1>Edit Province</h1>
+
+            {/* Show loading indicator while fetching data */}
+            {fetching && <p className="text-center">Loading...</p>}
+
+            {/* Error Message */}
             {error && <div className="alert alert-danger">{error}</div>}
-            <form onSubmit={handleSubmit}>
-                {/* Province Name */}
-                <div className="mb-3">
-                    <label htmlFor="Name" className="form-label">
-                        Province Name <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <input
-                        type="text"
-                        id="Name"
-                        name="Name"
-                        className="form-control"
-                        value={formData.Name}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
 
-                {/* Country Dropdown */}
-                <div className="mb-3">
-                    <label htmlFor="CountryId" className="form-label">
-                        Country <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <select
-                        id="CountryId"
-                        name="CountryId"
-                        className="form-select"
-                        value={formData.CountryId}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="" disabled>
-                            Select a country
-                        </option>
-                        {countries.map((country: any) => (
-                            <option key={country.Code} value={country.Code}>
-                                {country.Name}
+            {!fetching && (
+                <form onSubmit={handleSubmit}>
+                    {/* Province Name */}
+                    <div className="mb-3">
+                        <label htmlFor="Name" className="form-label">
+                            Province Name{" "}
+                            <span style={{ color: "red" }}>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="Name"
+                            name="Name"
+                            className="form-control"
+                            value={formData.Name}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    {/* Country Dropdown */}
+                    <div className="mb-3">
+                        <label htmlFor="CountryId" className="form-label">
+                            Country <span style={{ color: "red" }}>*</span>
+                        </label>
+                        <select
+                            id="CountryId"
+                            name="CountryId"
+                            className="form-select"
+                            value={formData.CountryId}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="" disabled style={{ color: "red" }}>
+                                Select a country
                             </option>
-                        ))}
-                    </select>
-                </div>
+                            {countryOptions}
+                        </select>
+                    </div>
 
-                {/* Status Dropdown */}
-                <div className="mb-3">
-                    <label htmlFor="Status" className="form-label">
-                        Status <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <select
-                        id="Status"
-                        name="Status"
-                        className="form-select"
-                        value={formData.Status}
-                        onChange={handleChange}
-                        required
+                    {/* Status Dropdown */}
+                    <div className="mb-3">
+                        <label htmlFor="Status" className="form-label">
+                            Status <span style={{ color: "red" }}>*</span>
+                        </label>
+                        <select
+                            id="Status"
+                            name="Status"
+                            className="form-select"
+                            value={formData.Status}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Non-Active">Non-Active</option>
+                        </select>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        className="btn btn-dark"
+                        disabled={loading}
                     >
-                        <option value="Active">Active</option>
-                        <option value="Non-Active">Non-Active</option>
-                    </select>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                >
-                    {loading ? "Saving..." : "Save Changes"}
-                </button>
-            </form>
+                        {loading ? "Saving..." : "Save Changes"}
+                    </button>
+                </form>
+            )}
         </div>
     );
 }

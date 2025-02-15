@@ -86,6 +86,13 @@ export default function EditUomPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/product_dashboard")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Edit Unit of Measure (UoM)</h1>
 
             {errorMessage && (
@@ -159,7 +166,7 @@ export default function EditUomPage() {
 
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Updating..." : "Update UoM"}
