@@ -439,6 +439,13 @@ export default function AddSupplierPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/business")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <div className="card shadow-sm">
                 <div className="card-header bg-dark text-white text-center">
                     <h4>Add New Supplier</h4>

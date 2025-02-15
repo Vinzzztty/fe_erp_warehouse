@@ -58,6 +58,13 @@ export default function ChannelPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/product_dashboard")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Manage Channels</h1>
             <p>Add new channels to your system.</p>
 
@@ -151,7 +158,7 @@ export default function ChannelPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add Channel"}

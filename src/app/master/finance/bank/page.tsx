@@ -60,6 +60,13 @@ export default function BankPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/finance")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Add New Bank</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 {/* Name Field */}
@@ -113,7 +120,7 @@ export default function BankPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add Bank"}

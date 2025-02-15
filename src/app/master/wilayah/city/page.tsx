@@ -111,6 +111,13 @@ export default function CityPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/wilayah")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Manage Cities</h1>
             <p>Add new cities to your system.</p>
 
@@ -206,7 +213,7 @@ export default function CityPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add City"}

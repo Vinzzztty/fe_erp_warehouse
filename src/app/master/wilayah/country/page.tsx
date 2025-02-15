@@ -55,6 +55,13 @@ export default function CountryPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/wilayah")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Manage Countries</h1>
             <p>Add new countries to your system.</p>
 
@@ -102,7 +109,7 @@ export default function CountryPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add Country"}

@@ -58,6 +58,13 @@ export default function AddCompanyPage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/business")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Add New Company</h1>
             <p>Fill in the details below to add a new company to the system.</p>
 

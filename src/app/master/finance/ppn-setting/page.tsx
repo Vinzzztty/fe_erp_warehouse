@@ -63,6 +63,13 @@ export default function PPNSettingPage() {
 
     return (
         <div className="container mt-4">
+                        {/* Back Button */}
+                        <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/finance")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Add New PPN Setting</h1>
             <form onSubmit={handleSubmit} className="mt-4">
                 {/* Name Field */}
@@ -120,7 +127,7 @@ export default function PPNSettingPage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add PPN Setting"}

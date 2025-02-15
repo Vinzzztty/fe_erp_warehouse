@@ -75,6 +75,13 @@ export default function EditCountryPage() {
     return (
         <div className="container mt-4">
             <h1>Edit Country</h1>
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/wilayah")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             {error && <div className="alert alert-danger">{error}</div>}
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">

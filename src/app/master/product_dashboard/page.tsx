@@ -27,7 +27,7 @@ export default function DashboardProductPage() {
     const router = useRouter();
 
     // State for each entity
-    const [products, setProducts] = useState([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(
         null
     );
@@ -42,57 +42,47 @@ export default function DashboardProductPage() {
         string | null
     >(null);
 
+    const [startIndex, setStartIndex] = useState(0);
+    const itemsPerPage = 5;
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [
-                    productsRes,
-                    categoriesRes,
-                    channelsRes,
-                    uomsRes,
-                    variantsRes,
-                ] = await Promise.all([
-                    fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/products`
-                    ),
-                    fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/categories`
-                    ),
-                    fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/channels`
-                    ),
-                    fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/uoms`
-                    ),
-                    fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/variants`
-                    ),
-                ]);
+                setLoading(true);
 
-                if (
-                    !productsRes.ok ||
-                    !categoriesRes.ok ||
-                    !channelsRes.ok ||
-                    !uomsRes.ok ||
-                    !variantsRes.ok
-                ) {
-                    throw new Error("Faield to fetch data");
+                // Fetch all data in parallel
+                const endpoints = [
+                    "/master/products",
+                    "/master/categories",
+                    "/master/channels",
+                    "/master/uoms",
+                    "/master/variants",
+                ];
+
+                const responses = await Promise.all(
+                    endpoints.map((endpoint) =>
+                        fetch(
+                            `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`
+                        )
+                    )
+                );
+
+                // Check if any response failed
+                const failedResponse = responses.find((res) => !res.ok);
+                if (failedResponse) {
+                    throw new Error(`Failed to fetch: ${failedResponse.url}`);
                 }
 
+                // Parse JSON in parallel
                 const [
                     productsData,
                     categoriesData,
                     channelsData,
                     uomsData,
                     variantsData,
-                ] = await Promise.all([
-                    productsRes.json(),
-                    categoriesRes.json(),
-                    channelsRes.json(),
-                    uomsRes.json(),
-                    variantsRes.json(),
-                ]);
+                ] = await Promise.all(responses.map((res) => res.json()));
 
+                // Sorting before updating state to avoid re-renders
                 setProducts(
                     (productsData?.data || []).sort((a: any, b: any) =>
                         a.Status.localeCompare(b.Status)
@@ -126,6 +116,7 @@ export default function DashboardProductPage() {
                 setLoading(false);
             }
         };
+
         fetchData();
     }, []);
 
@@ -167,6 +158,12 @@ export default function DashboardProductPage() {
             alert(error.message || "An unexpected error occurred.");
         }
     };
+
+    // Get the current slice of products
+    const displayedProducts = products.slice(
+        startIndex,
+        startIndex + itemsPerPage
+    );
 
     return (
         <div className="container-fluid mt-4">
@@ -325,84 +322,121 @@ export default function DashboardProductPage() {
                                         <th>No</th>
                                         <th>Name</th>
                                         <th>SKU Code</th>
-                                        <th>Category Code</th>
+                                        <th>Category</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products.length > 0 ? (
-                                        products.map(
-                                            (product: any, index: number) => (
-                                                <tr key={product.Code}>
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{product.Name}</td>
-                                                    <td>{product.SKUCode}</td>
-                                                    <td>
-                                                        {product.Category.Name}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                product.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {product.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn btn-warning btn-sm me-2"
-                                                            onClick={() =>
-                                                                router.push(
-                                                                    `/master/product_dashboard/product/edit/${product.Code}`
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-pencil-square"></i>{" "}
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm me-2"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    "products",
-                                                                    product.Code
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-trash"></i>{" "}
-                                                            Delete
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-info btn-sm"
-                                                            onClick={() =>
-                                                                setSelectedProduct(
-                                                                    product
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-search"></i>{" "}
-                                                            View Detail
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4}>
-                                                No Data available
+                                    {/* Display products */}
+                                    {displayedProducts.map((product, index) => (
+                                        <tr
+                                            key={product.Code}
+                                            style={{ height: "60px" }}
+                                        >
+                                            <td className="fw-bold">
+                                                {startIndex + index + 1}
+                                            </td>
+                                            <td>{product.Name}</td>
+                                            <td>{product.SKUCode || "N/A"}</td>
+                                            <td>
+                                                {product.Category?.Name ||
+                                                    "N/A"}
+                                            </td>
+                                            <td>
+                                                <span
+                                                    className={`badge ${
+                                                        product.Status ===
+                                                        "Active"
+                                                            ? "bg-success"
+                                                            : "bg-secondary"
+                                                    }`}
+                                                >
+                                                    {product.Status}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="btn btn-warning btn-sm me-2"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/master/product_dashboard/product/edit/${product.Code}`
+                                                        )
+                                                    }
+                                                >
+                                                    <i className="bi bi-pencil-square"></i>{" "}
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-danger btn-sm me-2"
+                                                    onClick={() =>
+                                                        console.log(
+                                                            "Delete",
+                                                            product.Code
+                                                        )
+                                                    }
+                                                >
+                                                    <i className="bi bi-trash"></i>{" "}
+                                                    Delete
+                                                </button>
+                                                <button
+                                                    className="btn btn-info btn-sm"
+                                                    onClick={() =>
+                                                        setSelectedProduct(
+                                                            product
+                                                        )
+                                                    }
+                                                >
+                                                    <i className="bi bi-search"></i>{" "}
+                                                    View Detail
+                                                </button>
                                             </td>
                                         </tr>
-                                    )}
+                                    ))}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedProducts.length < itemsPerPage &&
+                                        [
+                                            ...Array(
+                                                itemsPerPage -
+                                                    displayedProducts.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={6}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={startIndex === 0}
+                                onClick={() =>
+                                    setStartIndex((prev) =>
+                                        Math.max(prev - itemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    startIndex + itemsPerPage >= products.length
+                                }
+                                onClick={() =>
+                                    setStartIndex((prev) => prev + itemsPerPage)
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -742,13 +776,15 @@ export default function DashboardProductPage() {
             {/* Detail Modal */}
             {selectedProduct && (
                 <div
-                    className="modal show"
+                    className="modal fade show"
+                    tabIndex={-1}
+                    role="dialog"
                     style={{
                         display: "block",
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
                     }}
                 >
-                    <div className="modal-dialog modal-lg">
+                    <div className="modal-dialog modal-lg" role="document">
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Product Details</h5>
@@ -760,90 +796,114 @@ export default function DashboardProductPage() {
                             </div>
                             <div className="modal-body">
                                 <div className="row">
-                                    {/* Product Image */}
-                                    <div className="col-md-5">
-                                        {selectedProduct.ImageURL ? (
-                                            <div className="image-container">
+                                    {/* Product Image - Fixed Overlapping Issue */}
+                                    <div className="col-md-5 d-flex justify-content-center align-items-center">
+                                        <div
+                                            className="border rounded p-2"
+                                            style={{
+                                                width: "100%",
+                                                height: "auto",
+                                                overflow: "hidden",
+                                                backgroundColor: "#f5f5f5",
+                                            }}
+                                        >
+                                            {selectedProduct.ImageURL ? (
                                                 <Image
                                                     src={
                                                         selectedProduct.ImageURL
                                                     }
                                                     alt={selectedProduct.Name}
-                                                    layout="responsive"
-                                                    width={500}
-                                                    height={500}
-                                                    objectFit="contain"
-                                                    priority // For faster LCP
+                                                    width={250}
+                                                    height={250}
+                                                    style={{
+                                                        maxWidth: "100%",
+                                                        height: "auto",
+                                                        objectFit: "contain",
+                                                        borderRadius: "8px",
+                                                        display: "block",
+                                                        margin: "0 auto",
+                                                    }}
+                                                    priority
                                                 />
-                                            </div>
-                                        ) : (
-                                            <div
-                                                className="d-flex align-items-center justify-content-center"
-                                                style={{
-                                                    width: "100%",
-                                                    height: "100%",
-                                                    backgroundColor: "#f5f5f5",
-                                                    border: "1px solid #ddd",
-                                                    borderRadius: "8px",
-                                                }}
-                                            >
-                                                <p>No image available</p>
-                                            </div>
-                                        )}
+                                            ) : (
+                                                <p className="text-center">
+                                                    No image available
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Product Details */}
                                     <div className="col-md-7">
-                                        <p>
-                                            <strong>Code:</strong>{" "}
-                                            {selectedProduct.Code}
-                                        </p>
-                                        <p>
-                                            <strong>Name:</strong>{" "}
-                                            {selectedProduct.Name}
-                                        </p>
-                                        <p>
-                                            <strong>CodeName:</strong>{" "}
-                                            {selectedProduct.CodeName}
-                                        </p>
-                                        <p>
-                                            <strong>SKU Code:</strong>{" "}
-                                            {selectedProduct.SKUCode}
-                                        </p>
-                                        <p>
-                                            <strong>Category:</strong>{" "}
-                                            {selectedProduct.Category?.Name}
-                                        </p>
-                                        <p>
-                                            <strong>Status:</strong>{" "}
-                                            {selectedProduct.Status}
-                                        </p>
-                                        <p>
-                                            <strong>Content:</strong>{" "}
-                                            {selectedProduct.Content}
-                                        </p>
-                                        <p>
-                                            <strong>UoM:</strong>{" "}
-                                            {selectedProduct.UoM}
-                                        </p>
-                                        <p>
-                                            <strong>Notes:</strong>{" "}
-                                            {selectedProduct.Notes}
-                                        </p>
-                                        <p>
-                                            <strong>Dimensions:</strong>{" "}
-                                            {selectedProduct.Length} x{" "}
-                                            {selectedProduct.Width} x{" "}
-                                            {selectedProduct.Height}
-                                        </p>
-                                        <p>
-                                            <strong>Weight:</strong>{" "}
-                                            {selectedProduct.Weight}
-                                        </p>
-                                        <p>
-                                            <strong>Keyword:</strong>{" "}
-                                            {selectedProduct.Keyword}
-                                        </p>
+                                        <div className="d-flex flex-column gap-2">
+                                            <p>
+                                                <strong>Code:</strong>{" "}
+                                                {selectedProduct.Code || "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>Name:</strong>{" "}
+                                                {selectedProduct.Name || "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>CodeName:</strong>{" "}
+                                                {selectedProduct.CodeName ||
+                                                    "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>SKU Code:</strong>{" "}
+                                                {selectedProduct.SKUCode ||
+                                                    "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>Category:</strong>{" "}
+                                                {selectedProduct.Category
+                                                    ?.Name || "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>Status:</strong>{" "}
+                                                <span
+                                                    className={`badge ${
+                                                        selectedProduct.Status ===
+                                                        "Active"
+                                                            ? "bg-success"
+                                                            : "bg-secondary"
+                                                    }`}
+                                                >
+                                                    {selectedProduct.Status ||
+                                                        "N/A"}
+                                                </span>
+                                            </p>
+                                            <p>
+                                                <strong>Content:</strong>{" "}
+                                                {selectedProduct.Content ||
+                                                    "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>UoM:</strong>{" "}
+                                                {selectedProduct.UoM || "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>Notes:</strong>{" "}
+                                                {selectedProduct.Notes || "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>Dimensions:</strong>{" "}
+                                                {selectedProduct.Length || "0"}{" "}
+                                                x {selectedProduct.Width || "0"}{" "}
+                                                x{" "}
+                                                {selectedProduct.Height || "0"}
+                                            </p>
+                                            <p>
+                                                <strong>Weight:</strong>{" "}
+                                                {selectedProduct.Weight ||
+                                                    "N/A"}
+                                            </p>
+                                            <p>
+                                                <strong>Keyword:</strong>{" "}
+                                                {selectedProduct.Keyword ||
+                                                    "N/A"}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

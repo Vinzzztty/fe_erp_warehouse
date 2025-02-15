@@ -87,6 +87,13 @@ export default function ProvincePage() {
 
     return (
         <div className="container mt-4">
+            {/* Back Button */}
+            <button
+                className="btn btn-outline-dark mb-3"
+                onClick={() => router.push("/master/wilayah")}
+            >
+                <i className="bi bi-arrow-left"></i> Back
+            </button>
             <h1>Manage Provinces</h1>
             <p>Add new provinces to your system.</p>
 
@@ -116,7 +123,8 @@ export default function ProvincePage() {
                 {/* Country Dropdown */}
                 <div className="mb-3">
                     <label htmlFor="CountryId" className="form-label">
-                        Country
+                        Country <span style={{ color: "red" }}>*</span>{" "}
+                        {/* Move the asterisk here */}
                     </label>
                     <select
                         id="CountryId"
@@ -127,8 +135,7 @@ export default function ProvincePage() {
                         required
                     >
                         <option value="" disabled>
-                            Select a country{" "}
-                            <span style={{ color: "red" }}>*</span>
+                            Select a country
                         </option>
                         {countries.map((country: any) => (
                             <option key={country.Code} value={country.Code}>
@@ -159,7 +166,7 @@ export default function ProvincePage() {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-dark"
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : "Add Province"}
