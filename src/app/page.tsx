@@ -82,32 +82,31 @@ export default function Home() {
 
     useEffect(() => {
         setLoading(true);
+        setError(null); // Reset error state
 
-        const fetchMasters = async () => {
-            try {
-                const data = await fetchData("/home/total-masters");
-                setMasters(data?.data || {});
-            } catch (error: any) {
-                setError((prev) =>
-                    prev ? prev + "\n" + error.message : error.message
-                );
-            }
+        const fetchAllData = async () => {
+            const results = await Promise.allSettled([
+                fetchData("/home/total-masters"),
+                fetchData("/home/total-transactions"),
+            ]);
+
+            results.forEach((result, index) => {
+                if (result.status === "fulfilled") {
+                    if (index === 0) setMasters(result.value?.data || {});
+                    if (index === 1) setTransactions(result.value?.data || {});
+                } else {
+                    setError((prev) =>
+                        prev
+                            ? prev + "\n" + result.reason.message
+                            : result.reason.message
+                    );
+                }
+            });
+
+            setLoading(false);
         };
 
-        const fetchTransactions = async () => {
-            try {
-                const data = await fetchData("/home/total-transactions");
-                setTransactions(data?.data || {});
-            } catch (error: any) {
-                setError((prev) =>
-                    prev ? prev + "\n" + error.message : error.message
-                );
-            }
-        };
-
-        fetchMasters();
-        fetchTransactions();
-        setLoading(false);
+        fetchAllData();
     }, []);
 
     if (loading) {

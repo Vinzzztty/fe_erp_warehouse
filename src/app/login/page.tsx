@@ -9,6 +9,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -18,7 +19,7 @@ export default function LoginPage() {
 
         try {
             // Make API request
-            console.log("Sending request to /auth/login",username,password);
+            console.log("Sending request to /auth/login", username, password);
             const response = await api.post("auth/login", {
                 username,
                 password,
@@ -59,43 +60,86 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="d-flex vh-100 justify-content-center align-items-center">
-            <div className="card p-4" style={{ width: "400px" }}>
+        <div className="d-flex vh-100 justify-content-center align-items-center bg-light">
+            <div
+                className="card p-4 shadow-lg"
+                style={{ width: "400px", borderRadius: "10px" }}
+            >
                 <h2 className="text-center mb-3">Login</h2>
-                {error && <div className="alert alert-danger">{error}</div>}
+
+                {/* Error Message */}
+                {error && (
+                    <div className="alert alert-danger text-center">
+                        {error}
+                    </div>
+                )}
+
                 <form onSubmit={handleLogin}>
+                    {/* Username Field */}
                     <div className="mb-3">
-                        <label htmlFor="username" className="form-label">
+                        <label
+                            htmlFor="username"
+                            className="form-label fw-bold"
+                        >
                             Username
                         </label>
                         <input
                             type="text"
                             id="username"
                             className="form-control"
+                            placeholder="Enter your username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
                         />
                     </div>
+
+                    {/* Password Field with Toggle */}
                     <div className="mb-3">
-                        <label htmlFor="password" className="form-label">
+                        <label
+                            htmlFor="password"
+                            className="form-label fw-bold"
+                        >
                             Password
                         </label>
-                        <input
-                            type="password"
-                            id="password"
-                            className="form-control"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className="input-group">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                className="form-control"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                <i
+                                    className={`bi ${
+                                        showPassword ? "bi-eye-slash" : "bi-eye"
+                                    }`}
+                                ></i>
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Login Button */}
                     <button
                         type="submit"
                         className="btn btn-primary w-100"
                         disabled={loading}
                     >
-                        {loading ? "Logging in..." : "Login"}
+                        {loading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2"></span>
+                                Logging in...
+                            </>
+                        ) : (
+                            "Login"
+                        )}
                     </button>
                 </form>
             </div>
