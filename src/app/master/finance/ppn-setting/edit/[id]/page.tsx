@@ -65,7 +65,18 @@ export default function EditPpnSettingPage() {
                     body: JSON.stringify(formData),
                 }
             );
-            if (!response.ok) throw new Error("Failed to update PPN setting.");
+            if (!response.ok) {
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to Update PPN";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
+            }
             router.push("/master/finance"); // Redirect after success
         } catch (error: any) {
             setError(error.message || "An unexpected error occurred.");

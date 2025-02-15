@@ -16,6 +16,21 @@ export default function WilayahPage() {
     const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
         string | null
     >(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{
+        endpoint: string;
+        id: number;
+    } | null>(null);
+    const [loadingDelete, setLoadingDelete] = useState(false); // Track deletion loading state
+
+    const [countryStartIndex, setCountryStartIndex] = useState(0);
+    const countryItemsPerPage = 5;
+
+    const [cityStartIndex, setCityStartIndex] = useState(0);
+    const cityItemsPerPage = 5;
+
+    const [provinceStartIndex, setProvinceStartIndex] = useState(0);
+    const provinceItemsPerPage = 5;
 
     // Fetch data for cities, provinces, and countries
     useEffect(() => {
@@ -72,42 +87,53 @@ export default function WilayahPage() {
         fetchData();
     }, []);
 
-    // Delete an item
-    const handleDelete = async (endpoint: string, id: number) => {
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return; // Ensure there is an item selected for deletion
+        setLoadingDelete(true); // Show loading state
+
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}/${id}`,
-                {
-                    method: "DELETE",
-                }
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${itemToDelete.endpoint}/${itemToDelete.id}`,
+                { method: "DELETE" }
             );
 
             if (!response.ok) {
                 throw new Error("Failed to delete item.");
             }
 
-            // Refresh the data after deletion
-            const fetchData = async () => {
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
-                );
-                const data = await res.json();
-                return data?.data || [];
-            };
-
-            if (endpoint === "cities") setCities(await fetchData());
-            if (endpoint === "provinces") setProvinces(await fetchData());
-            if (endpoint === "countries") setCountries(await fetchData());
-
-            // Show success message
+            // Show success message inside modal
             setDeleteSuccessMessage("Item deleted successfully!");
 
-            // Hide the message after 3 seconds
-            setTimeout(() => setDeleteSuccessMessage(null), 3000);
+            // Wait 3 seconds before reloading the page
+            setTimeout(() => {
+                window.location.reload(); // Reload the browser
+            }, 1000);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
+        } finally {
+            setLoadingDelete(false); // Remove loading state
+            setShowDeleteModal(false); // Hide modal
+            setItemToDelete(null);
         }
     };
+
+    // Get the current slice of cities
+    const displayedCities = cities.slice(
+        cityStartIndex,
+        cityStartIndex + cityItemsPerPage
+    );
+
+    // Get the current slice of provinces
+    const displayedProvinces = provinces.slice(
+        provinceStartIndex,
+        provinceStartIndex + provinceItemsPerPage
+    );
+
+    // Get the current slice of countries
+    const displayedCountries = countries.slice(
+        countryStartIndex,
+        countryStartIndex + countryItemsPerPage
+    );
 
     return (
         <div className="container-fluid mt-4">
@@ -197,6 +223,74 @@ export default function WilayahPage() {
                 <p className="text-center mt-5">Loading data...</p>
             ) : (
                 <>
+                    {/* Delete Confirmation Modal */}
+                    {showDeleteModal && (
+                        <div
+                            className="modal show d-block"
+                            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+                        >
+                            <div className="modal-dialog">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title">
+                                            Confirm Delete
+                                        </h5>
+                                        <button
+                                            className="btn-close"
+                                            onClick={() =>
+                                                setShowDeleteModal(false)
+                                            }
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body">
+                                        {deleteSuccessMessage ? (
+                                            <div className="alert alert-success text-center">
+                                                {deleteSuccessMessage}
+                                            </div>
+                                        ) : (
+                                            <p>
+                                                Are you sure you want to delete
+                                                this item?
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="modal-footer">
+                                        {!deleteSuccessMessage && (
+                                            <>
+                                                <button
+                                                    className="btn btn-secondary"
+                                                    onClick={() =>
+                                                        setShowDeleteModal(
+                                                            false
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    className="btn btn-danger"
+                                                    onClick={
+                                                        handleConfirmDelete
+                                                    }
+                                                    disabled={loadingDelete}
+                                                >
+                                                    {loadingDelete ? (
+                                                        <span className="spinner-border spinner-border-sm"></span>
+                                                    ) : (
+                                                        <>
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Confirm Delete
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Cities Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Cities</p>
@@ -218,77 +312,119 @@ export default function WilayahPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cities.length > 0 ? (
-                                        cities.map(
-                                            (city: any, index: number) => (
-                                                <tr key={city.Code}>
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{city.Name}</td>
-                                                    <td>
-                                                        {provinces.find(
-                                                            (p: any) =>
-                                                                p.Code ===
-                                                                city.ProvinceId
-                                                        )?.Name || "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        {countries.find(
-                                                            (c: any) =>
-                                                                c.Code ===
-                                                                city.CountryId
-                                                        )?.Name || "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                city.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {city.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn btn-warning btn-sm me-2"
-                                                            onClick={() =>
-                                                                router.push(
-                                                                    `/master/wilayah/city/edit/${city.Code}`
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-pencil-square"></i>{" "}
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    "cities",
-                                                                    city.Code
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-trash"></i>{" "}
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={6}>
-                                                No data available
+                                    {/* Display Cities */}
+                                    {displayedCities.map((city, index) => (
+                                        <tr
+                                            key={city.Code}
+                                            style={{ height: "60px" }}
+                                        >
+                                            <td className="fw-bold">
+                                                {cityStartIndex + index + 1}
+                                            </td>
+                                            <td>{city.Name}</td>
+                                            <td>
+                                                {provinces.find(
+                                                    (p: any) =>
+                                                        p.Code ===
+                                                        city.ProvinceId
+                                                )?.Name || "N/A"}
+                                            </td>
+                                            <td>
+                                                {countries.find(
+                                                    (c: any) =>
+                                                        c.Code ===
+                                                        city.CountryId
+                                                )?.Name || "N/A"}
+                                            </td>
+                                            <td>
+                                                <span
+                                                    className={`badge ${
+                                                        city.Status === "Active"
+                                                            ? "bg-success"
+                                                            : "bg-secondary"
+                                                    }`}
+                                                >
+                                                    {city.Status}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="btn btn-warning btn-sm me-2"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/master/wilayah/city/edit/${city.Code}`
+                                                        )
+                                                    }
+                                                >
+                                                    <i className="bi bi-pencil-square"></i>{" "}
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() => {
+                                                        setItemToDelete({
+                                                            endpoint: "cities",
+                                                            id: city.Code,
+                                                        });
+                                                        setShowDeleteModal(
+                                                            true
+                                                        );
+                                                    }}
+                                                >
+                                                    <i className="bi bi-trash"></i>{" "}
+                                                    Delete
+                                                </button>
                                             </td>
                                         </tr>
-                                    )}
+                                    ))}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedCities.length <
+                                        cityItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                cityItemsPerPage -
+                                                    displayedCities.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-city-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={6}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={cityStartIndex === 0}
+                                onClick={() =>
+                                    setCityStartIndex((prev) =>
+                                        Math.max(prev - cityItemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    cityStartIndex + cityItemsPerPage >=
+                                    cities.length
+                                }
+                                onClick={() =>
+                                    setCityStartIndex(
+                                        (prev) => prev + cityItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -312,70 +448,118 @@ export default function WilayahPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {provinces.length > 0 ? (
-                                        provinces.map(
-                                            (province: any, index: number) => (
-                                                <tr key={province.Code}>
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{province.Name}</td>
-                                                    <td>
-                                                        {countries.find(
-                                                            (c: any) =>
-                                                                c.Code ===
-                                                                province.CountryId
-                                                        )?.Name || "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                province.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {province.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn btn-warning btn-sm me-2"
-                                                            onClick={() =>
-                                                                router.push(
-                                                                    `/master/wilayah/province/edit/${province.Code}`
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-pencil-square"></i>{" "}
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() =>
-                                                                handleDelete(
+                                    {/* Display Provinces */}
+                                    {displayedProvinces.map(
+                                        (province, index) => (
+                                            <tr
+                                                key={province.Code}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td className="fw-bold">
+                                                    {provinceStartIndex +
+                                                        index +
+                                                        1}
+                                                </td>
+                                                <td>{province.Name}</td>
+                                                <td>
+                                                    {countries.find(
+                                                        (c: any) =>
+                                                            c.Code ===
+                                                            province.CountryId
+                                                    )?.Name || "N/A"}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        className={`badge ${
+                                                            province.Status ===
+                                                            "Active"
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
+                                                    >
+                                                        {province.Status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-warning btn-sm me-2"
+                                                        onClick={() =>
+                                                            router.push(
+                                                                `/master/wilayah/province/edit/${province.Code}`
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-pencil-square"></i>{" "}
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
                                                                     "provinces",
-                                                                    province.Code
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-trash"></i>{" "}
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
+                                                                id: province.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-trash"></i>{" "}
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         )
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={5}>
-                                                No data available
-                                            </td>
-                                        </tr>
                                     )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedProvinces.length <
+                                        provinceItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                provinceItemsPerPage -
+                                                    displayedProvinces.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-province-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={5}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={provinceStartIndex === 0}
+                                onClick={() =>
+                                    setProvinceStartIndex((prev) =>
+                                        Math.max(prev - provinceItemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    provinceStartIndex + provinceItemsPerPage >=
+                                    provinces.length
+                                }
+                                onClick={() =>
+                                    setProvinceStartIndex(
+                                        (prev) => prev + provinceItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -398,10 +582,18 @@ export default function WilayahPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {countries.length > 0 ? (
-                                        countries.map((country: any) => (
-                                            <tr key={country.Code}>
-                                                <td>{country.Code}</td>
+                                    {/* Display Countries */}
+                                    {displayedCountries.map(
+                                        (country, index) => (
+                                            <tr
+                                                key={country.Code}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td className="fw-bold">
+                                                    {countryStartIndex +
+                                                        index +
+                                                        1}
+                                                </td>
                                                 <td>{country.Name}</td>
                                                 <td>
                                                     <span
@@ -429,28 +621,72 @@ export default function WilayahPage() {
                                                     </button>
                                                     <button
                                                         className="btn btn-danger btn-sm"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                "countries",
-                                                                country.Code
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
+                                                                    "countries",
+                                                                id: country.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
                                                     >
                                                         <i className="bi bi-trash"></i>{" "}
                                                         Delete
                                                     </button>
                                                 </td>
                                             </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4}>
-                                                No data available
-                                            </td>
-                                        </tr>
+                                        )
                                     )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedCountries.length <
+                                        countryItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                countryItemsPerPage -
+                                                    displayedCountries.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-country-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={4}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={countryStartIndex === 0}
+                                onClick={() =>
+                                    setCountryStartIndex((prev) =>
+                                        Math.max(prev - countryItemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    countryStartIndex + countryItemsPerPage >=
+                                    countries.length
+                                }
+                                onClick={() =>
+                                    setCountryStartIndex(
+                                        (prev) => prev + countryItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 </>

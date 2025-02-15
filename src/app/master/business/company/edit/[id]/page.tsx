@@ -73,7 +73,16 @@ export default function EditCompanyPage() {
                 }
             );
             if (!response.ok) {
-                throw new Error("Failed to update company.");
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to update Company";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
             }
             router.push("/master/business");
         } catch (error: any) {

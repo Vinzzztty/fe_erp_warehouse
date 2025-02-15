@@ -67,7 +67,18 @@ export default function EditBankPage() {
                     body: JSON.stringify(formData),
                 }
             );
-            if (!response.ok) throw new Error("Failed to update bank.");
+            if (!response.ok) {
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to Update Bank";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
+            }
             router.push("/master/finance"); // Redirect after success
         } catch (error: any) {
             setError(error.message || "An unexpected error occurred.");

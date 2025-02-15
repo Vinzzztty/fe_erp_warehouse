@@ -42,8 +42,16 @@ export default function CategoryPage() {
             );
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to add category.");
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to add Category";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
             }
 
             // Navigate back to Product Page on success
@@ -57,8 +65,8 @@ export default function CategoryPage() {
 
     return (
         <div className="container mt-4">
-                        {/* Back Button */}
-                        <button
+            {/* Back Button */}
+            <button
                 className="btn btn-outline-dark mb-3"
                 onClick={() => router.push("/master/product_dashboard")}
             >

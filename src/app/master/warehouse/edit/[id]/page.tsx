@@ -72,10 +72,16 @@ export default function EditWarehousePage() {
             );
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(
-                    errorData.message || "Failed to update warehouse."
-                );
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to Update warehouse.";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
             }
 
             // Redirect back to Warehouse page on success

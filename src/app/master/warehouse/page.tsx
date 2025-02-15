@@ -13,6 +13,12 @@ export default function WarehousePage() {
     const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
         string | null
     >(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{
+        endpoint: string;
+        id: number;
+    } | null>(null);
+    const [loadingDelete, setLoadingDelete] = useState(false); // Track deletion loading state
     // Fetch warehouses
     useEffect(() => {
         const fetchWarehouses = async () => {
@@ -69,6 +75,36 @@ export default function WarehousePage() {
         }
     };
 
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return; // Ensure there is an item selected for deletion
+        setLoadingDelete(true); // Show loading state
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${itemToDelete.endpoint}/${itemToDelete.id}`,
+                { method: "DELETE" }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to delete item.");
+            }
+
+            // Show success message inside modal
+            setDeleteSuccessMessage("Item deleted successfully!");
+
+            // Wait 3 seconds before reloading the page
+            setTimeout(() => {
+                window.location.reload(); // Reload the browser
+            }, 1000);
+        } catch (error: any) {
+            alert(error.message || "An unexpected error occurred.");
+        } finally {
+            setLoadingDelete(false); // Remove loading state
+            setShowDeleteModal(false); // Hide modal
+            setItemToDelete(null);
+        }
+    };
+
     if (loading) {
         return <p>Loading warehouses...</p>;
     }
@@ -104,6 +140,69 @@ export default function WarehousePage() {
             </div>
 
             <div className="row mt-4">
+                {/* Delete Confirmation Modal */}
+                {showDeleteModal && (
+                    <div
+                        className="modal show d-block"
+                        style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+                    >
+                        <div className="modal-dialog">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">
+                                        Confirm Delete
+                                    </h5>
+                                    <button
+                                        className="btn-close"
+                                        onClick={() =>
+                                            setShowDeleteModal(false)
+                                        }
+                                    ></button>
+                                </div>
+                                <div className="modal-body">
+                                    {deleteSuccessMessage ? (
+                                        <div className="alert alert-success text-center">
+                                            {deleteSuccessMessage}
+                                        </div>
+                                    ) : (
+                                        <p>
+                                            Are you sure you want to delete this
+                                            item?
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="modal-footer">
+                                    {!deleteSuccessMessage && (
+                                        <>
+                                            <button
+                                                className="btn btn-secondary"
+                                                onClick={() =>
+                                                    setShowDeleteModal(false)
+                                                }
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                className="btn btn-danger"
+                                                onClick={handleConfirmDelete}
+                                                disabled={loadingDelete}
+                                            >
+                                                {loadingDelete ? (
+                                                    <span className="spinner-border spinner-border-sm"></span>
+                                                ) : (
+                                                    <>
+                                                        <i className="bi bi-trash"></i>{" "}
+                                                        Confirm Delete
+                                                    </>
+                                                )}
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {warehouses.length === 0 && <p>No warehouses available.</p>}
                 {warehouses.map((warehouse: any) => (
                     <div className="col-md-4 mb-4" key={warehouse.Code}>
@@ -147,9 +246,13 @@ export default function WarehousePage() {
                                     </button>
                                     <button
                                         className="btn btn-danger btn-sm"
-                                        onClick={() =>
-                                            handleDelete(warehouse.Code)
-                                        }
+                                        onClick={() => {
+                                            setItemToDelete({
+                                                endpoint: "warehouses",
+                                                id: warehouse.Code,
+                                            });
+                                            setShowDeleteModal(true);
+                                        }}
                                     >
                                         <i className="bi bi-trash"></i> Delete
                                     </button>

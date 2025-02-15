@@ -16,6 +16,12 @@ export default function BusinessPage() {
     const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
         string | null
     >(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{
+        endpoint: string;
+        id: number;
+    } | null>(null);
+    const [loadingDelete, setLoadingDelete] = useState(false); // Track deletion loading state
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,40 +94,72 @@ export default function BusinessPage() {
         fetchData();
     }, []);
 
-    const handleDelete = async (endpoint: string, id: number) => {
+    // const handleDelete = async (endpoint: string, id: number) => {
+    //     try {
+    //         const response = await fetch(
+    //             `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}/${id}`,
+    //             {
+    //                 method: "DELETE",
+    //             }
+    //         );
+
+    //         if (!response.ok) {
+    //             throw new Error("Failed to delete item.");
+    //         }
+
+    //         // Refresh the data after deletion
+    //         const fetchData = async () => {
+    //             const res = await fetch(
+    //                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
+    //             );
+    //             const data = await res.json();
+    //             return data?.data || [];
+    //         };
+
+    //         if (endpoint === "companies") setCompanies(await fetchData());
+    //         if (endpoint === "stores") setStores(await fetchData());
+    //         if (endpoint === "suppliers") setSuppliers(await fetchData());
+    //         if (endpoint === "forwarders") setForwarders(await fetchData());
+
+    //         // Show success message
+    //         setDeleteSuccessMessage("Item deleted successfully!");
+
+    //         // Hide the message after 3 seconds
+    //         setTimeout(() => setDeleteSuccessMessage(null), 3000);
+    //     } catch (error: any) {
+    //         alert(error.message || "An unexpected error occurred.");
+    //     }
+    // };
+
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return; // Ensure there is an item selected for deletion
+        setLoadingDelete(true); // Show loading state
+
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}/${id}`,
-                {
-                    method: "DELETE",
-                }
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${itemToDelete.endpoint}/${itemToDelete.id}`,
+                { method: "DELETE" }
             );
+
+            console.log(response);
 
             if (!response.ok) {
                 throw new Error("Failed to delete item.");
             }
 
-            // Refresh the data after deletion
-            const fetchData = async () => {
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
-                );
-                const data = await res.json();
-                return data?.data || [];
-            };
-
-            if (endpoint === "companies") setCompanies(await fetchData());
-            if (endpoint === "stores") setStores(await fetchData());
-            if (endpoint === "suppliers") setSuppliers(await fetchData());
-            if (endpoint === "forwarders") setForwarders(await fetchData());
-
-            // Show success message
+            // Show success message inside modal
             setDeleteSuccessMessage("Item deleted successfully!");
 
-            // Hide the message after 3 seconds
-            setTimeout(() => setDeleteSuccessMessage(null), 3000);
+            // Wait 3 seconds before reloading the page
+            setTimeout(() => {
+                window.location.reload(); // Reload the browser
+            }, 2000);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
+        } finally {
+            setLoadingDelete(false); // Remove loading state
+            setShowDeleteModal(false); // Hide modal
+            setItemToDelete(null);
         }
     };
 
@@ -202,6 +240,73 @@ export default function BusinessPage() {
                 <p className="text-center mt-5">Loading data.....</p>
             ) : (
                 <>
+                    {/* Delete Confirmation Modal */}
+                    {showDeleteModal && (
+                        <div
+                            className="modal show d-block"
+                            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+                        >
+                            <div className="modal-dialog">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title">
+                                            Confirm Delete
+                                        </h5>
+                                        <button
+                                            className="btn-close"
+                                            onClick={() =>
+                                                setShowDeleteModal(false)
+                                            }
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body">
+                                        {deleteSuccessMessage ? (
+                                            <div className="alert alert-success text-center">
+                                                {deleteSuccessMessage}
+                                            </div>
+                                        ) : (
+                                            <p>
+                                                Are you sure you want to delete
+                                                this item?
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="modal-footer">
+                                        {!deleteSuccessMessage && (
+                                            <>
+                                                <button
+                                                    className="btn btn-secondary"
+                                                    onClick={() =>
+                                                        setShowDeleteModal(
+                                                            false
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    className="btn btn-danger"
+                                                    onClick={
+                                                        handleConfirmDelete
+                                                    }
+                                                    disabled={loadingDelete}
+                                                >
+                                                    {loadingDelete ? (
+                                                        <span className="spinner-border spinner-border-sm"></span>
+                                                    ) : (
+                                                        <>
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Confirm Delete
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Supplier</p>
 
@@ -270,12 +375,16 @@ export default function BusinessPage() {
                                                     </button>
                                                     <button
                                                         className="btn btn-danger btn-sm"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                "suppliers",
-                                                                supplier.Code
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
+                                                                    "suppliers",
+                                                                id: supplier.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
                                                     >
                                                         <i className="bi bi-trash"></i>{" "}
                                                         Delete
@@ -363,12 +472,16 @@ export default function BusinessPage() {
                                                     </button>
                                                     <button
                                                         className="btn btn-danger btn-sm"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                "forwarders",
-                                                                forwarder.Code
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
+                                                                    "forwarders",
+                                                                id: forwarder.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
                                                     >
                                                         <i className="bi bi-trash"></i>{" "}
                                                         Delete
@@ -454,12 +567,18 @@ export default function BusinessPage() {
                                                             </button>
                                                             <button
                                                                 className="btn btn-danger btn-sm"
-                                                                onClick={() =>
-                                                                    handleDelete(
-                                                                        "companies",
-                                                                        company.Code
-                                                                    )
-                                                                }
+                                                                onClick={() => {
+                                                                    setItemToDelete(
+                                                                        {
+                                                                            endpoint:
+                                                                                "companies",
+                                                                            id: company.Code,
+                                                                        }
+                                                                    );
+                                                                    setShowDeleteModal(
+                                                                        true
+                                                                    );
+                                                                }}
                                                             >
                                                                 <i className="bi bi-trash"></i>{" "}
                                                                 Delete
@@ -528,12 +647,15 @@ export default function BusinessPage() {
                                                 </button>
                                                 <button
                                                     className="btn btn-danger btn-sm"
-                                                    onClick={() =>
-                                                        handleDelete(
-                                                            "stores",
-                                                            store.Code
-                                                        )
-                                                    }
+                                                    onClick={() => {
+                                                        setItemToDelete({
+                                                            endpoint: "stores",
+                                                            id: store.Code,
+                                                        });
+                                                        setShowDeleteModal(
+                                                            true
+                                                        );
+                                                    }}
                                                 >
                                                     <i className="bi bi-trash"></i>{" "}
                                                     Delete

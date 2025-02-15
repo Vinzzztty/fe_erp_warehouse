@@ -91,7 +91,16 @@ export default function EditProvincePage() {
             );
 
             if (!response.ok) {
-                throw new Error("Failed to update province.");
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to Update province.";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
             }
 
             router.push("/master/wilayah");

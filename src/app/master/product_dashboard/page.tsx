@@ -41,9 +41,23 @@ export default function DashboardProductPage() {
     const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
         string | null
     >(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{
+        endpoint: string;
+        id: number;
+    } | null>(null);
+    const [loadingDelete, setLoadingDelete] = useState(false); // Track deletion loading state
 
     const [startIndex, setStartIndex] = useState(0);
     const itemsPerPage = 5;
+    const [categoryStartIndex, setCategoryStartIndex] = useState(0);
+    const categoryItemsPerPage = 5;
+    const [channelStartIndex, setChannelStartIndex] = useState(0);
+    const channelItemsPerPage = 5;
+    const [uomStartIndex, setUomStartIndex] = useState(0);
+    const uomItemsPerPage = 5;
+    const [variantStartIndex, setVariantStartIndex] = useState(0);
+    const variantItemsPerPage = 5;
 
     useEffect(() => {
         const fetchData = async () => {
@@ -120,42 +134,33 @@ export default function DashboardProductPage() {
         fetchData();
     }, []);
 
-    // Delete an item
-    const handleDelete = async (endpoint: string, id: number) => {
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return; // Ensure there is an item selected for deletion
+        setLoadingDelete(true); // Show loading state
+
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}/${id}`,
-                {
-                    method: "DELETE",
-                }
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${itemToDelete.endpoint}/${itemToDelete.id}`,
+                { method: "DELETE" }
             );
 
             if (!response.ok) {
                 throw new Error("Failed to delete item.");
             }
 
-            // Refresh the data after deletion
-            const fetchData = async () => {
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
-                );
-                const data = await res.json();
-                return data?.data || [];
-            };
-
-            if (endpoint === "products") setProducts(await fetchData());
-            if (endpoint === "categories") setCategories(await fetchData());
-            if (endpoint === "channels") setChannels(await fetchData());
-            if (endpoint === "uoms") setUoms(await fetchData());
-            if (endpoint === "variants") setVariants(await fetchData());
-
-            // Show success message
+            // Show success message inside modal
             setDeleteSuccessMessage("Item deleted successfully!");
 
-            // Hide the message after 3 seconds
-            setTimeout(() => setDeleteSuccessMessage(null), 3000);
+            // Wait 3 seconds before reloading the page
+            setTimeout(() => {
+                window.location.reload(); // Reload the browser
+            }, 1000);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
+        } finally {
+            setLoadingDelete(false); // Remove loading state
+            setShowDeleteModal(false); // Hide modal
+            setItemToDelete(null);
         }
     };
 
@@ -163,6 +168,30 @@ export default function DashboardProductPage() {
     const displayedProducts = products.slice(
         startIndex,
         startIndex + itemsPerPage
+    );
+
+    // Get the current slice of categories
+    const displayedCategories = categories.slice(
+        categoryStartIndex,
+        categoryStartIndex + categoryItemsPerPage
+    );
+
+    // Get the current slice of channels
+    const displayedChannels = channels.slice(
+        channelStartIndex,
+        channelStartIndex + channelItemsPerPage
+    );
+
+    // Get the current slice of UoMs
+    const displayedUoMs = uoms.slice(
+        uomStartIndex,
+        uomStartIndex + uomItemsPerPage
+    );
+
+    // Get the current slice of Variants
+    const displayedVariants = variants.slice(
+        variantStartIndex,
+        variantStartIndex + variantItemsPerPage
     );
 
     return (
@@ -312,6 +341,73 @@ export default function DashboardProductPage() {
                 <p className="text-center mt-5">Loading data .. </p>
             ) : (
                 <>
+                    {/* Delete Confirmation Modal */}
+                    {showDeleteModal && (
+                        <div
+                            className="modal show d-block"
+                            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+                        >
+                            <div className="modal-dialog">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title">
+                                            Confirm Delete
+                                        </h5>
+                                        <button
+                                            className="btn-close"
+                                            onClick={() =>
+                                                setShowDeleteModal(false)
+                                            }
+                                        ></button>
+                                    </div>
+                                    <div className="modal-body">
+                                        {deleteSuccessMessage ? (
+                                            <div className="alert alert-success text-center">
+                                                {deleteSuccessMessage}
+                                            </div>
+                                        ) : (
+                                            <p>
+                                                Are you sure you want to delete
+                                                this item?
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="modal-footer">
+                                        {!deleteSuccessMessage && (
+                                            <>
+                                                <button
+                                                    className="btn btn-secondary"
+                                                    onClick={() =>
+                                                        setShowDeleteModal(
+                                                            false
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    className="btn btn-danger"
+                                                    onClick={
+                                                        handleConfirmDelete
+                                                    }
+                                                    disabled={loadingDelete}
+                                                >
+                                                    {loadingDelete ? (
+                                                        <span className="spinner-border spinner-border-sm"></span>
+                                                    ) : (
+                                                        <>
+                                                            <i className="bi bi-trash"></i>{" "}
+                                                            Confirm Delete
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {/* Products Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Products</p>
@@ -369,12 +465,16 @@ export default function DashboardProductPage() {
                                                 </button>
                                                 <button
                                                     className="btn btn-danger btn-sm me-2"
-                                                    onClick={() =>
-                                                        console.log(
-                                                            "Delete",
-                                                            product.Code
-                                                        )
-                                                    }
+                                                    onClick={() => {
+                                                        setItemToDelete({
+                                                            endpoint:
+                                                                "products",
+                                                            id: product.Code,
+                                                        });
+                                                        setShowDeleteModal(
+                                                            true
+                                                        );
+                                                    }}
                                                 >
                                                     <i className="bi bi-trash"></i>{" "}
                                                     Delete
@@ -449,75 +549,124 @@ export default function DashboardProductPage() {
                                     <tr>
                                         <th>No</th>
                                         <th>Name</th>
-                                        <th>SKUCode</th>
+                                        <th>SKU Code</th>
                                         <th>Notes</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {categories.length > 0 ? (
-                                        categories.map(
-                                            (category: any, index: number) => (
-                                                <tr key={category.Code}>
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{category.Name}</td>
-                                                    <td>{category.SKUCode}</td>
-                                                    <td>
-                                                        {category.Notes ||
-                                                            "N/A"}{" "}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                category.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {category.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn btn-warning btn-sm me-2"
-                                                            onClick={() =>
-                                                                router.push(
-                                                                    `/master/product_dashboard/category/edit/${category.Code}`
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-pencil-square"></i>{" "}
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() =>
-                                                                handleDelete(
+                                    {/* Display categories */}
+                                    {displayedCategories.map(
+                                        (category: any, index) => (
+                                            <tr
+                                                key={category.Code}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td className="fw-bold">
+                                                    {categoryStartIndex +
+                                                        index +
+                                                        1}
+                                                </td>
+                                                <td>{category.Name}</td>
+                                                <td>
+                                                    {category.SKUCode || "N/A"}
+                                                </td>
+                                                <td>
+                                                    {category.Notes || "N/A"}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        className={`badge ${
+                                                            category.Status ===
+                                                            "Active"
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
+                                                    >
+                                                        {category.Status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-warning btn-sm me-2"
+                                                        onClick={() =>
+                                                            router.push(
+                                                                `/master/product_dashboard/category/edit/${category.Code}`
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-pencil-square"></i>{" "}
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
                                                                     "categories",
-                                                                    category.Code
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-trash"></i>{" "}
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
+                                                                id: category.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-trash"></i>{" "}
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         )
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={6}>
-                                                No Data available
-                                            </td>
-                                        </tr>
                                     )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedCategories.length <
+                                        categoryItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                categoryItemsPerPage -
+                                                    displayedCategories.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-category-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={6}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={categoryStartIndex === 0}
+                                onClick={() =>
+                                    setCategoryStartIndex((prev) =>
+                                        Math.max(prev - categoryItemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    categoryStartIndex + categoryItemsPerPage >=
+                                    categories.length
+                                }
+                                onClick={() =>
+                                    setCategoryStartIndex(
+                                        (prev) => prev + categoryItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -543,74 +692,126 @@ export default function DashboardProductPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {channels.length > 0 ? (
-                                        channels.map(
-                                            (channel: any, index: number) => (
-                                                <tr key={channel.Code}>
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{channel.Name}</td>
-                                                    <td>{channel.Initial}</td>
-                                                    <td>{channel.Category}</td>
-                                                    <td>
-                                                        {channel.Notes || "N/A"}{" "}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                channel.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {channel.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn btn-warning btn-sm me-2"
-                                                            onClick={() =>
-                                                                router.push(
-                                                                    `/master/product_dashboard/channel/edit/${channel.Code}`
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-pencil-square"></i>{" "}
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() =>
-                                                                handleDelete(
+                                    {/* Display channels */}
+                                    {displayedChannels.map(
+                                        (channel: any, index) => (
+                                            <tr
+                                                key={channel.Code}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td className="fw-bold">
+                                                    {channelStartIndex +
+                                                        index +
+                                                        1}
+                                                </td>
+                                                <td>{channel.Name}</td>
+                                                <td>
+                                                    {channel.Initial || "N/A"}
+                                                </td>
+                                                <td>
+                                                    {channel.Category || "N/A"}
+                                                </td>
+                                                <td>
+                                                    {channel.Notes || "N/A"}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        className={`badge ${
+                                                            channel.Status ===
+                                                            "Active"
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
+                                                    >
+                                                        {channel.Status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-warning btn-sm me-2"
+                                                        onClick={() =>
+                                                            router.push(
+                                                                `/master/product_dashboard/channel/edit/${channel.Code}`
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-pencil-square"></i>{" "}
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
                                                                     "channels",
-                                                                    channel.Code
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-trash"></i>{" "}
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
+                                                                id: channel.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-trash"></i>{" "}
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         )
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={6}>
-                                                No Data available
-                                            </td>
-                                        </tr>
                                     )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedChannels.length <
+                                        channelItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                channelItemsPerPage -
+                                                    displayedChannels.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-channel-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={7}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={channelStartIndex === 0}
+                                onClick={() =>
+                                    setChannelStartIndex((prev) =>
+                                        Math.max(prev - channelItemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    channelStartIndex + channelItemsPerPage >=
+                                    channels.length
+                                }
+                                onClick={() =>
+                                    setChannelStartIndex(
+                                        (prev) => prev + channelItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
 
                     {/* UoMs Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
-                        <p className="mb-4 fw-bold">UoMS</p>
+                        <p className="mb-4 fw-bold">UoMs</p>
                         {errorMessage && (
                             <div className="alert alert-danger">
                                 {errorMessage}
@@ -628,62 +829,105 @@ export default function DashboardProductPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {uoms.length > 0 ? (
-                                        uoms.map((uom: any, index: number) => (
-                                            <tr key={uom.Code}>
-                                                <td className="fw-bold">
-                                                    {index + 1}
-                                                </td>
-                                                <td>{uom.Name}</td>
-                                                <td>{uom.Notes || "N/A"} </td>
-                                                <td>
-                                                    <span
-                                                        className={`badge ${
-                                                            uom.Status ===
-                                                            "Active"
-                                                                ? "bg-success"
-                                                                : "bg-secondary"
-                                                        }`}
-                                                    >
-                                                        {uom.Status}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        className="btn btn-warning btn-sm me-2"
-                                                        onClick={() =>
-                                                            router.push(
-                                                                `/master/product_dashboard/uom/edit/${uom.Code}`
-                                                            )
-                                                        }
-                                                    >
-                                                        <i className="bi bi-pencil-square"></i>{" "}
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-danger btn-sm"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                "uoms",
-                                                                uom.Code
-                                                            )
-                                                        }
-                                                    >
-                                                        <i className="bi bi-trash"></i>{" "}
-                                                        Delete
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={6}>
-                                                No Data available
+                                    {/* Display UoMs */}
+                                    {displayedUoMs.map((uom: any, index) => (
+                                        <tr
+                                            key={uom.Code}
+                                            style={{ height: "60px" }}
+                                        >
+                                            <td className="fw-bold">
+                                                {uomStartIndex + index + 1}
+                                            </td>
+                                            <td>{uom.Name}</td>
+                                            <td>{uom.Notes || "N/A"}</td>
+                                            <td>
+                                                <span
+                                                    className={`badge ${
+                                                        uom.Status === "Active"
+                                                            ? "bg-success"
+                                                            : "bg-secondary"
+                                                    }`}
+                                                >
+                                                    {uom.Status}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="btn btn-warning btn-sm me-2"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/master/product_dashboard/uom/edit/${uom.Code}`
+                                                        )
+                                                    }
+                                                >
+                                                    <i className="bi bi-pencil-square"></i>{" "}
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() => {
+                                                        setItemToDelete({
+                                                            endpoint: "uoms",
+                                                            id: uom.Code,
+                                                        });
+                                                        setShowDeleteModal(
+                                                            true
+                                                        );
+                                                    }}
+                                                >
+                                                    <i className="bi bi-trash"></i>{" "}
+                                                    Delete
+                                                </button>
                                             </td>
                                         </tr>
-                                    )}
+                                    ))}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedUoMs.length < uomItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                uomItemsPerPage -
+                                                    displayedUoMs.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-uom-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={5}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={uomStartIndex === 0}
+                                onClick={() =>
+                                    setUomStartIndex((prev) =>
+                                        Math.max(prev - uomItemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    uomStartIndex + uomItemsPerPage >=
+                                    uoms.length
+                                }
+                                onClick={() =>
+                                    setUomStartIndex(
+                                        (prev) => prev + uomItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -695,7 +939,6 @@ export default function DashboardProductPage() {
                                 {errorMessage}
                             </div>
                         )}
-
                         <div className="table-responsive">
                             <table className="table table-striped table-bordered table-hover align-middle text-center">
                                 <thead className="table-dark">
@@ -708,66 +951,114 @@ export default function DashboardProductPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {variants.length > 0 ? (
-                                        variants.map(
-                                            (variant: any, index: number) => (
-                                                <tr key={variant.Code}>
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{variant.Name}</td>
-                                                    <td>
-                                                        {variant.Notes || "N/A"}{" "}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                variant.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {variant.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className="btn btn-warning btn-sm me-2"
-                                                            onClick={() =>
-                                                                router.push(
-                                                                    `/master/product_dashboard/variant/edit/${variant.Code}`
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-pencil-square"></i>{" "}
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() =>
-                                                                handleDelete(
+                                    {/* Display Variants */}
+                                    {displayedVariants.map(
+                                        (variant: any, index) => (
+                                            <tr
+                                                key={variant.Code}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td className="fw-bold">
+                                                    {variantStartIndex +
+                                                        index +
+                                                        1}
+                                                </td>
+                                                <td>{variant.Name}</td>
+                                                <td>
+                                                    {variant.Notes || "N/A"}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        className={`badge ${
+                                                            variant.Status ===
+                                                            "Active"
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
+                                                    >
+                                                        {variant.Status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-warning btn-sm me-2"
+                                                        onClick={() =>
+                                                            router.push(
+                                                                `/master/product_dashboard/variant/edit/${variant.Code}`
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-pencil-square"></i>{" "}
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
                                                                     "variants",
-                                                                    variant.Code
-                                                                )
-                                                            }
-                                                        >
-                                                            <i className="bi bi-trash"></i>{" "}
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
+                                                                id: variant.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-trash"></i>{" "}
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         )
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={6}>
-                                                No Data available
-                                            </td>
-                                        </tr>
                                     )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedVariants.length <
+                                        variantItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                variantItemsPerPage -
+                                                    displayedVariants.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-variant-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={5}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Buttons */}
+                        <div className="d-flex justify-content-between mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={variantStartIndex === 0}
+                                onClick={() =>
+                                    setVariantStartIndex((prev) =>
+                                        Math.max(prev - variantItemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    variantStartIndex + variantItemsPerPage >=
+                                    variants.length
+                                }
+                                onClick={() =>
+                                    setVariantStartIndex(
+                                        (prev) => prev + variantItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 </>

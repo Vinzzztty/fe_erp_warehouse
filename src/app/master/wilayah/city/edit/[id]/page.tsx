@@ -77,7 +77,16 @@ export default function EditCityPage() {
                 }
             );
             if (!response.ok) {
-                throw new Error("Failed to update city.");
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to Update city.";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
             }
             router.push("/master/wilayah");
         } catch (error: any) {

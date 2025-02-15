@@ -32,26 +32,42 @@ export default function CountryPage() {
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/countries`,
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(formData),
                 }
             );
 
+            // ✅ Check if response is NOT OK
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to add country.");
+                const errorData = await response.json(); // Extract response JSON
+                let apiMessage =
+                    errorData?.status?.message || "Failed to add country.";
+
+                // ✅ Customize error message if "already exists"
+                if (apiMessage.includes("already exists")) {
+                    apiMessage = "The name is Duplicate";
+                }
+
+                throw new Error(apiMessage); // Throw error so it goes to catch block
             }
 
             // Navigate back to Wilayah page on success
             router.push("/master/wilayah");
         } catch (error: any) {
-            setErrorMessage(error.message || "An unexpected error occurred.");
+            // ✅ Handle API response errors
+            if (error.message) {
+                setErrorMessage(error.message);
+            } else {
+                setErrorMessage(
+                    "An unexpected error occurred. Please try again."
+                );
+            }
         } finally {
             setLoading(false);
         }
     };
+
+    const isFormValid = formData.Name.trim() !== "";
 
     return (
         <div className="container mt-4">
@@ -110,7 +126,7 @@ export default function CountryPage() {
                 <button
                     type="submit"
                     className="btn btn-dark"
-                    disabled={loading}
+                    disabled={!isFormValid || loading}
                 >
                     {loading ? "Submitting..." : "Add Country"}
                 </button>
