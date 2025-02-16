@@ -34,7 +34,6 @@ interface CxQuotationDetail {
     CrossBorderFee: string;
     ImportDuties: string;
     DiscountAndFees: string;
-    LastMileTrackingNumber: string | null;
     CXCost: string;
     TotalCXCost: string;
     createdAt: string;
@@ -45,9 +44,10 @@ export default function CXQuotations() {
     const [cxQuotations, setCxQuotations] = useState<CxQuotation[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedDetail, setSelectedDetail] = useState<CxQuotationDetail | null>(null);
+    const [selectedDetail, setSelectedDetail] = useState<CxQuotationDetail | null>(null); // Single detail object
     const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
+    const [cxCode, setCxCode] = useState<string>("");
 
     useEffect(() => {
         const fetchCxQuotations = async () => {
@@ -106,7 +106,7 @@ export default function CXQuotations() {
     const handleDetails = async (id: string) => {
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotation-details/${id}`
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotation-details/by-cx-quotation/${id}`
             );
 
             if (!response.ok) {
@@ -114,24 +114,23 @@ export default function CXQuotations() {
             }
 
             const data = await response.json();
+            console.log(JSON.stringify(data));
             if (data.status.code !== 200) {
                 throw new Error(data.status.message || "No details found.");
             }
 
-            setSelectedDetail(data.data);
+            setSelectedDetail(data.data); // Set the single detail object
         } catch (error: any) {
             console.error("Error fetching CX Quotation details:", error);
-            setSelectedDetail(null); // Set to null to indicate no details
+            setSelectedDetail(null);
         } finally {
-            setIsModalOpen(true); // Open the modal regardless of the result
+            setIsModalOpen(true);
         }
     };
 
-    const handleAddDetail = () => {
+    const handleAddDetail = (id: string) => {
         // Redirect to the add detail page
-        if (selectedDetail) {
-            router.push(`/transaction/cx-quotation/add-detail?id=${selectedDetail.CxQuotationId}`);
-        }
+        router.push(`/transaction/cx-quotation/addcxquodetail?id=${id}`);
     };
 
     const handlePrintDetail = () => {
@@ -220,7 +219,7 @@ export default function CXQuotations() {
 
             {isModalOpen && (
                 <div
-                    className="modal show d-flex align-items-center justify-content-center"
+ className="modal show d-flex align-items-center justify-content-center"
                     style={{
                         display: "block",
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -237,97 +236,69 @@ export default function CXQuotations() {
                                 ></button>
                             </div>
                             <div className="modal-body">
-                                <div className="table-responsive">
-                                    <table className="table table-bordered table-striped align-middle text-center">
-                                        <thead className="table-dark">
-                                            <tr>
-                                                <th>Field</th>
-                                                <th>Value</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {selectedDetail ? (
-                                                <>
-                                                    <tr>
-                                                        <td>Product Name</td>
-                                                        <td>{selectedDetail.ProductName}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Variant</td>
-                                                        <td>{selectedDetail.Variant || "N/A"}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Quantity</td>
-                                                        <td>{selectedDetail.QTY}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Carton Dimensions (P x L x T)</td>
-                                                        <td>{`${selectedDetail.CartonP} x ${selectedDetail.CartonL} x ${selectedDetail.CartonT}`}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Carton Quantity</td>
-                                                        <td>{selectedDetail.CartonQty}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Estimated CBM Total</td>
-                                                        <td>{selectedDetail.EstimatedCBMTotal}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Cross Border Fee</td>
-                                                        <td>{selectedDetail.CrossBorderFee}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Import Duties</td>
-                                                        <td>{selectedDetail.ImportDuties}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Discount and Fees</td>
-                                                        <td>{selectedDetail.DiscountAndFees}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>CX Cost</td>
-                                                        <td>{selectedDetail.CXCost}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Total CX Cost</td>
-                                                        <td>{selectedDetail.TotalCXCost}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Created At</td>
-                                                        <td>{new Date(selectedDetail.createdAt).toLocaleString()}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Updated At</td>
-                                                        <td>{new Date(selectedDetail.updatedAt).toLocaleString()}</td>
-                                                    </tr>
-                                                </>
-                                            ) : (
+                                {selectedDetail ? (
+                                    <div className="table-responsive">
+                                        <table className="table table-bordered table-striped align-middle text-center">
+                                            <thead className="table-dark">
                                                 <tr>
-                                                    <td colSpan={2}>No details available for this CX Quotation.</td>
+                                                    <th>No</th>
+                                                    <th>Product Name</th>
+                                                    <th>Variant</th>
+                                                    <th>Quantity</th>
+                                                    <th>Carton Dimensions (P x L x T)</th>
+                                                    <th>Carton Quantity</th>
+                                                    <th>Estimated CBM Total</th>
+                                                    <th>Cross Border Fee</th>
+                                                    <th>Import Duties</th>
+                                                    <th>Discount and Fees</th>
+                                                    <th>CX Cost</th>
+                                                    <th>Total CX Cost</th>
+                                                    <th>Created At</th>
+                                                    <th>Updated At</th>
                                                 </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                <tr key={selectedDetail.Id}>
+                                                    <td className="fw-bold">1</td>
+                                                    <td>{selectedDetail.ProductName}</td>
+                                                    <td>{selectedDetail.Variant || "N/A"}</td>
+                                                    <td>{selectedDetail.QTY}</td>
+                                                    <td>{`${selectedDetail.CartonP} x ${selectedDetail.CartonL} x ${selectedDetail.CartonT}`}</td>
+                                                    <td>{selectedDetail.CartonQty}</td>
+                                                    <td>{selectedDetail.EstimatedCBMTotal}</td>
+                                                    <td>{selectedDetail.CrossBorderFee}</td>
+                                                    <td>{selectedDetail.ImportDuties}</td>
+                                                    <td>{selectedDetail.DiscountAndFees}</td>
+                                                    <td>{selectedDetail.CXCost}</td>
+                                                    <td>{selectedDetail.TotalCXCost}</td>
+                                                    <td>{new Date(selectedDetail.createdAt).toLocaleString()}</td>
+                                                    <td>{new Date(selectedDetail.updatedAt).toLocaleString()}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p>No details available for this CX Quotation.</p>
+                                )}
                             </div>
                             <div className="modal-footer">
+                                <button
+                                    className="btn btn-success me-2"
+                                    onClick={() => handleAddDetail(cxCode)}
+                                >
+                                    <i className="bi bi-plus-square me-2"></i> Add Detail
+                                </button>
+                                <button
+                                    className="btn btn-info"
+                                    onClick={handlePrintDetail}
+                                >
+                                    <i className="bi bi-printer me-2"></i> Print Detail
+                                </button>
                                 <button
                                     className="btn btn-secondary"
                                     onClick={() => setIsModalOpen(false)}
                                 >
-                                    Close
-                                </button>
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={handleAddDetail}
-                                >
-                                    Add Detail
-                                </button>
-                                <button
-                                    className="btn btn-success"
-                                    onClick={handlePrintDetail}
-                                >
-                                    Print Detail (PDF)
+                                    <i className="bi bi-x-lg me-2"></i> Close
                                 </button>
                             </div>
                         </div>
