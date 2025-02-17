@@ -465,7 +465,7 @@ export default function FinancePage() {
                                                             className="btn btn-warning btn-sm me-2"
                                                             onClick={() =>
                                                                 router.push(
-                                                                    `/master/finance/ppn-setting/edit/${item.Code}`
+                                                                    `/master/finance/ppn-setting/edit/${item.id}`
                                                                 )
                                                             }
                                                         >

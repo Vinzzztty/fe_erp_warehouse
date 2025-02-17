@@ -229,7 +229,7 @@ export default function EditProductPage() {
                                     Loading...
                                 </span>
                             </div>
-                            <p>Fetching Forwarders data...</p>
+                            <p>Fetching Product data...</p>
                         </div>
                     ) : errorMessage ? (
                         <div className="alert alert-danger text-center">
