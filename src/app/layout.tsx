@@ -9,10 +9,6 @@ import { useRouter, usePathname } from "next/navigation";
 export default function Layout({ children }: { children: React.ReactNode }) {
     const [currentTime, setCurrentTime] = useState("");
     const [loading, setLoading] = useState(true);
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
-    const [masterOpen, setMasterOpen] = useState(false);
-    const [transactionOpen, setTransactionOpen] = useState(false);
-    const [productPricingOpen, setProductPricingOpen] = useState(false);
 
     const router = useRouter();
     const pathname = usePathname();
@@ -64,143 +60,121 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     children
                 ) : (
                     <div className="d-flex vh-100">
-                        {/* Sidebar */}
+                        {/* Sidebar (Always Open) */}
                         <nav
                             className="bg-dark text-white d-flex flex-column"
                             style={{
-                                width: isSidebarOpen ? "250px" : "60px",
+                                width: "250px",
                                 position: "fixed",
                                 height: "100vh",
                                 zIndex: 1030,
                             }}
                         >
+                            {/* Sidebar Content */}
                             <div className="p-3">
-                                <h3
-                                    className={`${
-                                        isSidebarOpen ? "" : "d-none"
-                                    } d-none d-md-block`}
-                                >
+                                <h3 className="d-none d-md-block">
                                     ERP Warehouse
                                 </h3>
-                                <ul className="nav flex-column">
-                                    {/* Dashboard */}
+                                <hr />
+                                <ul
+                                    className="nav flex-column"
+                                    style={{
+                                        listStyle: "none",
+                                        paddingLeft: 0,
+                                        margin: 0,
+                                    }}
+                                >
                                     <SidebarItem
                                         href="/"
                                         icon="bi-house-fill"
                                         label="Dashboard"
-                                        isSidebarOpen={isSidebarOpen}
                                     />
 
-                                    {/* Master Section */}
                                     <SidebarDropdown
                                         label="Master"
                                         icon="bi-folder"
-                                        isOpen={masterOpen}
-                                        toggleOpen={() =>
-                                            setMasterOpen(!masterOpen)
-                                        }
-                                        isSidebarOpen={isSidebarOpen}
                                     >
                                         <SidebarItem
                                             href="/master/business"
                                             icon="bi-building"
                                             label="Business"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/master/product_dashboard"
                                             icon="bi-box"
                                             label="Product"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/master/warehouse"
                                             icon="bi-geo-alt"
                                             label="Warehouse"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/master/finance"
                                             icon="bi-wallet2"
                                             label="Finance"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/master/wilayah"
                                             icon="bi-map"
                                             label="Wilayah"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                     </SidebarDropdown>
+                                    <hr />
 
-                                    {/* Transaction Section */}
                                     <SidebarDropdown
                                         label="Transaction"
                                         icon="bi-folder"
-                                        isOpen={transactionOpen}
-                                        toggleOpen={() =>
-                                            setTransactionOpen(!transactionOpen)
-                                        }
-                                        isSidebarOpen={isSidebarOpen}
                                     >
                                         <SidebarItem
                                             href="/transaction/po"
                                             icon="bi-file-earmark-text"
                                             label="Purchase Order"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/transaction/pi"
                                             icon="bi-receipt"
                                             label="Proforma Invoice"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/transaction/pi-payment"
                                             icon="bi-cash-coin"
                                             label="PI Payment"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/transaction/cx-quotaton"
                                             icon="bi-chat-quote"
                                             label="CX Quotation"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/transaction/cx-invoice"
                                             icon="bi-file-earmark-check"
                                             label="CX Invoice"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/transaction/last-mile"
                                             icon="bi-truck"
                                             label="Last Mile"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                         <SidebarItem
                                             href="/transaction/goods-receipt"
                                             icon="bi-receipt-cutoff"
                                             label="Goods Receipt"
-                                            isSidebarOpen={isSidebarOpen}
                                         />
                                     </SidebarDropdown>
+                                    <hr />
 
-                                    {/* Product Pricing */}
                                     <SidebarItem
                                         href="/pricing"
                                         icon="bi-currency-dollar"
                                         label="Product Pricing"
-                                        isSidebarOpen={isSidebarOpen}
                                     />
+                                    <hr />
 
-                                    {/* Logout */}
                                     <SidebarItem
                                         href="/logout"
                                         icon="bi-box-arrow-right"
                                         label="Logout"
-                                        isSidebarOpen={isSidebarOpen}
                                         onClick={() => {
                                             localStorage.removeItem(
                                                 "authToken"
@@ -208,36 +182,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                             router.push("/login");
                                         }}
                                     />
+                                    <hr />
                                 </ul>
                             </div>
-
-                            {/* Toggle Sidebar Button */}
-                            <button
-                                className="btn btn-dark w-100 mt-auto"
-                                onClick={() => setSidebarOpen(!isSidebarOpen)}
-                                style={{
-                                    zIndex: 1000,
-                                    height: "50px",
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <i
-                                    className={`bi ${
-                                        isSidebarOpen
-                                            ? "bi-chevron-left"
-                                            : "bi-chevron-right"
-                                    }`}
-                                />
-                            </button>
                         </nav>
 
                         {/* Main Content Area */}
                         <div
-                            className={`flex-grow-1`}
+                            className="flex-grow-1"
                             style={{
-                                marginLeft: isSidebarOpen ? "250px" : "60px",
+                                marginLeft: "250px", // Always leave space for sidebar
                                 transition: "margin-left 0.3s",
                             }}
                         >
@@ -270,28 +224,34 @@ function SidebarItem({
     href,
     icon,
     label,
-    isSidebarOpen,
     onClick,
 }: {
     href: string;
     icon: string;
     label: string;
-    isSidebarOpen: boolean;
     onClick?: () => void;
 }) {
+    const pathname = usePathname(); // Get current page path
+    const isActive = pathname === href; // Check if the link is active
+
     return (
         <li className="nav-item">
             <a
-                className="nav-link text-white d-flex align-items-center sidebar-item"
+                className={`nav-link d-flex align-items-center sidebar-item ${
+                    isActive ? "active-link" : "text-white"
+                }`}
                 href={href}
                 onClick={onClick}
                 style={{
                     padding: "10px",
                     borderRadius: "8px",
+                    backgroundColor: isActive ? "#0d6efd" : "transparent", // Change background if active
+                    color: isActive ? "#ffffff" : "inherit", // Ensure text contrast
+                    fontWeight: isActive ? "bold" : "normal", // Make active link bold
                 }}
             >
                 <i className={`bi ${icon} me-2`}></i>
-                {isSidebarOpen && <span>{label}</span>}
+                <span>{label}</span>
             </a>
         </li>
     );
@@ -301,48 +261,22 @@ function SidebarItem({
 function SidebarDropdown({
     label,
     icon,
-    isOpen,
-    toggleOpen,
-    isSidebarOpen,
     children,
 }: {
     label: string;
     icon: string;
-    isOpen: boolean;
-    toggleOpen: () => void;
-    isSidebarOpen: boolean;
     children: React.ReactNode;
 }) {
     return (
         <li className="nav-item">
             <button
                 className="btn btn-dark w-100 text-start d-flex align-items-center sidebar-dropdown"
-                style={{
-                    background: "none",
-                    border: "none",
-                    padding: "10px",
-                    borderRadius: "8px",
-                }}
-                onClick={toggleOpen}
+                style={{ background: "none", border: "none", padding: "10px" }}
             >
                 <i className={`bi ${icon} me-2`}></i>
-                {isSidebarOpen && label}
-                <i
-                    className={`ms-auto bi ${
-                        isOpen ? "bi-chevron-down" : "bi-chevron-right"
-                    }`}
-                />
+                {label}
             </button>
-            {isOpen && (
-                <ul
-                    className="nav flex-column ms-3"
-                    style={{
-                        marginTop: "5px",
-                    }}
-                >
-                    {children}
-                </ul>
-            )}
+            <ul className="nav flex-column ms-3">{children}</ul>
         </li>
     );
 }
