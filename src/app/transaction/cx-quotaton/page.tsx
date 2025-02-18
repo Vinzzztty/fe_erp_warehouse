@@ -44,7 +44,8 @@ export default function CXQuotations() {
     const [cxQuotations, setCxQuotations] = useState<CxQuotation[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedDetail, setSelectedDetail] = useState<CxQuotationDetail | null>(null); // Single detail object
+    const [selectedDetail, setSelectedDetail] = useState<CxQuotationDetail[]>([]); // Ubah jadi array
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
     const [cxCode, setCxCode] = useState<string>("");
@@ -76,7 +77,11 @@ export default function CXQuotations() {
     }, []);
 
     const handleEdit = (id: string) => {
-        router.push(`/transaction/cx-quotation/editcxquo?id=${id}`);
+        router.push(`/transaction/cx-quotaton/editcxquo?id=${id}`);
+    };
+
+    const handleEditDetail = (id: string) => {
+        router.push(`/transaction/cx-quotaton/editcxquodetail?id=${id}`);
     };
 
     const handleDelete = async (id: string) => {
@@ -103,55 +108,146 @@ export default function CXQuotations() {
         }
     };
 
+    const handleDeleteDetail = async (id: string) => {
+        const confirmDelete = confirm("Are you sure you want to delete this CX Quotation?");
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotation-details/${id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to delete CX Quotation.");
+            }
+
+            setCxQuotations((prev) => prev.filter((quotation) => quotation.Code !== Number(id)));
+            alert("CX Quotation deleted successfully.");
+            router.push(`/transaction/cx-quotaton/`);
+            setIsModalOpen(false);
+        } catch (error: any) {
+            alert(error.message || "An unexpected error occurred.");
+        }
+    };
+
     const handleDetails = async (id: string) => {
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotation-details/by-cx-quotation/${id}`
             );
-
+    
             if (!response.ok) {
                 throw new Error("Failed to fetch CX Quotation details.");
             }
-
+    
             const data = await response.json();
-            console.log(JSON.stringify(data));
-            if (data.status.code !== 200) {
+            console.log("Fetched data:", data); // Log the fetched data untuk debugging
+            if (data.status.code !== 200 || !Array.isArray(data.data) || data.data.length === 0) {
                 throw new Error(data.status.message || "No details found.");
             }
-
-            setSelectedDetail(data.data); // Set the single detail object
+    
+            setSelectedDetail(data.data); // Pastikan data disimpan sebagai array
+            setCxCode(id.toString());
         } catch (error: any) {
             console.error("Error fetching CX Quotation details:", error);
-            setSelectedDetail(null);
+            setSelectedDetail([]);
+            setCxCode(id.toString());
         } finally {
             setIsModalOpen(true);
+            setCxCode(id.toString());
         }
     };
+    
 
     const handleAddDetail = (id: string) => {
         // Redirect to the add detail page
-        router.push(`/transaction/cx-quotation/addcxquodetail?id=${id}`);
+        router.push(`/transaction/cx-quotaton/addcxquodetail?id=${id}`);
     };
 
     const handlePrintDetail = () => {
-        if (selectedDetail) {
-            const doc = new jsPDF("portrait", "mm", "a4");
+        if (selectedDetail && Array.isArray(selectedDetail) && selectedDetail.length > 0) {
+            const doc = new jsPDF("landscape", "mm", "a4");
+    
+            // Page width untuk positioning
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const rightAlignX = pageWidth - 20;
+    
+            // --- Judul di pojok kanan atas ---
             doc.setFontSize(18);
-            doc.text("CX Quotation Detail", 14, 22);
+            doc.text("CX Quotation Details", rightAlignX, 20, { align: "right" });
+    
             doc.setFontSize(12);
-            doc.text(`Product Name: ${selectedDetail.ProductName}`, 14, 40);
-            doc.text(`Quantity: ${selectedDetail.QTY}`, 14, 50);
-            doc.text(`Carton Dimensions: ${selectedDetail.CartonP} x ${selectedDetail.CartonL} x ${selectedDetail.CartonT}`, 14, 60);
-            doc.text(`Cross Border Fee: ${selectedDetail.CrossBorderFee}`, 14, 70);
-            doc.text(`Import Duties: ${selectedDetail.ImportDuties}`, 14, 80);
-            doc.text(`Discount and Fees: ${selectedDetail.DiscountAndFees}`, 14, 90);
-            doc.text(`CX Cost: ${selectedDetail.CXCost}`, 14, 100);
-            doc.text(`Total CX Cost: ${selectedDetail.TotalCXCost}`, 14, 110);
-            doc.save(`cx-quotation-detail-${selectedDetail.Id}.pdf`);
+            let yOffset = 40;
+    
+            // --- Judul tabel ---
+            doc.setFontSize(14);
+            doc.text("CX Quotation Detail", 20, yOffset);
+            yOffset += 10;
+    
+            const headers = [
+                "No",
+                "Product Name",
+                "Variant",
+                "Quantity",
+                "Carton (P x L x T)",
+                "Carton Qty",
+                "Estimated CBM Total",
+                "Cross Border Fee",
+                "Import Duties",
+                "Discount & Fees",
+                "CX Cost",
+                "Total CX Cost",
+                "Created At",
+                "Updated At",
+            ];
+    
+            const tableData = selectedDetail.map((detail, index) => [
+                index + 1,
+                detail.ProductName,
+                detail.Variant || "N/A",
+                detail.QTY,
+                `${detail.CartonP} x ${detail.CartonL} x ${detail.CartonT}`,
+                detail.CartonQty,
+                detail.EstimatedCBMTotal,
+                detail.CrossBorderFee,
+                detail.ImportDuties,
+                detail.DiscountAndFees,
+                detail.CXCost,
+                detail.TotalCXCost,
+                new Date(detail.createdAt).toLocaleString(),
+                new Date(detail.updatedAt).toLocaleString(),
+            ]);
+    
+            autoTable(doc, {
+                startY: yOffset,
+                head: [headers],
+                body: tableData,
+                theme: "grid",
+                margin: { left: 20 },
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 3,
+                    lineColor: [0, 0, 0],
+                    textColor: [0, 0, 0],
+                },
+                headStyles: {
+                    fillColor: [0, 0, 0],
+                    textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                },
+            });
+    
+            // Simpan PDF
+            doc.save(`cx-quotation-details-${cxCode}.pdf`);
         } else {
-            alert("No detail available to print.");
+            alert("No CX Quotation details available to print.");
         }
     };
+    
 
     return (
         <div className="container-fluid mt-4">
@@ -160,7 +256,7 @@ export default function CXQuotations() {
                     <i className="bi bi-building me-2"></i> CX Quotations
                 </h1>
                 <p>View and manage your CX quotations here.</p>
-                <Link href="/transaction/cx-quotation/addcxquo">
+                <Link href="/transaction/cx-quotaton/addcxquo">
                     <button className="btn btn-dark">Add CX Quotation</button>
                 </Link>
             </div>
@@ -219,7 +315,7 @@ export default function CXQuotations() {
 
             {isModalOpen && (
                 <div
- className="modal show d-flex align-items-center justify-content-center"
+                    className="modal show d-flex align-items-center justify-content-center"
                     style={{
                         display: "block",
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -255,26 +351,50 @@ export default function CXQuotations() {
                                                     <th>Total CX Cost</th>
                                                     <th>Created At</th>
                                                     <th>Updated At</th>
+                                                    <th>Action</th> {/* New Action Column */}
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr key={selectedDetail.Id}>
-                                                    <td className="fw-bold">1</td>
-                                                    <td>{selectedDetail.ProductName}</td>
-                                                    <td>{selectedDetail.Variant || "N/A"}</td>
-                                                    <td>{selectedDetail.QTY}</td>
-                                                    <td>{`${selectedDetail.CartonP} x ${selectedDetail.CartonL} x ${selectedDetail.CartonT}`}</td>
-                                                    <td>{selectedDetail.CartonQty}</td>
-                                                    <td>{selectedDetail.EstimatedCBMTotal}</td>
-                                                    <td>{selectedDetail.CrossBorderFee}</td>
-                                                    <td>{selectedDetail.ImportDuties}</td>
-                                                    <td>{selectedDetail.DiscountAndFees}</td>
-                                                    <td>{selectedDetail.CXCost}</td>
-                                                    <td>{selectedDetail.TotalCXCost}</td>
-                                                    <td>{new Date(selectedDetail.createdAt).toLocaleString()}</td>
-                                                    <td>{new Date(selectedDetail.updatedAt).toLocaleString()}</td>
-                                                </tr>
-                                            </tbody>
+                                                    {selectedDetail.length > 0 ? (
+                                                        selectedDetail.map((detail, index) => (
+                                                            <tr key={detail.Id}>
+                                                                <td className="fw-bold">{index + 1}</td>
+                                                                <td>{detail.ProductName}</td>
+                                                                <td>{detail.Variant || "N/A"}</td>
+                                                                <td>{detail.QTY}</td>
+                                                                <td>{`${detail.CartonP} x ${detail.CartonL} x ${detail.CartonT}`}</td>
+                                                                <td>{detail.CartonQty}</td>
+                                                                <td>{detail.EstimatedCBMTotal}</td>
+                                                                <td>{detail.CrossBorderFee}</td>
+                                                                <td>{detail.ImportDuties}</td>
+                                                                <td>{detail.DiscountAndFees}</td>
+                                                                <td>{detail.CXCost}</td>
+                                                                <td>{detail.TotalCXCost}</td>
+                                                                <td>{new Date(detail.createdAt).toLocaleString()}</td>
+                                                                <td>{new Date(detail.updatedAt).toLocaleString()}</td>
+                                                                <td>
+                                                                    <button
+                                                                        className="btn btn-warning btn-sm me-2"
+                                                                        onClick={() => handleEditDetail(detail.Id.toString())}
+                                                                    >
+                                                                        <i className="bi bi-pencil-square"></i> Edit
+                                                                    </button>
+                                                                    <button
+                                                                        className="btn btn-danger btn-sm"
+                                                                        onClick={() => handleDeleteDetail(detail.Id.toString())}
+                                                                    >
+                                                                        <i className="bi bi-trash"></i> Delete
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                    ) : (
+                                                        <tr>
+                                                            <td >No details available for this CX Quotation.</td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+
                                         </table>
                                     </div>
                                 ) : (

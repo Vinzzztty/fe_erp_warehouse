@@ -1,105 +1,136 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
-export default function EditProformaInvoiceDetail() {
-    const router = useRouter();
+interface FormData {
+    CXCost: number;
+    DiscountAndFees: number;
+}
+
+export default function EditDetailCxQuotationPage() {
     const searchParams = useSearchParams();
-    const id = searchParams.get("id"); // Get `id` from query parameters
-
-    const [formData, setFormData] = useState({
-        ReceivedQty: 0,
-        Notes:""
+    const router = useRouter();
+    const [formData, setFormData] = useState<FormData>({
+        CXCost: 0,
+        DiscountAndFees: 0,
     });
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const detailId = searchParams.get("id"); // Get the ID from the URL
 
-    const fetchDetail = async () => {
-        if (!id) return; // Ensure `id` is available
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/goods-receipt-detils/${id}`
-            );
-            if (!response.ok) throw new Error("Failed to fetch data.");
-
-            const data = await response.json();
-            console.log("Fetched GR Detail:", data.data);
-            setFormData({
-                ReceivedQty: data.data.ReceivedQty,
-                Notes: data.data.Notes,
-            });
-        } catch (error: any) {
-            alert(error.message);
-        }
-    };
-
+    // Fetch existing data for the specified detail ID
     useEffect(() => {
-        fetchDetail();
-    }, [id]);
+        const fetchDetailData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotation-details/${detailId}`
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch CX Quotation detail.");
+                }
+                const data = await response.json();
+                if (data.status.code !== 200) {
+                    throw new Error(data.status.message || "No detail found.");
+                }
 
+                // Set the form data with the fetched detail
+                setFormData({
+                    CXCost: data.data.CXCost,
+                    DiscountAndFees: data.data.DiscountAndFees,
+                });
+            } catch (error: any) {
+                setError(error.message || "An unexpected error occurred.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (detailId) {
+            fetchDetailData();
+        }
+    }, [detailId]);
+
+    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        const payload = {
+            CXCost: formData.CXCost,
+            DiscountAndFees: formData.DiscountAndFees,
+        };
+
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/goods-receipt-detils/${id}`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/cx-quotation-details/${detailId}`,
                 {
-                    method: "PUT",
+                    method: "PUT", // Use PUT for updating existing data
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify(payload),
                 }
             );
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(
-                    errorData.message || "Failed to update goods-receipt detail."
-                );
+                throw new Error("Failed to update CX Quotation detail.");
             }
 
-            alert("Goods-receipt Detail updated successfully.");
-            router.push("/transaction/goods-receipt"); // Redirect back to the proforma invoices list
+            router.push("/transaction/cx-quotaton"); // Redirect after successful update
         } catch (error: any) {
-            alert(error.message || "An unexpected error occurred.");
+            setError(error.message || "An unexpected error occurred.");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="container mt-4">
-            <h1>Edit Goods-receipt Detail</h1>
-            <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                    <label htmlFor="ReceivedQty" className="form-label">
-                        Received QTY
-                    </label>
-                    <input
-                        type="number"
-                        id="ReceivedQty"
-                        name="ReceivedQty"
-                        className="form-control"
-                        value={formData.ReceivedQty}
-                        onChange={(e) =>
-                            setFormData({ ...formData, ReceivedQty: +e.target.value })
-                        }
-                        required
-                    />
-                </div>
-                <div className="mb-3">
-            <label htmlFor="Notes" className="form-label">
-              Notes
-            </label>
-            <textarea
-              id="Notes"
-              className="form-control"
-              value={formData.Notes}
-              onChange={(e) => setFormData({ ...formData, Notes: e.target.value })}
-            />
-          </div>
-               
-                <button type="submit" className="btn btn-primary">
-                    Save Changes
-                </button>
-            </form>
+            <h1>Edit Detail CX Quotation</h1>
+            {error && <div className="alert alert-danger mt-4">{error}</div>}
+
+            {loading ? (
+                <p>Loading...</p>
+            ) : (
+                <form onSubmit={handleSubmit} className="mt-4">
+                    {/* CX Cost */}
+                    <div className="mb-3">
+                        <label htmlFor="CXCost" className="form-label">
+                            CX Cost
+                        </label>
+                        <input
+                            type="number"
+                            id="CXCost"
+                            className="form-control"
+                            value={formData.CXCost}
+                            onChange={(e) => setFormData({ ...formData, CXCost: +e.target.value })}
+                        />
+                    </div>
+
+                    {/* Discount and Fees */}
+                    <div className="mb-3">
+                        <label htmlFor="DiscountAndFees" className="form-label">
+                            Discount and Fees
+                        </label>
+                        <input
+                            type="number"
+                            id="DiscountAndFees"
+                            className="form-control"
+                            value={formData.DiscountAndFees}
+                            onChange={(e) => setFormData({ ...formData, DiscountAndFees: +e.target.value })}
+                        />
+                    </div>
+
+                    <button type="submit" className="btn btn-primary">
+                        Submit
+                    </button>
+                </form>
+            )}
         </div>
     );
 }
