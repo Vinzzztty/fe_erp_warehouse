@@ -103,7 +103,7 @@ export default function Lastmile() {
             "Are you sure you want to delete this last-mile?"
         );
         if (!confirmDelete) return;
-
+    
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/last-mile/${id}`,
@@ -111,20 +111,23 @@ export default function Lastmile() {
                     method: "DELETE",
                 }
             );
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error("Error data:", errorData); // Log error data for debugging
                 throw new Error(
                     errorData.message || "Failed to delete last-mile."
                 );
             }
-
+    
             // Update state to remove deleted item
             setLm((prev) =>
-                prev.filter((purchase: any) => purchase.Code !== id)
+                prev.filter((purchase: any) => purchase.Code !== Number(id))
             );
             alert("Last-mile deleted successfully.");
+            router.push(`/transaction/last-mile`);
         } catch (error: any) {
+            console.error("Error occurred:", error); // Log error for debugging
             alert(error.message || "An unexpected error occurred.");
         }
     };
@@ -170,7 +173,7 @@ export default function Lastmile() {
             "Are you sure you want to delete this detail?"
         );
         if (!confirmDelete) return;
-
+    
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/transaction/last-mile-details/${detailId}`,
@@ -178,16 +181,18 @@ export default function Lastmile() {
                     method: "DELETE",
                 }
             );
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(
                     errorData.message || "Failed to delete detail."
                 );
             }
-
+    
             alert("Detail deleted successfully.");
-            // Optionally, refresh the details or update the state
+            // Redirect to the same page to refresh
+            router.push(`/transaction/last-mile`);
+            setIsModalOpen(false);
         } catch (error: any) {
             alert(error.message || "An unexpected error occurred.");
         }

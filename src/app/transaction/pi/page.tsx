@@ -49,7 +49,6 @@ const generatePDF = (selectedDetails: ProformaInvoiceDetail[]) => {
 
         doc.setFontSize(12);
         yOffset += 10;
-        doc.text("Company: XYZ Corporation", 20, yOffset);
         doc.text(
             `Proforma Invoice ID: ${selectedDetails[0].ProformaInvoiceId}`,
             20,
@@ -617,8 +616,8 @@ export default function PIPage() {
                                                                 <button
                                                                     className="btn btn-primary btn-sm me-2"
                                                                     onClick={() =>
-                                                                        router.push(
-                                                                            `/transaction/proforma-invoice/edit?id=${detail.Id}`
+                                                                        handleEditDetail(
+                                                                            detail.Id.toString()
                                                                         )
                                                                     }
                                                                 >
