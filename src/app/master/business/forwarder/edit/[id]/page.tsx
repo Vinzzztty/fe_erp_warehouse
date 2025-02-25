@@ -32,8 +32,10 @@ export default function EditForwarderPage() {
         Name: string;
         Notes: string;
         CountryId: string | number;
+        AddressChina: string;
         AddressIndonesia: string;
         CoordinateIndonesia: string;
+        NamePIC: string;
         Department: string;
         ContactMethod: string;
         Description: string;
@@ -47,8 +49,10 @@ export default function EditForwarderPage() {
         Name: "",
         Notes: "",
         CountryId: "",
+        AddressChina: "",
         AddressIndonesia: "",
         CoordinateIndonesia: "",
+        NamePIC: "",
         Department: "",
         ContactMethod: "Email",
         Description: "",
@@ -93,8 +97,10 @@ export default function EditForwarderPage() {
                     Name: forwarder.Name || "",
                     Notes: forwarder.Notes || "",
                     CountryId: forwarder.CountryId || "",
+                    AddressChina: forwarder.AddressChina || "",
                     AddressIndonesia: forwarder.AddressIndonesia || "",
                     CoordinateIndonesia: forwarder.CoordinateIndonesia || "",
+                    NamePIC: forwarder.NamePIC || "",
                     Department: forwarder.Department || "",
                     ContactMethod: forwarder.ContactMethod || "Email",
                     Description: forwarder.Description || "",
@@ -319,10 +325,35 @@ export default function EditForwarderPage() {
                                             <strong>Name PIC</strong>
                                             <input
                                                 type="text"
-                                                id="Description"
-                                                name="Description"
+                                                id="NamePIC"
+                                                name="NamePIC"
                                                 className="form-control"
-                                                value={formData.Description}
+                                                value={formData.NamePIC}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>Address in China</strong>
+                                            <input
+                                                type="text"
+                                                id="AddressChina"
+                                                name="AddressChina"
+                                                className="form-control"
+                                                value={formData.AddressChina}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+
+                                        <td>
+                                            <strong>Department</strong>
+                                            <input
+                                                type="text"
+                                                id="Department"
+                                                name="Department"
+                                                className="form-control"
+                                                value={formData.Department}
                                                 onChange={handleChange}
                                             />
                                         </td>
@@ -343,16 +374,24 @@ export default function EditForwarderPage() {
                                                 onChange={handleChange}
                                             />
                                         </td>
+
                                         <td>
-                                            <strong>Department</strong>
-                                            <input
-                                                type="text"
-                                                id="Department"
-                                                name="Department"
-                                                className="form-control"
-                                                value={formData.Department}
+                                            <strong>Contact Method</strong>
+                                            <select
+                                                id="ContactMethod"
+                                                name="ContactMethod"
+                                                className="form-select"
+                                                value={formData.ContactMethod}
                                                 onChange={handleChange}
-                                            />
+                                            >
+                                                <option value="Email">
+                                                    Email
+                                                </option>
+                                                <option value="Telephone">
+                                                    Telephone
+                                                </option>
+                                                <option value="WA">WA</option>
+                                            </select>
                                         </td>
                                     </tr>
                                     <tr>
@@ -372,22 +411,15 @@ export default function EditForwarderPage() {
                                             />
                                         </td>
                                         <td>
-                                            <strong>Contact Method</strong>
-                                            <select
-                                                id="ContactMethod"
-                                                name="ContactMethod"
-                                                className="form-select"
-                                                value={formData.ContactMethod}
+                                            <strong>Description</strong>
+                                            <input
+                                                type="text"
+                                                id="Description"
+                                                name="Description"
+                                                className="form-control"
+                                                value={formData.Description}
                                                 onChange={handleChange}
-                                            >
-                                                <option value="Email">
-                                                    Email
-                                                </option>
-                                                <option value="Telephone">
-                                                    Telephone
-                                                </option>
-                                                <option value="WA">WA</option>
-                                            </select>
+                                            />
                                         </td>
                                     </tr>
 

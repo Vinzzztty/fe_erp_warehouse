@@ -352,6 +352,7 @@ export default function FinancePage() {
                                 <thead className="table-dark">
                                     <tr>
                                         <th>No</th>
+                                        <th>Code</th>
                                         <th>Name</th>
                                         <th>Notes</th>
                                         <th>Status</th>
@@ -364,6 +365,7 @@ export default function FinancePage() {
                                             (item: any, index: number) => (
                                                 <tr key={index}>
                                                     <td>{index + 1}</td>
+                                                    <td>{item.Code}</td>
                                                     <td>{item.Name}</td>
                                                     <td>
                                                         {item.Notes || "N/A"}

@@ -43,6 +43,7 @@ export default function AddSupplierPage() {
         PostalCode: string;
         Notes: string;
         Status: string;
+        NamePIC: string;
         Department: string;
         ContactMethod: string;
         Description: string;
@@ -62,6 +63,7 @@ export default function AddSupplierPage() {
         PostalCode: "",
         Notes: "",
         Status: "Active",
+        NamePIC: "",
         Department: "",
         ContactMethod: "Email",
         Description: "",
@@ -395,9 +397,9 @@ export default function AddSupplierPage() {
                                 <td>
                                     <input
                                         type="text"
-                                        name="Description"
+                                        name="NamePIC"
                                         className="form-control"
-                                        value={formData.Description}
+                                        value={formData.NamePIC}
                                         onChange={handleChange}
                                     />
                                 </td>
@@ -432,7 +434,10 @@ export default function AddSupplierPage() {
                                 <td>
                                     <input
                                         type="text"
+                                        name="Description"
                                         className="form-control"
+                                        value={formData.Description}
+                                        onChange={handleChange}
                                     />
                                 </td>
                             </tr>

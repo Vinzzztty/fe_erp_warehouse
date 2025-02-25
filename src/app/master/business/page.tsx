@@ -23,6 +23,39 @@ export default function BusinessPage() {
     } | null>(null);
     const [loadingDelete, setLoadingDelete] = useState(false); // Track deletion loading state
 
+    const [supplierStartIndex, setSupplierStartIndex] = useState(0);
+    const supplierPerPage = 5;
+    const [ForwarderStartIndex, setForwarderStartIndex] = useState(0);
+    const ForwarderItemsPerPage = 5;
+    const [companyStartIndex, setcompanyStartIndex] = useState(0);
+    const companyItemsPerPage = 5;
+    const [storeStartIndex, setstoreStartIndex] = useState(0);
+    const storeitemsPerPage = 5;
+
+    // Get the current slice of Suppliers
+    const displayedSuppliers = suppliers.slice(
+        supplierStartIndex,
+        supplierStartIndex + supplierPerPage
+    );
+
+    // Get the current slice of forwarders
+    const displayedForwarders = forwarders.slice(
+        ForwarderStartIndex,
+        ForwarderStartIndex + ForwarderItemsPerPage
+    );
+
+    // Get the current slice of companies
+    const displayedCompanies = companies.slice(
+        companyStartIndex,
+        companyStartIndex + companyItemsPerPage
+    );
+
+    // Get the current slice of stores
+    const displayStores = stores.slice(
+        storeStartIndex,
+        storeStartIndex + storeitemsPerPage
+    );
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -93,43 +126,6 @@ export default function BusinessPage() {
 
         fetchData();
     }, []);
-
-    // const handleDelete = async (endpoint: string, id: number) => {
-    //     try {
-    //         const response = await fetch(
-    //             `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}/${id}`,
-    //             {
-    //                 method: "DELETE",
-    //             }
-    //         );
-
-    //         if (!response.ok) {
-    //             throw new Error("Failed to delete item.");
-    //         }
-
-    //         // Refresh the data after deletion
-    //         const fetchData = async () => {
-    //             const res = await fetch(
-    //                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/master/${endpoint}`
-    //             );
-    //             const data = await res.json();
-    //             return data?.data || [];
-    //         };
-
-    //         if (endpoint === "companies") setCompanies(await fetchData());
-    //         if (endpoint === "stores") setStores(await fetchData());
-    //         if (endpoint === "suppliers") setSuppliers(await fetchData());
-    //         if (endpoint === "forwarders") setForwarders(await fetchData());
-
-    //         // Show success message
-    //         setDeleteSuccessMessage("Item deleted successfully!");
-
-    //         // Hide the message after 3 seconds
-    //         setTimeout(() => setDeleteSuccessMessage(null), 3000);
-    //     } catch (error: any) {
-    //         alert(error.message || "An unexpected error occurred.");
-    //     }
-    // };
 
     const handleConfirmDelete = async () => {
         if (!itemToDelete) return; // Ensure there is an item selected for deletion
@@ -307,6 +303,7 @@ export default function BusinessPage() {
                             </div>
                         </div>
                     )}
+                    {/* Supplier Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Supplier</p>
 
@@ -326,11 +323,13 @@ export default function BusinessPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {suppliers.map(
+                                    {displayedSuppliers.map(
                                         (supplier: any, index: number) => (
                                             <tr key={supplier.Code}>
                                                 <td className="fw-bold">
-                                                    {index + 1}
+                                                    {supplierStartIndex +
+                                                        index +
+                                                        1}
                                                 </td>
                                                 <td>{supplier.Name}</td>
                                                 <td>{supplier.Address}</td>
@@ -393,13 +392,71 @@ export default function BusinessPage() {
                                             </tr>
                                         )
                                     )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedSuppliers.length <
+                                        supplierPerPage &&
+                                        [
+                                            ...Array(
+                                                supplierPerPage -
+                                                    displayedSuppliers.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-supplier-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={9}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Pagination Controls */}
+                        <div className="d-flex justify-content-between align-items-center mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={supplierStartIndex === 0}
+                                onClick={() =>
+                                    setSupplierStartIndex((prev) =>
+                                        Math.max(prev - supplierPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+
+                            <span className="fw-bold">
+                                Page{" "}
+                                {Math.floor(
+                                    supplierStartIndex / supplierPerPage
+                                ) + 1}{" "}
+                                of{" "}
+                                {Math.ceil(suppliers.length / supplierPerPage)}
+                            </span>
+
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    supplierStartIndex + supplierPerPage >=
+                                    suppliers.length
+                                }
+                                onClick={() =>
+                                    setSupplierStartIndex(
+                                        (prev) => prev + supplierPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
 
+                    {/* Forwarders Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Forwarders</p>
+
                         <div className="table-responsive">
                             <table className="table table-striped table-bordered table-hover align-middle text-center">
                                 <thead className="table-dark">
@@ -416,11 +473,13 @@ export default function BusinessPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {forwarders.map(
+                                    {displayedForwarders.map(
                                         (forwarder: any, index: number) => (
                                             <tr key={forwarder.Code}>
                                                 <td className="fw-bold">
-                                                    {index + 1}
+                                                    {ForwarderStartIndex +
+                                                        index +
+                                                        1}
                                                 </td>
                                                 <td>{forwarder.Name}</td>
                                                 <td>
@@ -490,12 +549,74 @@ export default function BusinessPage() {
                                             </tr>
                                         )
                                     )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayedForwarders.length <
+                                        ForwarderItemsPerPage &&
+                                        [
+                                            ...Array(
+                                                ForwarderItemsPerPage -
+                                                    displayedForwarders.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-forwarder-${i}`}
+                                                style={{ height: "60px" }}
+                                            >
+                                                <td colSpan={9}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Pagination Controls */}
+                        <div className="d-flex justify-content-between align-items-center mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={ForwarderStartIndex === 0}
+                                onClick={() =>
+                                    setForwarderStartIndex((prev) =>
+                                        Math.max(
+                                            prev - ForwarderItemsPerPage,
+                                            0
+                                        )
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+
+                            <span className="fw-bold">
+                                Page{" "}
+                                {Math.floor(
+                                    ForwarderStartIndex / ForwarderItemsPerPage
+                                ) + 1}{" "}
+                                of{" "}
+                                {Math.ceil(
+                                    forwarders.length / ForwarderItemsPerPage
+                                )}
+                            </span>
+
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    ForwarderStartIndex +
+                                        ForwarderItemsPerPage >=
+                                    forwarders.length
+                                }
+                                onClick={() =>
+                                    setForwarderStartIndex(
+                                        (prev) => prev + ForwarderItemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Comapanies Table */}
+                    {/* Companies Table */}
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Company</p>
                         {errorMessage && (
@@ -509,91 +630,169 @@ export default function BusinessPage() {
                                 Loading company data...
                             </p>
                         ) : (
-                            <div className="table-responsive">
-                                <table className="table table-striped table-bordered table-hover align-middle text-center">
-                                    <thead className="table-dark">
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Name</th>
-                                            <th>Notes</th>
-                                            <th>Status</th>
-                                            <th>Created At</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {companies.map(
-                                            (company: any, index: number) => (
-                                                <tr
-                                                    key={company.Code}
-                                                    className="bg-white shadow-sm"
-                                                >
-                                                    <td className="fw-bold">
-                                                        {index + 1}
-                                                    </td>
-                                                    <td>{company.Name}</td>
-                                                    <td>
-                                                        {company.Notes || "N/A"}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                company.Status ===
-                                                                "Active"
-                                                                    ? "bg-success"
-                                                                    : "bg-secondary"
-                                                            }`}
-                                                        >
-                                                            {company.Status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        {new Date(
-                                                            company.createdAt
-                                                        ).toLocaleString()}
-                                                    </td>
-                                                    <td>
-                                                        <div className="d-flex justify-content-center gap-2">
-                                                            <button
-                                                                className="btn btn-warning btn-sm me-2"
-                                                                onClick={() =>
-                                                                    router.push(
-                                                                        `/master/business/company/edit/${company.Code}`
-                                                                    )
-                                                                }
+                            <>
+                                <div className="table-responsive">
+                                    <table className="table table-striped table-bordered table-hover align-middle text-center">
+                                        <thead className="table-dark">
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Name</th>
+                                                <th>Notes</th>
+                                                <th>Status</th>
+                                                <th>Created At</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {displayedCompanies.map(
+                                                (
+                                                    company: any,
+                                                    index: number
+                                                ) => (
+                                                    <tr
+                                                        key={company.Code}
+                                                        className="bg-white shadow-sm"
+                                                    >
+                                                        <td className="fw-bold">
+                                                            {companyStartIndex +
+                                                                index +
+                                                                1}
+                                                        </td>
+                                                        <td>{company.Name}</td>
+                                                        <td>
+                                                            {company.Notes ||
+                                                                "N/A"}
+                                                        </td>
+                                                        <td>
+                                                            <span
+                                                                className={`badge ${
+                                                                    company.Status ===
+                                                                    "Active"
+                                                                        ? "bg-success"
+                                                                        : "bg-secondary"
+                                                                }`}
                                                             >
-                                                                <i className="bi bi-pencil-square"></i>{" "}
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                className="btn btn-danger btn-sm"
-                                                                onClick={() => {
-                                                                    setItemToDelete(
-                                                                        {
-                                                                            endpoint:
-                                                                                "companies",
-                                                                            id: company.Code,
-                                                                        }
-                                                                    );
-                                                                    setShowDeleteModal(
-                                                                        true
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <i className="bi bi-trash"></i>{" "}
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                                {company.Status}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            {new Date(
+                                                                company.createdAt
+                                                            ).toLocaleString()}
+                                                        </td>
+                                                        <td>
+                                                            <div className="d-flex justify-content-center gap-2">
+                                                                <button
+                                                                    className="btn btn-warning btn-sm me-2"
+                                                                    onClick={() =>
+                                                                        router.push(
+                                                                            `/master/business/company/edit/${company.Code}`
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <i className="bi bi-pencil-square"></i>{" "}
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-danger btn-sm"
+                                                                    onClick={() => {
+                                                                        setItemToDelete(
+                                                                            {
+                                                                                endpoint:
+                                                                                    "companies",
+                                                                                id: company.Code,
+                                                                            }
+                                                                        );
+                                                                        setShowDeleteModal(
+                                                                            true
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <i className="bi bi-trash"></i>{" "}
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            )}
+
+                                            {/* Fill empty rows to maintain table structure */}
+                                            {displayedCompanies.length <
+                                                companyItemsPerPage &&
+                                                [
+                                                    ...Array(
+                                                        companyItemsPerPage -
+                                                            displayedCompanies.length
+                                                    ),
+                                                ].map((_, i) => (
+                                                    <tr
+                                                        key={`empty-company-${i}`}
+                                                        style={{
+                                                            height: "60px",
+                                                        }}
+                                                    >
+                                                        <td colSpan={6}></td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Pagination Controls */}
+                                <div className="d-flex justify-content-between align-items-center mt-3">
+                                    <button
+                                        className="btn btn-outline-dark"
+                                        disabled={companyStartIndex === 0}
+                                        onClick={() =>
+                                            setcompanyStartIndex((prev) =>
+                                                Math.max(
+                                                    prev - companyItemsPerPage,
+                                                    0
+                                                )
                                             )
+                                        }
+                                    >
+                                        <i className="bi bi-arrow-left"></i>{" "}
+                                        Previous
+                                    </button>
+
+                                    <span className="fw-bold">
+                                        Page{" "}
+                                        {Math.floor(
+                                            companyStartIndex /
+                                                companyItemsPerPage
+                                        ) + 1}{" "}
+                                        of{" "}
+                                        {Math.ceil(
+                                            companies.length /
+                                                companyItemsPerPage
                                         )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    </span>
+
+                                    <button
+                                        className="btn btn-outline-dark"
+                                        disabled={
+                                            companyStartIndex +
+                                                companyItemsPerPage >=
+                                            companies.length
+                                        }
+                                        onClick={() =>
+                                            setcompanyStartIndex(
+                                                (prev) =>
+                                                    prev + companyItemsPerPage
+                                            )
+                                        }
+                                    >
+                                        Next{" "}
+                                        <i className="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </>
                         )}
                     </div>
 
+                    {/* Stores */}
                     <div className="card shadow-lg p-4 rounded mt-4">
                         <p className="mb-4 fw-bold">Stores</p>
                         <div className="table-responsive">
@@ -609,62 +808,124 @@ export default function BusinessPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {stores.map((store: any, index: number) => (
-                                        <tr key={store.Code}>
-                                            <td className="fw-bold">
-                                                {index + 1}
-                                            </td>
-                                            <td>{store.Name}</td>
-                                            <td>{store.Notes || "N/A"}</td>
-                                            <td>
-                                                <span
-                                                    className={`badge ${
-                                                        store.Status ===
-                                                        "Active"
-                                                            ? "bg-success"
-                                                            : "bg-secondary"
-                                                    }`}
-                                                >
-                                                    {store.Status}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {new Date(
-                                                    store.createdAt
-                                                ).toLocaleString()}
-                                            </td>
-                                            <td>
-                                                <button
-                                                    className="btn btn-warning btn-sm me-2"
-                                                    onClick={() =>
-                                                        router.push(
-                                                            `/master/business/store/edit/${store.Code}`
-                                                        )
-                                                    }
-                                                >
-                                                    <i className="bi bi-pencil-square"></i>{" "}
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() => {
-                                                        setItemToDelete({
-                                                            endpoint: "stores",
-                                                            id: store.Code,
-                                                        });
-                                                        setShowDeleteModal(
-                                                            true
-                                                        );
-                                                    }}
-                                                >
-                                                    <i className="bi bi-trash"></i>{" "}
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {displayStores.map(
+                                        (store: any, index: number) => (
+                                            <tr key={store.Code}>
+                                                <td className="fw-bold">
+                                                    {storeStartIndex +
+                                                        index +
+                                                        1}
+                                                </td>
+                                                <td>{store.Name}</td>
+                                                <td>{store.Notes || "N/A"}</td>
+                                                <td>
+                                                    <span
+                                                        className={`badge ${
+                                                            store.Status ===
+                                                            "Active"
+                                                                ? "bg-success"
+                                                                : "bg-secondary"
+                                                        }`}
+                                                    >
+                                                        {store.Status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {new Date(
+                                                        store.createdAt
+                                                    ).toLocaleString()}
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-warning btn-sm me-2"
+                                                        onClick={() =>
+                                                            router.push(
+                                                                `/master/business/store/edit/${store.Code}`
+                                                            )
+                                                        }
+                                                    >
+                                                        <i className="bi bi-pencil-square"></i>{" "}
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => {
+                                                            setItemToDelete({
+                                                                endpoint:
+                                                                    "stores",
+                                                                id: store.Code,
+                                                            });
+                                                            setShowDeleteModal(
+                                                                true
+                                                            );
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-trash"></i>{" "}
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
+
+                                    {/* Fill empty rows to maintain table structure */}
+                                    {displayStores.length < storeitemsPerPage &&
+                                        [
+                                            ...Array(
+                                                storeitemsPerPage -
+                                                    displayStores.length
+                                            ),
+                                        ].map((_, i) => (
+                                            <tr
+                                                key={`empty-store-${i}`}
+                                                style={{
+                                                    height: "60px",
+                                                }}
+                                            >
+                                                <td colSpan={6}></td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Pagination Controls */}
+                        <div className="d-flex justify-content-between align-items-center mt-3">
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={storeStartIndex === 0}
+                                onClick={() =>
+                                    setstoreStartIndex((prev) =>
+                                        Math.max(prev - storeitemsPerPage, 0)
+                                    )
+                                }
+                            >
+                                <i className="bi bi-arrow-left"></i> Previous
+                            </button>
+
+                            <span className="fw-bold">
+                                Page{" "}
+                                {Math.floor(
+                                    storeStartIndex / storeitemsPerPage
+                                ) + 1}{" "}
+                                of{" "}
+                                {Math.ceil(stores.length / storeitemsPerPage)}
+                            </span>
+
+                            <button
+                                className="btn btn-outline-dark"
+                                disabled={
+                                    storeStartIndex + storeitemsPerPage >=
+                                    stores.length
+                                }
+                                onClick={() =>
+                                    setstoreStartIndex(
+                                        (prev) => prev + storeitemsPerPage
+                                    )
+                                }
+                            >
+                                Next <i className="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 </>

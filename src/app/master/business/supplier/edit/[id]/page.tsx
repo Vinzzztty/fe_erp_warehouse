@@ -53,6 +53,7 @@ export default function EditSupplierPage() {
         PostalCode: string;
         Notes: string;
         Status: string;
+        NamePIC: string;
         Department: string;
         ContactMethod: string;
         Description: string;
@@ -72,6 +73,7 @@ export default function EditSupplierPage() {
         PostalCode: "",
         Notes: "",
         Status: "Active",
+        NamePIC: "",
         Department: "",
         ContactMethod: "Email",
         Description: "",
@@ -130,6 +132,7 @@ export default function EditSupplierPage() {
                     PostalCode: supplier.PostalCode || "",
                     Notes: supplier.Notes || "",
                     Status: supplier.Status || "Active",
+                    NamePIC: supplier.NamePIC || "",
                     Department: supplier.Department || "",
                     ContactMethod: supplier.ContactMethod || "Email",
                     Description: supplier.Description || "",
@@ -443,9 +446,9 @@ export default function EditSupplierPage() {
                                     <td>
                                         <input
                                             type="text"
-                                            name="Description"
+                                            name="NamePIC"
                                             className="form-control"
-                                            value={formData.Description}
+                                            value={formData.NamePIC}
                                             onChange={handleChange}
                                         />
                                     </td>
@@ -480,7 +483,10 @@ export default function EditSupplierPage() {
                                     <td>
                                         <input
                                             type="text"
+                                            name="Description"
                                             className="form-control"
+                                            value={formData.Description}
+                                            onChange={handleChange}
                                         />
                                     </td>
                                 </tr>

@@ -22,8 +22,10 @@ export default function AddForwarderPage() {
         Name: string;
         Notes: string;
         CountryId: string | number;
+        AddressChina: string;
         AddressIndonesia: string;
         CoordinateIndonesia: string;
+        NamePIC: string;
         Department: string;
         ContactMethod: string;
         Description: string;
@@ -37,8 +39,10 @@ export default function AddForwarderPage() {
         Name: "",
         Notes: "",
         CountryId: "",
+        AddressChina: "",
         AddressIndonesia: "",
         CoordinateIndonesia: "",
+        NamePIC: "",
         Department: "",
         ContactMethod: "Email",
         Description: "",
@@ -297,23 +301,23 @@ export default function AddForwarderPage() {
                                         <strong>Name PIC</strong>
                                         <input
                                             type="text"
-                                            id="Description"
-                                            name="Description"
+                                            id="NamePIC"
+                                            name="NamePIC"
                                             className="form-control"
-                                            value={formData.Description}
+                                            value={formData.NamePIC}
                                             onChange={handleChange}
                                         />
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>
-                                        <strong>Address in Indonesia</strong>
+                                        <strong>Address in China</strong>
                                         <input
                                             type="text"
-                                            id="AddressIndonesia"
-                                            name="AddressIndonesia"
+                                            id="AddressChina"
+                                            name="AddressChina"
                                             className="form-control"
-                                            value={formData.AddressIndonesia}
+                                            value={formData.AddressChina}
                                             onChange={handleChange}
                                         />
                                     </td>
@@ -331,16 +335,17 @@ export default function AddForwarderPage() {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <strong>Coordinate in Indonesia</strong>
+                                        <strong>Address in Indonesia</strong>
                                         <input
                                             type="text"
-                                            id="CoordinateIndonesia"
-                                            name="CoordinateIndonesia"
+                                            id="AddressIndonesia"
+                                            name="AddressIndonesia"
                                             className="form-control"
-                                            value={formData.CoordinateIndonesia}
+                                            value={formData.AddressIndonesia}
                                             onChange={handleChange}
                                         />
                                     </td>
+
                                     <td>
                                         <strong>Contact Method</strong>
                                         <select
@@ -356,6 +361,30 @@ export default function AddForwarderPage() {
                                             </option>
                                             <option value="WA">WA</option>
                                         </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Coordinate in Indonesia</strong>
+                                        <input
+                                            type="text"
+                                            id="CoordinateIndonesia"
+                                            name="CoordinateIndonesia"
+                                            className="form-control"
+                                            value={formData.CoordinateIndonesia}
+                                            onChange={handleChange}
+                                        />
+                                    </td>
+                                    <td>
+                                        <strong>Description</strong>
+                                        <input
+                                            type="text"
+                                            id="Description"
+                                            name="Description"
+                                            className="form-control"
+                                            value={formData.Description}
+                                            onChange={handleChange}
+                                        />
                                     </td>
                                 </tr>
 

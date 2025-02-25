@@ -822,6 +822,7 @@ export default function DashboardProductPage() {
                                 <thead className="table-dark">
                                     <tr>
                                         <th>No</th>
+                                        <th>Code</th>
                                         <th>Name</th>
                                         <th>Notes</th>
                                         <th>Status</th>
@@ -838,6 +839,7 @@ export default function DashboardProductPage() {
                                             <td className="fw-bold">
                                                 {uomStartIndex + index + 1}
                                             </td>
+                                            <td>{uom.Code}</td>
                                             <td>{uom.Name}</td>
                                             <td>{uom.Notes || "N/A"}</td>
                                             <td>
