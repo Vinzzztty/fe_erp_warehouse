@@ -38,7 +38,7 @@ export default function AddForwarderPage() {
     }>({
         Name: "",
         Notes: "",
-        CountryId: "",
+        CountryId: 1,
         AddressChina: "",
         AddressIndonesia: "",
         CoordinateIndonesia: "",
@@ -269,7 +269,7 @@ export default function AddForwarderPage() {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
+                                    {/* <td>
                                         <strong>
                                             Country{" "}
                                             <span style={{ color: "red" }}>
@@ -296,6 +296,17 @@ export default function AddForwarderPage() {
                                                 </option>
                                             ))}
                                         </select>
+                                    </td> */}
+                                    <td>
+                                        <strong>Address in China</strong>
+                                        <input
+                                            type="text"
+                                            id="AddressChina"
+                                            name="AddressChina"
+                                            className="form-control"
+                                            value={formData.AddressChina}
+                                            onChange={handleChange}
+                                        />
                                     </td>
                                     <td>
                                         <strong>Name PIC</strong>
@@ -311,13 +322,13 @@ export default function AddForwarderPage() {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <strong>Address in China</strong>
+                                        <strong>Address in Indonesia</strong>
                                         <input
                                             type="text"
-                                            id="AddressChina"
-                                            name="AddressChina"
+                                            id="AddressIndonesia"
+                                            name="AddressIndonesia"
                                             className="form-control"
-                                            value={formData.AddressChina}
+                                            value={formData.AddressIndonesia}
                                             onChange={handleChange}
                                         />
                                     </td>
@@ -335,17 +346,16 @@ export default function AddForwarderPage() {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <strong>Address in Indonesia</strong>
+                                        <strong>Coordinate in Indonesia</strong>
                                         <input
                                             type="text"
-                                            id="AddressIndonesia"
-                                            name="AddressIndonesia"
+                                            id="CoordinateIndonesia"
+                                            name="CoordinateIndonesia"
                                             className="form-control"
-                                            value={formData.AddressIndonesia}
+                                            value={formData.CoordinateIndonesia}
                                             onChange={handleChange}
                                         />
                                     </td>
-
                                     <td>
                                         <strong>Contact Method</strong>
                                         <select
@@ -364,17 +374,7 @@ export default function AddForwarderPage() {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <strong>Coordinate in Indonesia</strong>
-                                        <input
-                                            type="text"
-                                            id="CoordinateIndonesia"
-                                            name="CoordinateIndonesia"
-                                            className="form-control"
-                                            value={formData.CoordinateIndonesia}
-                                            onChange={handleChange}
-                                        />
-                                    </td>
+                                    <td></td>
                                     <td>
                                         <strong>Description</strong>
                                         <input

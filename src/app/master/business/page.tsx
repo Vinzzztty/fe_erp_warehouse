@@ -464,7 +464,7 @@ export default function BusinessPage() {
                                         <th>No</th>
                                         <th>Name</th>
                                         <th>Notes</th>
-                                        <th>Country</th>
+                                        {/* <th>Country</th> */}
                                         <th>Address</th>
                                         <th>Status</th>
                                         <th>Contact Method</th>
@@ -485,10 +485,10 @@ export default function BusinessPage() {
                                                 <td>
                                                     {forwarder.Notes || "N/A"}
                                                 </td>
-                                                <td>
+                                                {/* <td>
                                                     {forwarder.Country?.Name ||
                                                         "N/A"}
-                                                </td>
+                                                </td> */}
                                                 <td>
                                                     {forwarder.AddressIndonesia ||
                                                         "N/A"}

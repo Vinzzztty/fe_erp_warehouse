@@ -294,6 +294,17 @@ export default function EditForwarderPage() {
                                     </tr>
                                     <tr>
                                         <td>
+                                            <strong>Address in China</strong>
+                                            <input
+                                                type="text"
+                                                id="AddressChina"
+                                                name="AddressChina"
+                                                className="form-control"
+                                                value={formData.AddressChina}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                        {/* <td>
                                             <strong>
                                                 Country{" "}
                                                 <span style={{ color: "red" }}>
@@ -320,7 +331,7 @@ export default function EditForwarderPage() {
                                                     </option>
                                                 ))}
                                             </select>
-                                        </td>
+                                        </td> */}
                                         <td>
                                             <strong>Name PIC</strong>
                                             <input
@@ -329,31 +340,6 @@ export default function EditForwarderPage() {
                                                 name="NamePIC"
                                                 className="form-control"
                                                 value={formData.NamePIC}
-                                                onChange={handleChange}
-                                            />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <strong>Address in China</strong>
-                                            <input
-                                                type="text"
-                                                id="AddressChina"
-                                                name="AddressChina"
-                                                className="form-control"
-                                                value={formData.AddressChina}
-                                                onChange={handleChange}
-                                            />
-                                        </td>
-
-                                        <td>
-                                            <strong>Department</strong>
-                                            <input
-                                                type="text"
-                                                id="Department"
-                                                name="Department"
-                                                className="form-control"
-                                                value={formData.Department}
                                                 onChange={handleChange}
                                             />
                                         </td>
@@ -374,7 +360,34 @@ export default function EditForwarderPage() {
                                                 onChange={handleChange}
                                             />
                                         </td>
-
+                                        <td>
+                                            <strong>Department</strong>
+                                            <input
+                                                type="text"
+                                                id="Department"
+                                                name="Department"
+                                                className="form-control"
+                                                value={formData.Department}
+                                                onChange={handleChange}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                Coordinate in Indonesia
+                                            </strong>
+                                            <input
+                                                type="text"
+                                                id="CoordinateIndonesia"
+                                                name="CoordinateIndonesia"
+                                                className="form-control"
+                                                value={
+                                                    formData.CoordinateIndonesia
+                                                }
+                                                onChange={handleChange}
+                                            />
+                                        </td>
                                         <td>
                                             <strong>Contact Method</strong>
                                             <select
@@ -395,21 +408,7 @@ export default function EditForwarderPage() {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>
-                                            <strong>
-                                                Coordinate in Indonesia
-                                            </strong>
-                                            <input
-                                                type="text"
-                                                id="CoordinateIndonesia"
-                                                name="CoordinateIndonesia"
-                                                className="form-control"
-                                                value={
-                                                    formData.CoordinateIndonesia
-                                                }
-                                                onChange={handleChange}
-                                            />
-                                        </td>
+                                        <td></td>
                                         <td>
                                             <strong>Description</strong>
                                             <input
