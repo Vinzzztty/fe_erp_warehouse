@@ -21,8 +21,15 @@ export default function ProductPage() {
         Status: "Active",
     });
 
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    // const [imageFile, setImageFile] = useState<File | null>(null);
+    // const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    // ✅ Multiple Image Handling
+    const [imageFiles, setImageFiles] = useState<File[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
     const [companies, setCompanies] = useState([]);
     const [categories, setCategories] = useState([]);
     const [variants, setVariants] = useState([]);
@@ -79,15 +86,69 @@ export default function ProductPage() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // ✅ Handle multiple image selection
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0] || null;
-        setImageFile(file);
+        if (!e.target.files) return;
 
-        if (file) {
-            setImagePreview(URL.createObjectURL(file)); // Generate image preview
-        } else {
-            setImagePreview(null);
+        const files = Array.from(e.target.files);
+
+        // ✅ Prevent exceeding 8 images
+        if (files.length + imageFiles.length > 8) {
+            setErrorMessage("You can upload up to 8 images only.");
+            return;
         }
+
+        const newPreviews = files.map((file) => URL.createObjectURL(file));
+
+        setImageFiles((prev) => [...prev, ...files]);
+        setImagePreviews((prev) => [...prev, ...newPreviews]);
+
+        // ✅ Auto-select first image if not selected
+        if (imageFiles.length === 0) {
+            setSelectedImage(newPreviews[0]);
+            setCurrentImageIndex(0);
+        }
+    };
+
+    // ✅ Remove an image
+    const removeImage = (index: number) => {
+        const updatedFiles = imageFiles.filter((_, i) => i !== index);
+        const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+
+        setImageFiles(updatedFiles);
+        setImagePreviews(updatedPreviews);
+
+        // ✅ Adjust selected image if removed
+        if (updatedPreviews.length > 0) {
+            setSelectedImage(updatedPreviews[0]);
+            setCurrentImageIndex(0);
+        } else {
+            setSelectedImage(null);
+        }
+    };
+
+    // ✅ Handle next image navigation
+    const handleNextImage = () => {
+        setCurrentImageIndex(
+            (prevIndex) => (prevIndex + 1) % imagePreviews.length
+        );
+        setSelectedImage(
+            imagePreviews[(currentImageIndex + 1) % imagePreviews.length]
+        );
+    };
+
+    // ✅ Handle previous image navigation
+    const handlePreviousImage = () => {
+        setCurrentImageIndex(
+            (prevIndex) =>
+                (prevIndex - 1 + imagePreviews.length) % imagePreviews.length
+        );
+        setSelectedImage(
+            imagePreviews[
+                (currentImageIndex - 1 + imagePreviews.length) %
+                    imagePreviews.length
+            ]
+        );
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -109,7 +170,11 @@ export default function ProductPage() {
         if (formData.Notes) formDataToSubmit.append("Notes", formData.Notes);
         if (formData.Content)
             formDataToSubmit.append("Content", formData.Content);
-        if (imageFile) formDataToSubmit.append("file", imageFile);
+        // if (imageFile) formDataToSubmit.append("file", imageFile);
+        // ✅ Append multiple images
+        imageFiles.forEach((file) => {
+            formDataToSubmit.append("images", file);
+        });
 
         console.log("Payload being sent:");
         for (let [key, value] of formDataToSubmit.entries()) {
@@ -219,9 +284,10 @@ export default function ProductPage() {
                                     colSpan={2}
                                     className="text-center align-middle"
                                 >
+                                    {/* ✅ Generate Barcode Button */}
                                     <button
                                         type="button"
-                                        className="btn btn-secondary mt-2 mb-2"
+                                        className="btn btn-secondary mt-2 mb-3"
                                         onClick={() => {
                                             const words =
                                                 formData.Name.trim().split(" ");
@@ -239,24 +305,94 @@ export default function ProductPage() {
                                             }));
                                         }}
                                     >
-                                        Generate Code Name
+                                        Generate Barcode
                                     </button>
-                                    <div className="border p-3">
-                                        <p>
-                                            <strong>GAMBAR PRODUK</strong>
-                                        </p>
-                                        {imagePreview && (
-                                            <div className="mt-3">
-                                                <p>Preview:</p>
+
+                                    {/* ✅ Image Preview Section */}
+                                    <div className="border p-3 rounded bg-light">
+                                        <p className="fw-bold">GAMBAR PRODUK</p>
+
+                                        {/* ✅ Selected Image Display */}
+                                        <div className="d-flex justify-content-center align-items-center mb-3">
+                                            {selectedImage ? (
                                                 <img
-                                                    src={imagePreview}
-                                                    alt="Image Preview"
-                                                    style={{
-                                                        maxWidth: "200px",
-                                                    }}
+                                                    src={selectedImage}
+                                                    alt="Selected"
+                                                    width={150}
+                                                    className="rounded border shadow"
                                                 />
-                                            </div>
-                                        )}
+                                            ) : (
+                                                <p className="text-muted">
+                                                    No image selected
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* ✅ Navigation Buttons */}
+                                        <div className="d-flex justify-content-between mb-2">
+                                            <button
+                                                className="btn btn-sm btn-outline-dark"
+                                                onClick={handlePreviousImage}
+                                                disabled={
+                                                    imagePreviews.length <= 1
+                                                }
+                                            >
+                                                ◀ Previous
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-dark"
+                                                onClick={handleNextImage}
+                                                disabled={
+                                                    imagePreviews.length <= 1
+                                                }
+                                            >
+                                                Next ▶
+                                            </button>
+                                        </div>
+
+                                        {/* ✅ Thumbnail Previews */}
+                                        <div className="d-flex flex-wrap gap-2 justify-content-center">
+                                            {imagePreviews.map(
+                                                (preview, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="position-relative"
+                                                    >
+                                                        <img
+                                                            src={preview}
+                                                            alt={`Preview ${
+                                                                index + 1
+                                                            }`}
+                                                            width={80}
+                                                            className={`rounded border ${
+                                                                selectedImage ===
+                                                                preview
+                                                                    ? "border-primary"
+                                                                    : ""
+                                                            }`}
+                                                            style={{
+                                                                cursor: "pointer",
+                                                            }}
+                                                            onClick={() =>
+                                                                setSelectedImage(
+                                                                    preview
+                                                                )
+                                                            }
+                                                        />
+                                                        <button
+                                                            className="btn btn-danger btn-sm position-absolute top-0 end-0"
+                                                            onClick={() =>
+                                                                removeImage(
+                                                                    index
+                                                                )
+                                                            }
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -434,7 +570,7 @@ export default function ProductPage() {
                             </tr>
 
                             {/* Image Upload */}
-                            <tr>
+                            {/* <tr>
                                 <td>
                                     <label
                                         htmlFor="ImageURL"
@@ -452,6 +588,29 @@ export default function ProductPage() {
                                         onChange={handleFileChange}
                                         accept="image/*"
                                     />
+                                </td>
+                            // </tr> */}
+
+                            <tr>
+                                <td>
+                                    <label className="form-label">
+                                        Product Image
+                                    </label>
+                                </td>
+                                <td>
+                                    <input
+                                        type="file"
+                                        name="images"
+                                        className="form-control"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                    />
+                                    {errorMessage && (
+                                        <p className="text-danger">
+                                            {errorMessage}
+                                        </p>
+                                    )}
                                 </td>
                             </tr>
 

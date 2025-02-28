@@ -37,6 +37,7 @@ export default function DashboardProductPage() {
     const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
     const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<
         string | null
@@ -96,9 +97,24 @@ export default function DashboardProductPage() {
                     variantsData,
                 ] = await Promise.all(responses.map((res) => res.json()));
 
+                // ✅ Fix: Ensure `ImageURL` is properly formatted as an array
+                const processedProducts = (productsData?.data || []).map(
+                    (product: any) => ({
+                        ...product,
+                        ImageURL:
+                            typeof product.ImageURL === "string"
+                                ? product.ImageURL.startsWith("[") // Check if it's a JSON array
+                                    ? JSON.parse(product.ImageURL)
+                                    : [product.ImageURL] // Convert single URL to an array
+                                : Array.isArray(product.ImageURL)
+                                ? product.ImageURL
+                                : [], // Fallback to an empty array
+                    })
+                );
+
                 // Sorting before updating state to avoid re-renders
                 setProducts(
-                    (productsData?.data || []).sort((a: any, b: any) =>
+                    processedProducts.sort((a: any, b: any) =>
                         a.Status.localeCompare(b.Status)
                     )
                 );
@@ -1089,44 +1105,147 @@ export default function DashboardProductPage() {
                             </div>
                             <div className="modal-body">
                                 <div className="row">
-                                    {/* Product Image - Fixed Overlapping Issue */}
-                                    <div className="col-md-5 d-flex justify-content-center align-items-center">
+                                    {/* ✅ Product Image Carousel */}
+                                    <div className="col-md-5 d-flex flex-column align-items-center">
                                         <div
-                                            className="border rounded p-2"
+                                            className="border rounded p-2 d-flex flex-column align-items-center"
                                             style={{
                                                 width: "100%",
-                                                height: "auto",
                                                 overflow: "hidden",
                                                 backgroundColor: "#f5f5f5",
                                             }}
                                         >
-                                            {selectedProduct.ImageURL ? (
-                                                <Image
-                                                    src={
-                                                        selectedProduct.ImageURL
-                                                    }
-                                                    alt={selectedProduct.Name}
-                                                    width={250}
-                                                    height={250}
-                                                    style={{
-                                                        maxWidth: "100%",
-                                                        height: "auto",
-                                                        objectFit: "contain",
-                                                        borderRadius: "8px",
-                                                        display: "block",
-                                                        margin: "0 auto",
-                                                    }}
-                                                    priority
-                                                />
+                                            {selectedProduct?.ImageURL &&
+                                            Array.isArray(
+                                                selectedProduct.ImageURL
+                                            ) &&
+                                            selectedProduct.ImageURL.length >
+                                                0 ? (
+                                                <>
+                                                    {/* ✅ Display Selected Image */}
+                                                    <Image
+                                                        src={
+                                                            selectedProduct
+                                                                .ImageURL[
+                                                                selectedImageIndex
+                                                            ] ?? ""
+                                                        }
+                                                        alt={`Product Image ${
+                                                            selectedImageIndex +
+                                                            1
+                                                        }`}
+                                                        width={250}
+                                                        height={250}
+                                                        className="rounded border mb-2"
+                                                        style={{
+                                                            objectFit:
+                                                                "contain",
+                                                        }}
+                                                    />
+
+                                                    {/* ✅ Navigation Buttons */}
+                                                    <div className="d-flex justify-content-center gap-2">
+                                                        <button
+                                                            className="btn btn-sm btn-dark"
+                                                            onClick={() =>
+                                                                setSelectedImageIndex(
+                                                                    (
+                                                                        prevIndex
+                                                                    ) =>
+                                                                        prevIndex ===
+                                                                        0
+                                                                            ? (
+                                                                                  selectedProduct?.ImageURL ??
+                                                                                  []
+                                                                              )
+                                                                                  .length -
+                                                                              1
+                                                                            : prevIndex -
+                                                                              1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                (
+                                                                    selectedProduct?.ImageURL ??
+                                                                    []
+                                                                ).length <= 1
+                                                            } // ✅ Disable if only 1 image
+                                                        >
+                                                            ◀ Previous
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-dark"
+                                                            onClick={() =>
+                                                                setSelectedImageIndex(
+                                                                    (
+                                                                        prevIndex
+                                                                    ) =>
+                                                                        prevIndex ===
+                                                                        (
+                                                                            selectedProduct?.ImageURL ??
+                                                                            []
+                                                                        )
+                                                                            .length -
+                                                                            1
+                                                                            ? 0
+                                                                            : prevIndex +
+                                                                              1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                (
+                                                                    selectedProduct?.ImageURL ??
+                                                                    []
+                                                                ).length <= 1
+                                                            } // ✅ Disable if only 1 image
+                                                        >
+                                                            Next ▶
+                                                        </button>
+                                                    </div>
+
+                                                    {/* ✅ Thumbnail Selector */}
+                                                    <div className="d-flex flex-wrap gap-2 justify-content-center mt-2">
+                                                        {selectedProduct.ImageURL.map(
+                                                            (url, index) => (
+                                                                <Image
+                                                                    key={index}
+                                                                    src={url}
+                                                                    alt={`Thumbnail ${
+                                                                        index +
+                                                                        1
+                                                                    }`}
+                                                                    width={50}
+                                                                    height={50}
+                                                                    className={`rounded border ${
+                                                                        index ===
+                                                                        selectedImageIndex
+                                                                            ? "border-primary"
+                                                                            : ""
+                                                                    }`}
+                                                                    style={{
+                                                                        cursor: "pointer",
+                                                                        objectFit:
+                                                                            "contain",
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        setSelectedImageIndex(
+                                                                            index
+                                                                        )
+                                                                    }
+                                                                />
+                                                            )
+                                                        )}
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <p className="text-center">
-                                                    No image available
+                                                    No images available
                                                 </p>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Product Details */}
+                                    {/* ✅ Product Details Section */}
                                     <div className="col-md-7">
                                         <div className="d-flex flex-column gap-2">
                                             <p>

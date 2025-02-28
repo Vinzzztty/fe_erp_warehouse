@@ -38,16 +38,26 @@ export default function EditProductPage() {
         Parameter: "",
     });
 
-    const [imageFile, setImageFile] = useState<File | null>(null);
+    // const [imageFile, setImageFile] = useState<File | null>(null);
     const [companies, setCompanies] = useState([]);
     const [categories, setCategories] = useState([]);
     const [variants, setVariants] = useState([]);
     const [uoms, setUoms] = useState([]);
     const [stores, setStores] = useState([]);
     const [channels, setChannels] = useState([]);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [deleteImages, setDeleteImages] = useState<string[]>([]);
+
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    // ✅ Merge existing and new images for navigation
+    const imageList = [...existingImages, ...imagePreviews];
 
     // Fetch the product details when the page loads
     useEffect(() => {
@@ -92,6 +102,19 @@ export default function EditProductPage() {
                 const response = await fetchData(`/master/products/${id}`);
                 const product = response.data;
 
+                let parsedImages = [];
+
+                if (product.ImageURL) {
+                    try {
+                        parsedImages = JSON.parse(product.ImageURL);
+                        if (!Array.isArray(parsedImages)) {
+                            parsedImages = [product.ImageURL]; // Convert single string to an array
+                        }
+                    } catch (error) {
+                        parsedImages = [product.ImageURL]; // Handle cases where it's not a valid JSON
+                    }
+                }
+
                 // Populate form data with fetched product details
                 setFormData({
                     Name: product.Name || "",
@@ -114,10 +137,12 @@ export default function EditProductPage() {
                     Parameter: product.Parameter ?? 0, // Set default to 0 if null or undefined
                 });
 
-                // Set image preview if available
-                if (product.ImageURL) {
-                    setImagePreview(product.ImageURL);
-                }
+                // ✅ Set existing images safely & auto-select first image
+                setExistingImages(parsedImages);
+                setSelectedImage(
+                    parsedImages.length > 0 ? parsedImages[0] : null
+                );
+                setCurrentImageIndex(0);
             } catch (error: any) {
                 console.error("Failed to fetch product details:", error);
                 setErrorMessage("Failed to load product details.");
@@ -138,15 +163,66 @@ export default function EditProductPage() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // ✅ Handle new image selection
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0] || null;
-        setImageFile(file);
+        const files = e.target.files ? Array.from(e.target.files) : [];
 
-        if (file) {
-            setImagePreview(URL.createObjectURL(file)); // Generate image preview
-        } else {
-            setImagePreview(null);
+        if (files.length + newImageFiles.length > 8 - existingImages.length) {
+            setErrorMessage("You can only upload a maximum of 8 images.");
+            return;
         }
+
+        setNewImageFiles((prev) => [...prev, ...files]);
+        setImagePreviews((prev) => [
+            ...prev,
+            ...files.map((file) => URL.createObjectURL(file)),
+        ]);
+    };
+
+    // ✅ Handle next image
+    const handleNextImage = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % imageList.length);
+        setSelectedImage(imageList[(currentImageIndex + 1) % imageList.length]);
+    };
+
+    // ✅ Handle previous image
+    const handlePreviousImage = () => {
+        setCurrentImageIndex(
+            (prevIndex) => (prevIndex - 1 + imageList.length) % imageList.length
+        );
+        setSelectedImage(
+            imageList[
+                (currentImageIndex - 1 + imageList.length) % imageList.length
+            ]
+        );
+    };
+
+    const handleRemoveImage = (url: string) => {
+        setExistingImages((prevExisting) => {
+            if (prevExisting.includes(url)) {
+                setDeleteImages((prevDelete) => [...prevDelete, url]); // ✅ Track for deletion
+                return prevExisting.filter((img) => img !== url);
+            }
+            return prevExisting;
+        });
+
+        setImagePreviews((prevPreviews) =>
+            prevPreviews.filter((img) => img !== url)
+        );
+
+        // ✅ Ensure correct updated list before setting new selected image
+        setTimeout(() => {
+            const updatedList = [...existingImages, ...imagePreviews].filter(
+                (img) => img !== url
+            );
+
+            if (updatedList.length > 0) {
+                setCurrentImageIndex(0);
+                setSelectedImage(updatedList[0]);
+            } else {
+                setSelectedImage(null);
+            }
+        }, 100);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -170,9 +246,13 @@ export default function EditProductPage() {
         Object.entries(sanitizedFormData).forEach(([key, value]) => {
             formDataToSubmit.append(key, value.toString());
         });
-        if (imageFile) {
-            formDataToSubmit.append("file", imageFile);
-        }
+        // ✅ Append new images
+        newImageFiles.forEach((file) => {
+            formDataToSubmit.append("images", file);
+        });
+
+        // ✅ Send deleteImages array as a JSON string
+        formDataToSubmit.append("deleteImages", JSON.stringify(deleteImages));
 
         try {
             const response = await fetch(
@@ -273,9 +353,10 @@ export default function EditProductPage() {
                                         colSpan={2}
                                         className="text-center align-middle"
                                     >
+                                        {/* ✅ Generate Barcode Button */}
                                         <button
                                             type="button"
-                                            className="btn btn-secondary mt-2 mb-2"
+                                            className="btn btn-secondary mt-2 mb-3"
                                             onClick={() => {
                                                 const words =
                                                     formData.Name.trim().split(
@@ -296,24 +377,96 @@ export default function EditProductPage() {
                                                 }));
                                             }}
                                         >
-                                            Generate Code Name
+                                            Generate Barcode
                                         </button>
-                                        <div className="border p-3">
-                                            <p>
-                                                <strong>GAMBAR PRODUK</strong>
+
+                                        {/* ✅ Image Preview Section */}
+                                        <div className="border p-3 rounded bg-light">
+                                            <p className="fw-bold">
+                                                GAMBAR PRODUK
                                             </p>
-                                            {imagePreview && (
-                                                <div className="mt-3">
-                                                    <p>Preview:</p>
+
+                                            {/* ✅ Selected Image Display */}
+                                            <div className="d-flex justify-content-center align-items-center mb-3">
+                                                {selectedImage ? (
                                                     <img
-                                                        src={imagePreview}
-                                                        alt="Image Preview"
-                                                        style={{
-                                                            maxWidth: "200px",
-                                                        }}
+                                                        src={selectedImage}
+                                                        alt="Selected"
+                                                        width={150}
+                                                        className="rounded border shadow"
                                                     />
-                                                </div>
-                                            )}
+                                                ) : (
+                                                    <p className="text-muted">
+                                                        No image selected
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* ✅ Navigation Buttons */}
+                                            <div className="d-flex justify-content-between mb-2">
+                                                <button
+                                                    className="btn btn-sm btn-outline-dark"
+                                                    onClick={
+                                                        handlePreviousImage
+                                                    }
+                                                    disabled={
+                                                        imageList.length <= 1
+                                                    }
+                                                >
+                                                    ◀ Previous
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-dark"
+                                                    onClick={handleNextImage}
+                                                    disabled={
+                                                        imageList.length <= 1
+                                                    }
+                                                >
+                                                    Next ▶
+                                                </button>
+                                            </div>
+
+                                            {/* ✅ Thumbnail Previews */}
+                                            <div className="d-flex flex-wrap gap-2 justify-content-center">
+                                                {imageList.map((url, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="position-relative"
+                                                    >
+                                                        <img
+                                                            src={url}
+                                                            alt={`Preview ${
+                                                                index + 1
+                                                            }`}
+                                                            width={80}
+                                                            className={`rounded border ${
+                                                                selectedImage ===
+                                                                url
+                                                                    ? "border-primary"
+                                                                    : ""
+                                                            }`}
+                                                            style={{
+                                                                cursor: "pointer",
+                                                            }}
+                                                            onClick={() =>
+                                                                setSelectedImage(
+                                                                    url
+                                                                )
+                                                            }
+                                                        />
+                                                        <button
+                                                            className="btn btn-danger btn-sm position-absolute top-0 end-0"
+                                                            onClick={() =>
+                                                                handleRemoveImage(
+                                                                    url
+                                                                )
+                                                            }
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -499,17 +652,16 @@ export default function EditProductPage() {
                                             htmlFor="ImageURL"
                                             className="form-label"
                                         >
-                                            Product Image
+                                            Product Image (Max 8)
                                         </label>
                                     </td>
                                     <td>
                                         <input
                                             type="file"
-                                            id="ImageURL"
-                                            name="ImageURL"
                                             className="form-control"
-                                            onChange={handleFileChange}
+                                            multiple
                                             accept="image/*"
+                                            onChange={handleFileChange}
                                         />
                                     </td>
                                 </tr>
