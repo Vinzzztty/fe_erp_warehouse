@@ -398,34 +398,6 @@ export default function ProductPage() {
                             </tr>
                             <tr>
                                 <td>
-                                    Channel{" "}
-                                    <span style={{ color: "red" }}>*</span>
-                                </td>
-                                <td>
-                                    <select
-                                        id="Channel"
-                                        name="Channel"
-                                        className="form-select"
-                                        value={formData.Channel}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            Select a Channel
-                                        </option>
-                                        {channels.map((channel: any) => (
-                                            <option
-                                                key={channel.Code}
-                                                value={channel.Code}
-                                            >
-                                                {channel.Name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
                                     Category Code{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
@@ -451,6 +423,7 @@ export default function ProductPage() {
                                     </select>
                                 </td>
                             </tr>
+
                             <tr>
                                 <td>
                                     Variant{" "}
@@ -478,7 +451,7 @@ export default function ProductPage() {
                                     </select>
                                 </td>
                             </tr>
-                            <tr></tr>
+
                             <tr>
                                 <td>
                                     Name <span style={{ color: "red" }}>*</span>
@@ -507,6 +480,19 @@ export default function ProductPage() {
                                         value={formData.CodeName}
                                         onChange={handleChange}
                                         required
+                                    />
+                                </td>
+                            </tr>
+                            {/* Contents */}
+                            <tr>
+                                <td>Contents</td>
+                                <td>
+                                    <textarea
+                                        id="Content"
+                                        name="Content"
+                                        className="form-control"
+                                        value={formData.Content}
+                                        onChange={handleChange}
                                     />
                                 </td>
                             </tr>
@@ -539,12 +525,243 @@ export default function ProductPage() {
                                 </td>
                             </tr>
 
-                            {/* Store */}
+                            {/* Notes */}
+                            <tr>
+                                <td>Notes</td>
+                                <td>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                            </tr>
+                            {/* Status */}
                             <tr>
                                 <td>
-                                    StoreName{" "}
+                                    Status{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="Status"
+                                        value={formData.Status}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Non-Active">
+                                            Non-Active
+                                        </option>
+                                    </select>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colSpan={4} className="text-center">
+                                    <label className="form-label">
+                                        <strong>Tab Grid</strong>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="w-bold text-center bg-light"
+                                >
+                                    <label className="form-label">
+                                        <strong>Detail Product</strong>
+                                    </label>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Detail Product </td>
+
+                                <td>Parameter</td>
+                                <td>Unit</td>
+                            </tr>
+                            <tr>
+                                <td>Length </td>
+
+                                <td>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="UoM"
+                                        value={formData.UoM}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a unit of measure
+                                        </option>
+                                        {uoms.map((uom: any) => (
+                                            <option
+                                                key={uom.Code}
+                                                value={uom.Code}
+                                            >
+                                                {uom.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Width </td>
+
+                                <td>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="UoM"
+                                        value={formData.UoM}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a unit of measure
+                                        </option>
+                                        {uoms.map((uom: any) => (
+                                            <option
+                                                key={uom.Code}
+                                                value={uom.Code}
+                                            >
+                                                {uom.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Height </td>
+
+                                <td>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="UoM"
+                                        value={formData.UoM}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a unit of measure
+                                        </option>
+                                        {uoms.map((uom: any) => (
+                                            <option
+                                                key={uom.Code}
+                                                value={uom.Code}
+                                            >
+                                                {uom.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Weight </td>
+
+                                <td>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select"
+                                        name="UoM"
+                                        value={formData.UoM}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a unit of measure
+                                        </option>
+                                        {uoms.map((uom: any) => (
+                                            <option
+                                                key={uom.Code}
+                                                value={uom.Code}
+                                            >
+                                                {uom.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="text-center w-bold text-center bg-light"
+                                >
+                                    <label className="form-label ">
+                                        <strong>Keywords</strong>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Keyword</td>
+                                <td>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                            </tr>
+
+                            {/* SKU Ecommerce List */}
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="text-center w-bold text-center bg-light"
+                                >
+                                    <label className="form-label">
+                                        <strong>SKU E-Commerce List</strong>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Store Name{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>
+                                    Channel{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td>Category</td>
+                                <td>Code Number</td>
+                            </tr>
+                            {/* Store */}
+                            <tr>
                                 <td>
                                     <select
                                         id="StoreName"
@@ -567,33 +784,72 @@ export default function ProductPage() {
                                         ))}
                                     </select>
                                 </td>
-                            </tr>
-
-                            {/* Image Upload */}
-                            {/* <tr>
                                 <td>
-                                    <label
-                                        htmlFor="ImageURL"
-                                        className="form-label"
+                                    <select
+                                        id="Channel"
+                                        name="Channel"
+                                        className="form-select"
+                                        value={formData.Channel}
+                                        onChange={handleChange}
+                                        required
                                     >
-                                        Product Image
+                                        <option value="" disabled>
+                                            Select a Channel
+                                        </option>
+                                        {channels.map((channel: any) => (
+                                            <option
+                                                key={channel.Code}
+                                                value={channel.Code}
+                                            >
+                                                {channel.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select
+                                        id="Channel"
+                                        name="Channel"
+                                        className="form-select"
+                                        value={formData.Channel}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="" disabled>
+                                            Select a Channel
+                                        </option>
+                                        {channels.map((channel: any) => (
+                                            <option
+                                                key={channel.Code}
+                                                value={channel.Code}
+                                            >
+                                                {channel.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td>
+                                    <textarea
+                                        className="form-control"
+                                        name="Notes"
+                                        value={formData.Notes}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="text-center fw-bold text-center bg-light"
+                                >
+                                    <label className="form-label">
+                                        <strong>Upload Images</strong>
                                     </label>
                                 </td>
-                                <td>
-                                    <input
-                                        type="file"
-                                        id="ImageURL"
-                                        name="ImageURL"
-                                        className="form-control"
-                                        onChange={handleFileChange}
-                                        accept="image/*"
-                                    />
-                                </td>
-                            // </tr> */}
-
+                            </tr>
                             <tr>
                                 <td>
-                                    <label className="form-label">
+                                    <label className="form-label ">
                                         Product Image
                                     </label>
                                 </td>
@@ -614,54 +870,6 @@ export default function ProductPage() {
                                 </td>
                             </tr>
 
-                            {/* Notes */}
-                            <tr>
-                                <td>Contents</td>
-                                <td colSpan={3}>
-                                    <textarea
-                                        id="Content"
-                                        name="Content"
-                                        className="form-control"
-                                        value={formData.Content}
-                                        onChange={handleChange}
-                                    />
-                                </td>
-                            </tr>
-
-                            {/* Notes */}
-                            <tr>
-                                <td>Notes</td>
-                                <td colSpan={3}>
-                                    <textarea
-                                        className="form-control"
-                                        name="Notes"
-                                        value={formData.Notes}
-                                        onChange={handleChange}
-                                    ></textarea>
-                                </td>
-                            </tr>
-
-                            {/* Status */}
-                            <tr>
-                                <td>
-                                    Status{" "}
-                                    <span style={{ color: "red" }}>*</span>
-                                </td>
-                                <td colSpan={3}>
-                                    <select
-                                        className="form-select"
-                                        name="Status"
-                                        value={formData.Status}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="Active">Active</option>
-                                        <option value="Non-Active">
-                                            Non-Active
-                                        </option>
-                                    </select>
-                                </td>
-                            </tr>
                             {/* Submit Button */}
                             <tr>
                                 <td colSpan={4} className="text-center">
