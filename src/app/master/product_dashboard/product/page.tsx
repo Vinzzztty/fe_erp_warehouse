@@ -3,6 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+interface Store {
+    Code: number;
+    Name: string;
+}
+
+interface Channel {
+    Code: number;
+    Name: string;
+    InitialChannel: string; // ✅ Corrected field
+    CategoryFromChannel: string; // ✅ Corrected field
+}
+
 export default function ProductPage() {
     const router = useRouter();
 
@@ -10,19 +22,57 @@ export default function ProductPage() {
         Name: "",
         CodeName: "",
         SKUCode: "",
+        SKUFull: "",
+        SKUParent: "",
+        SKUCodeChild: "",
         CompanyCode: "",
         CategoryCode: "",
         VariantId: "",
-        UoM: "",
-        StoreName: "",
-        Channel: "",
-        Notes: "",
+        VariantId_2: "",
         Content: "",
+        UoM: "",
+        Notes: "",
         Status: "Active",
-    });
+        Length_UoM: "",
+        Width_UoM: "",
+        Height_UoM: "",
+        Weight_UoM: "",
+        Keyword: [], // ✅ JSON array
+        StoreName_1: null,
+        Channel_1: null,
+        InitialChannel_1: "",
+        CategoryFromChannel_1: "",
+        CodeNumber_1: null,
+        SKUCodeEcommerce_1: "",
 
-    // const [imageFile, setImageFile] = useState<File | null>(null);
-    // const [imagePreview, setImagePreview] = useState<string | null>(null);
+        StoreName_2: null,
+        Channel_2: null,
+        InitialChannel_2: "",
+        CategoryFromChannel_2: "",
+        CodeNumber_2: null,
+        SKUCodeEcommerce_2: "",
+
+        StoreName_3: null,
+        Channel_3: null,
+        InitialChannel_3: "",
+        CategoryFromChannel_3: "",
+        CodeNumber_3: null,
+        SKUCodeEcommerce_3: "",
+
+        StoreName_4: null,
+        Channel_4: null,
+        InitialChannel_4: "",
+        CategoryFromChannel_4: "",
+        CodeNumber_4: null,
+        SKUCodeEcommerce_4: "",
+
+        StoreName_5: null,
+        Channel_5: null,
+        InitialChannel_5: "",
+        CategoryFromChannel_5: "",
+        CodeNumber_5: null,
+        SKUCodeEcommerce_5: "",
+    });
 
     // ✅ Multiple Image Handling
     const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -34,8 +84,8 @@ export default function ProductPage() {
     const [categories, setCategories] = useState([]);
     const [variants, setVariants] = useState([]);
     const [uoms, setUoms] = useState([]);
-    const [stores, setStores] = useState([]);
-    const [channels, setChannels] = useState([]);
+    const [stores, setStores] = useState<Store[]>([]);
+    const [channels, setChannels] = useState<Channel[]>([]);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -49,7 +99,20 @@ export default function ProductPage() {
                     { url: "/master/variants", setter: setVariants },
                     { url: "/master/uoms", setter: setUoms },
                     { url: "/master/stores", setter: setStores },
-                    { url: "/master/channels", setter: setChannels },
+                    {
+                        url: "/master/channels",
+                        setter: (data: any[]) => {
+                            // ✅ Ensure channels map correctly to expected fields
+                            setChannels(
+                                data.map((channel) => ({
+                                    Code: channel.Code,
+                                    Name: channel.Name,
+                                    InitialChannel: channel.Initial || "", // ✅ Map 'Initial' to 'InitialChannel'
+                                    CategoryFromChannel: channel.Category || "", // ✅ Map 'Category' to 'CategoryFromChannel'
+                                }))
+                            );
+                        },
+                    },
                 ];
 
                 await Promise.all(
@@ -77,13 +140,55 @@ export default function ProductPage() {
         fetchDropdownData();
     }, []);
 
+    const handleSKUChange = (
+        e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
+        key: string
+    ) => {
+        const { value } = e.target;
+        setFormData((prev) => {
+            const updatedData: any = { ...prev, [key]: value };
+
+            // ✅ When Channel is selected, auto-fill related fields
+            if (key.startsWith("Channel_")) {
+                const index = key.split("_")[1]; // Extract the number
+                const selectedChannel = channels.find(
+                    (c) => c.Code.toString() === value
+                );
+
+                if (selectedChannel) {
+                    updatedData[`InitialChannel_${index}`] =
+                        selectedChannel.InitialChannel || "";
+                    updatedData[`CategoryFromChannel_${index}`] =
+                        selectedChannel.CategoryFromChannel || "";
+                    updatedData[
+                        `SKUCodeEcommerce_${index}`
+                    ] = `SKU-${selectedChannel.Code}-${index}`; // Example SKU generation
+                }
+            }
+
+            return updatedData;
+        });
+    };
+    // const handleChange = (
+    //     e: React.ChangeEvent<
+    //         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    //     >
+    // ) => {
+    //     const { name, value } = e.target;
+    //     setFormData((prev) => ({ ...prev, [name]: value }));
+    // };
+
     const handleChange = (
         e: React.ChangeEvent<
             HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
         >
     ) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: name === "CodeName" ? value.toUpperCase() : value,
+        }));
     };
 
     // ✅ Handle multiple image selection
@@ -163,14 +268,86 @@ export default function ProductPage() {
         formDataToSubmit.append("CompanyCode", formData.CompanyCode);
         formDataToSubmit.append("CategoryCode", formData.CategoryCode);
         formDataToSubmit.append("UoM", formData.UoM);
-        formDataToSubmit.append("StoreName", formData.StoreName);
-        formDataToSubmit.append("Channel", formData.Channel);
+        formDataToSubmit.append("Notes", formData.Notes || "");
+        formDataToSubmit.append("Content", formData.Content || "");
+        formDataToSubmit.append("Status", formData.Status);
+        formDataToSubmit.append("Length_UoM", formData.Length_UoM || "");
+        formDataToSubmit.append("Width_UoM", formData.Width_UoM || "");
+        formDataToSubmit.append("Height_UoM", formData.Height_UoM || "");
+        formDataToSubmit.append("Weight_UoM", formData.Weight_UoM || "");
+
         if (formData.VariantId)
             formDataToSubmit.append("VariantId", formData.VariantId);
-        if (formData.Notes) formDataToSubmit.append("Notes", formData.Notes);
-        if (formData.Content)
-            formDataToSubmit.append("Content", formData.Content);
-        // if (imageFile) formDataToSubmit.append("file", imageFile);
+        if (formData.VariantId_2)
+            formDataToSubmit.append("VariantId_2", formData.VariantId_2);
+
+        // ✅ Ensure JSON fields are stored correctly as JSON strings
+        formDataToSubmit.append("Keyword", JSON.stringify(formData.Keyword));
+        formDataToSubmit.append(
+            "InitialChannel_1",
+            formData.InitialChannel_1 || ""
+        );
+        formDataToSubmit.append(
+            "CategoryFromChannel_1",
+            formData.CategoryFromChannel_1 || ""
+        );
+        formDataToSubmit.append(
+            "SKUCodeEcommerce_1",
+            formData.SKUCodeEcommerce_1 || ""
+        );
+
+        formDataToSubmit.append(
+            "InitialChannel_2",
+            formData.InitialChannel_2 || ""
+        );
+        formDataToSubmit.append(
+            "CategoryFromChannel_2",
+            formData.CategoryFromChannel_2 || ""
+        );
+        formDataToSubmit.append(
+            "SKUCodeEcommerce_2",
+            formData.SKUCodeEcommerce_2 || ""
+        );
+
+        formDataToSubmit.append(
+            "InitialChannel_3",
+            formData.InitialChannel_3 || ""
+        );
+        formDataToSubmit.append(
+            "CategoryFromChannel_3",
+            formData.CategoryFromChannel_3 || ""
+        );
+        formDataToSubmit.append(
+            "SKUCodeEcommerce_3",
+            formData.SKUCodeEcommerce_3 || ""
+        );
+
+        formDataToSubmit.append(
+            "InitialChannel_4",
+            formData.InitialChannel_4 || ""
+        );
+        formDataToSubmit.append(
+            "CategoryFromChannel_4",
+            formData.CategoryFromChannel_4 || ""
+        );
+        formDataToSubmit.append(
+            "SKUCodeEcommerce_4",
+            formData.SKUCodeEcommerce_4 || ""
+        );
+
+        formDataToSubmit.append(
+            "InitialChannel_5",
+            formData.InitialChannel_5 || ""
+        );
+        formDataToSubmit.append(
+            "CategoryFromChannel_5",
+            formData.CategoryFromChannel_5 || ""
+        );
+        formDataToSubmit.append(
+            "SKUCodeEcommerce_5",
+            formData.SKUCodeEcommerce_5 || ""
+        );
+
         // ✅ Append multiple images
         imageFiles.forEach((file) => {
             formDataToSubmit.append("images", file);
@@ -217,12 +394,14 @@ export default function ProductPage() {
                 throw new Error(apiMessage); // Throw error so it goes to catch block
             }
 
-            // Update the formData state with the auto-calculated dimensions
+            // ✅ Update state with auto-generated SKU values
             setFormData((prev) => ({
                 ...prev,
-                Length: responseData.data.Length,
-                Width: responseData.data.Width,
-                Height: responseData.data.Height,
+                SKUFull: responseData.data.SKUFull || prev.SKUFull,
+                SKUParent: responseData.data.SKUParent || prev.SKUParent,
+                SKUCode: responseData.data.SKUCode || prev.SKUCode,
+                SKUCodeChild:
+                    responseData.data.SKUCodeChild || prev.SKUCodeChild,
             }));
 
             router.push("/master/product_dashboard");
@@ -254,11 +433,110 @@ export default function ProductPage() {
                         <tbody>
                             {/* Form Fields */}
                             <tr>
+                                {/* SKU */}
+                                <td>
+                                    <strong>SKU Full:</strong>
+                                </td>
+                                <td colSpan={2}>
+                                    <input
+                                        type="text"
+                                        value={
+                                            formData.SKUFull
+                                                ? formData.SKUFull
+                                                : ""
+                                        }
+                                        placeholder="Will be autofilled after saving"
+                                        readOnly
+                                        className="form-control"
+                                    />
+                                    {!formData.SKUFull && (
+                                        <small className="text-muted">
+                                            Example: Test_Product_123
+                                        </small>
+                                    )}
+                                </td>
+                                <td>
+                                    <strong>SKU Parent:</strong>
+                                </td>
+                                <td colSpan={2}>
+                                    <input
+                                        type="text"
+                                        value={
+                                            formData.SKUParent
+                                                ? formData.SKUParent
+                                                : ""
+                                        }
+                                        placeholder="Will be autofilled after saving"
+                                        readOnly
+                                        className="form-control"
+                                    />
+                                    {!formData.SKUParent && (
+                                        <small className="text-muted">
+                                            Example: Test_Product_PARENT
+                                        </small>
+                                    )}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>SKU Code:</strong>
+                                </td>
+                                <td colSpan={2}>
+                                    <input
+                                        type="text"
+                                        value={
+                                            formData.SKUCode
+                                                ? formData.SKUCode
+                                                : ""
+                                        }
+                                        placeholder="Will be autofilled after saving"
+                                        readOnly
+                                        className="form-control"
+                                    />
+                                    {!formData.SKUCode && (
+                                        <small className="text-muted">
+                                            Example: Test_Product_CODE
+                                        </small>
+                                    )}
+                                </td>
+                                <td>
+                                    <strong>SKU Code Child:</strong>
+                                </td>
+                                <td colSpan={2}>
+                                    <input
+                                        type="text"
+                                        value={
+                                            formData.SKUCodeChild
+                                                ? formData.SKUCodeChild
+                                                : ""
+                                        }
+                                        placeholder="Will be autofilled after saving"
+                                        readOnly
+                                        className="form-control"
+                                    />
+                                    {!formData.SKUCodeChild && (
+                                        <small className="text-muted">
+                                            Example: Test_Product_CHILD
+                                        </small>
+                                    )}
+                                </td>
+                            </tr>
+                            {/* Empty Row for Spacing */}
+                            <tr>
+                                <td
+                                    className="bg-light"
+                                    colSpan={6}
+                                    style={{ height: "10px" }}
+                                ></td>
+                            </tr>
+
+                            {/* Company */}
+                            <tr>
                                 <td>
                                     Company Code{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
-                                <td>
+                                <td colSpan={2}>
                                     <select
                                         className="form-select"
                                         name="CompanyCode"
@@ -281,7 +559,7 @@ export default function ProductPage() {
                                 </td>
                                 <td
                                     rowSpan={6}
-                                    colSpan={2}
+                                    colSpan={3}
                                     className="text-center align-middle"
                                 >
                                     {/* ✅ Generate Barcode Button */}
@@ -401,7 +679,7 @@ export default function ProductPage() {
                                     Category Code{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
-                                <td>
+                                <td colSpan={2}>
                                     <select
                                         className="form-select"
                                         name="CategoryCode"
@@ -429,7 +707,7 @@ export default function ProductPage() {
                                     Variant{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
-                                <td>
+                                <td colSpan={2}>
                                     <select
                                         className="form-select"
                                         name="VariantId"
@@ -451,12 +729,20 @@ export default function ProductPage() {
                                     </select>
                                 </td>
                             </tr>
+                            {/* Empty Row for Spacing */}
+                            <tr>
+                                <td
+                                    className="bg-light"
+                                    colSpan={3}
+                                    style={{ height: "10px" }}
+                                ></td>
+                            </tr>
 
                             <tr>
                                 <td>
                                     Name <span style={{ color: "red" }}>*</span>
                                 </td>
-                                <td>
+                                <td colSpan={2}>
                                     <input
                                         type="text"
                                         className="form-control"
@@ -472,7 +758,7 @@ export default function ProductPage() {
                                     Code Name{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
-                                <td>
+                                <td colSpan={2}>
                                     <input
                                         type="text"
                                         className="form-control"
@@ -483,10 +769,47 @@ export default function ProductPage() {
                                     />
                                 </td>
                             </tr>
+
+                            <tr>
+                                <td>
+                                    Variant{" "}
+                                    <span style={{ color: "red" }}>*</span>
+                                </td>
+                                <td colSpan={2}>
+                                    <select
+                                        className="form-select"
+                                        name="VariantId_2"
+                                        value={formData.VariantId_2}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a variant
+                                        </option>
+                                        {variants.map((variant: any) => (
+                                            <option
+                                                key={variant.Code}
+                                                value={variant.Code}
+                                            >
+                                                {variant.Name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                            </tr>
+                            {/* Empty Row for Spacing */}
+                            <tr>
+                                <td
+                                    className="bg-light"
+                                    colSpan={6}
+                                    style={{ height: "10px" }}
+                                ></td>
+                            </tr>
+
                             {/* Contents */}
                             <tr>
                                 <td>Contents</td>
-                                <td>
+                                <td colSpan={5}>
                                     <textarea
                                         id="Content"
                                         name="Content"
@@ -502,7 +825,7 @@ export default function ProductPage() {
                                 <td>
                                     UoM <span style={{ color: "red" }}>*</span>
                                 </td>
-                                <td>
+                                <td colSpan={2}>
                                     <select
                                         className="form-select"
                                         name="UoM"
@@ -528,7 +851,7 @@ export default function ProductPage() {
                             {/* Notes */}
                             <tr>
                                 <td>Notes</td>
-                                <td>
+                                <td colSpan={2}>
                                     <textarea
                                         className="form-control"
                                         name="Notes"
@@ -543,7 +866,7 @@ export default function ProductPage() {
                                     Status{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
-                                <td>
+                                <td colSpan={2}>
                                     <select
                                         className="form-select"
                                         name="Status"
@@ -560,164 +883,89 @@ export default function ProductPage() {
                             </tr>
 
                             <tr>
-                                <td colSpan={4} className="text-center">
+                                <td colSpan={6} className="text-center">
                                     <label className="form-label">
                                         <strong>Tab Grid</strong>
                                     </label>
                                 </td>
                             </tr>
+
                             <tr>
                                 <td
-                                    colSpan={4}
-                                    className="w-bold text-center bg-light"
+                                    colSpan={6}
+                                    className="w-bold text-center bg-light py-2"
                                 >
-                                    <label className="form-label">
+                                    <label className="form-label text-uppercase">
                                         <strong>Detail Product</strong>
                                     </label>
                                 </td>
                             </tr>
 
-                            <tr>
-                                <td>Detail Product </td>
-
-                                <td>Parameter</td>
-                                <td>Unit</td>
-                            </tr>
-                            <tr>
-                                <td>Length </td>
-
-                                <td>
-                                    <textarea
-                                        className="form-control"
-                                        name="Notes"
-                                        value={formData.Notes}
-                                        onChange={handleChange}
-                                    ></textarea>
+                            <tr className="bg-secondary text-white text-center">
+                                <td className="fw-bold" colSpan={2}>
+                                    Detail Product
                                 </td>
-                                <td>
-                                    <select
-                                        className="form-select"
-                                        name="UoM"
-                                        value={formData.UoM}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="">
-                                            Select a unit of measure
-                                        </option>
-                                        {uoms.map((uom: any) => (
-                                            <option
-                                                key={uom.Code}
-                                                value={uom.Code}
-                                            >
-                                                {uom.Name}
+                                <td className="fw-bold" colSpan={2}>
+                                    Parameter
+                                </td>
+                                <td className="fw-bold" colSpan={2}>
+                                    Unit
+                                </td>
+                            </tr>
+
+                            {[
+                                { label: "Length", name: "Length_UoM" },
+                                { label: "Width", name: "Width_UoM" },
+                                { label: "Height", name: "Height_UoM" },
+                                { label: "Weight", name: "Weight_UoM" },
+                            ].map((item, index) => (
+                                <tr key={index}>
+                                    <td className="text-capitalize" colSpan={2}>
+                                        {item.label}
+                                    </td>
+                                    <td colSpan={2}>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            name={`${item.name}_value`}
+                                            value={
+                                                (formData as any)[
+                                                    `${item.name}_value`
+                                                ] || ""
+                                            }
+                                            onChange={handleChange}
+                                            placeholder="Enter value"
+                                        />
+                                    </td>
+                                    <td colSpan={2}>
+                                        <select
+                                            className="form-select"
+                                            name={item.name}
+                                            value={
+                                                (formData as any)[item.name] ||
+                                                ""
+                                            }
+                                            onChange={handleChange}
+                                            required
+                                        >
+                                            <option value="">
+                                                Select a unit of measure
                                             </option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Width </td>
-
-                                <td>
-                                    <textarea
-                                        className="form-control"
-                                        name="Notes"
-                                        value={formData.Notes}
-                                        onChange={handleChange}
-                                    ></textarea>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select"
-                                        name="UoM"
-                                        value={formData.UoM}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="">
-                                            Select a unit of measure
-                                        </option>
-                                        {uoms.map((uom: any) => (
-                                            <option
-                                                key={uom.Code}
-                                                value={uom.Code}
-                                            >
-                                                {uom.Name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Height </td>
-
-                                <td>
-                                    <textarea
-                                        className="form-control"
-                                        name="Notes"
-                                        value={formData.Notes}
-                                        onChange={handleChange}
-                                    ></textarea>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select"
-                                        name="UoM"
-                                        value={formData.UoM}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="">
-                                            Select a unit of measure
-                                        </option>
-                                        {uoms.map((uom: any) => (
-                                            <option
-                                                key={uom.Code}
-                                                value={uom.Code}
-                                            >
-                                                {uom.Name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Weight </td>
-
-                                <td>
-                                    <textarea
-                                        className="form-control"
-                                        name="Notes"
-                                        value={formData.Notes}
-                                        onChange={handleChange}
-                                    ></textarea>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select"
-                                        name="UoM"
-                                        value={formData.UoM}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="">
-                                            Select a unit of measure
-                                        </option>
-                                        {uoms.map((uom: any) => (
-                                            <option
-                                                key={uom.Code}
-                                                value={uom.Code}
-                                            >
-                                                {uom.Name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
+                                            {uoms.map((uom: any) => (
+                                                <option
+                                                    key={uom.Code}
+                                                    value={uom.Code}
+                                                >
+                                                    {uom.Name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                </tr>
+                            ))}
                             <tr>
                                 <td
-                                    colSpan={4}
+                                    colSpan={6}
                                     className="text-center w-bold text-center bg-light"
                                 >
                                     <label className="form-label ">
@@ -727,21 +975,21 @@ export default function ProductPage() {
                             </tr>
                             <tr>
                                 <td>Keyword</td>
-                                <td>
+                                <td colSpan={5}>
                                     <textarea
                                         className="form-control"
-                                        name="Notes"
-                                        value={formData.Notes}
+                                        name="Keyword"
+                                        value={formData.Keyword}
                                         onChange={handleChange}
                                     ></textarea>
                                 </td>
                             </tr>
 
-                            {/* SKU Ecommerce List */}
+                            {/* SKU E-Commerce List */}
                             <tr>
                                 <td
-                                    colSpan={4}
-                                    className="text-center w-bold text-center bg-light"
+                                    colSpan={6}
+                                    className="text-center w-bold bg-light"
                                 >
                                     <label className="form-label">
                                         <strong>SKU E-Commerce List</strong>
@@ -757,89 +1005,135 @@ export default function ProductPage() {
                                     Channel{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </td>
+                                <td>Initial Channel</td>
                                 <td>Category</td>
                                 <td>Code Number</td>
+                                <td>SKU Code</td>
                             </tr>
-                            {/* Store */}
-                            <tr>
-                                <td>
-                                    <select
-                                        id="StoreName"
-                                        name="StoreName"
-                                        className="form-select"
-                                        value={formData.StoreName}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            Select a store
-                                        </option>
-                                        {stores.map((store: any) => (
-                                            <option
-                                                key={store.Code}
-                                                value={store.Code}
-                                            >
-                                                {store.Name}
+                            {[1, 2, 3, 4, 5].map((index) => (
+                                <tr key={index}>
+                                    <td>
+                                        <select
+                                            name={`StoreName_${index}`}
+                                            className="form-select"
+                                            value={
+                                                (formData as any)[
+                                                    `StoreName_${index}`
+                                                ] || ""
+                                            }
+                                            onChange={(e) =>
+                                                handleSKUChange(
+                                                    e,
+                                                    `StoreName_${index}`
+                                                )
+                                            }
+                                        >
+                                            <option value="" disabled>
+                                                Select a store
                                             </option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <select
-                                        id="Channel"
-                                        name="Channel"
-                                        className="form-select"
-                                        value={formData.Channel}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            Select a Channel
-                                        </option>
-                                        {channels.map((channel: any) => (
-                                            <option
-                                                key={channel.Code}
-                                                value={channel.Code}
-                                            >
-                                                {channel.Name}
+                                            {stores.map((store) => (
+                                                <option
+                                                    key={store.Code}
+                                                    value={store.Code}
+                                                >
+                                                    {store.Name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select
+                                            name={`Channel_${index}`}
+                                            className="form-select"
+                                            value={
+                                                (formData as any)[
+                                                    `Channel_${index}`
+                                                ] || ""
+                                            }
+                                            onChange={(e) =>
+                                                handleSKUChange(
+                                                    e,
+                                                    `Channel_${index}`
+                                                )
+                                            }
+                                        >
+                                            <option value="" disabled>
+                                                Select a Channel
                                             </option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <select
-                                        id="Channel"
-                                        name="Channel"
-                                        className="form-select"
-                                        value={formData.Channel}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            Select a Channel
-                                        </option>
-                                        {channels.map((channel: any) => (
-                                            <option
-                                                key={channel.Code}
-                                                value={channel.Code}
-                                            >
-                                                {channel.Name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <textarea
-                                        className="form-control"
-                                        name="Notes"
-                                        value={formData.Notes}
-                                        onChange={handleChange}
-                                    ></textarea>
-                                </td>
-                            </tr>
+                                            {channels.map((channel) => (
+                                                <option
+                                                    key={channel.Code}
+                                                    value={channel.Code}
+                                                >
+                                                    {channel.Name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            name={`InitialChannel_${index}`}
+                                            value={
+                                                (formData as any)[
+                                                    `InitialChannel_${index}`
+                                                ] || ""
+                                            }
+                                            readOnly // ✅ Makes it read-only
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            name={`CategoryFromChannel_${index}`}
+                                            value={
+                                                (formData as any)[
+                                                    `CategoryFromChannel_${index}`
+                                                ] || ""
+                                            }
+                                            readOnly // ✅ Makes it read-only
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            name={`CodeNumber_${index}`}
+                                            value={
+                                                (formData as any)[
+                                                    `CodeNumber_${index}`
+                                                ] || ""
+                                            }
+                                            onChange={(e) =>
+                                                handleSKUChange(
+                                                    e,
+                                                    `CodeNumber_${index}`
+                                                )
+                                            }
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            name={`SKUCodeEcommerce_${index}`}
+                                            value={
+                                                (formData as any)[
+                                                    `SKUCodeEcommerce_${index}`
+                                                ] || ""
+                                            }
+                                            readOnly // ✅ Makes it read-only
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+
+                            {/* Imaages */}
                             <tr>
                                 <td
-                                    colSpan={4}
+                                    colSpan={6}
                                     className="text-center fw-bold text-center bg-light"
                                 >
                                     <label className="form-label">
@@ -847,13 +1141,15 @@ export default function ProductPage() {
                                     </label>
                                 </td>
                             </tr>
+
+                            {/* Images */}
                             <tr>
-                                <td>
+                                <td colSpan={2}>
                                     <label className="form-label ">
                                         Product Image
                                     </label>
                                 </td>
-                                <td>
+                                <td colSpan={4}>
                                     <input
                                         type="file"
                                         name="images"
@@ -872,7 +1168,7 @@ export default function ProductPage() {
 
                             {/* Submit Button */}
                             <tr>
-                                <td colSpan={4} className="text-center">
+                                <td colSpan={6} className="text-center">
                                     <button
                                         type="button"
                                         className="btn btn-dark"
